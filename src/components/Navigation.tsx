@@ -17,22 +17,23 @@ const Navigation = () => {
           </Link>
           
           <div className="hidden md:flex items-center gap-8">
-            <Link to="/features" className="text-foreground/80 hover:text-foreground transition-colors">
-              Features
+            <Link to="/workflow" className="text-foreground/80 hover:text-foreground transition-colors">
+              Workflow
             </Link>
             <Link to="/dashboard" className="text-foreground/80 hover:text-foreground transition-colors">
               Dashboard
             </Link>
-            <Link to="/pricing" className="text-foreground/80 hover:text-foreground transition-colors">
-              Pricing
-            </Link>
           </div>
 
           <div className="flex items-center gap-4">
-            <Button variant="ghost">Sign In</Button>
-            <Button className="bg-gradient-to-r from-primary to-accent hover:opacity-90 transition-opacity">
-              Get Started
-            </Button>
+            <Link to="/auth">
+              <Button variant="ghost">Sign In</Button>
+            </Link>
+            <Link to="/auth">
+              <Button className="bg-gradient-to-r from-primary to-accent hover:opacity-90 transition-opacity">
+                Get Started
+              </Button>
+            </Link>
           </div>
         </div>
       </div>
