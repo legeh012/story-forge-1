@@ -14,16 +14,265 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      characters: {
+        Row: {
+          age: number | null
+          background: string | null
+          created_at: string | null
+          goals: string | null
+          id: string
+          metadata: Json | null
+          name: string
+          personality: string | null
+          project_id: string
+          relationships: Json | null
+          role: string | null
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          age?: number | null
+          background?: string | null
+          created_at?: string | null
+          goals?: string | null
+          id?: string
+          metadata?: Json | null
+          name: string
+          personality?: string | null
+          project_id: string
+          relationships?: Json | null
+          role?: string | null
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          age?: number | null
+          background?: string | null
+          created_at?: string | null
+          goals?: string | null
+          id?: string
+          metadata?: Json | null
+          name?: string
+          personality?: string | null
+          project_id?: string
+          relationships?: Json | null
+          role?: string | null
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "characters_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      episodes: {
+        Row: {
+          content: string | null
+          created_at: string | null
+          episode_number: number
+          id: string
+          project_id: string
+          script: string | null
+          season: number | null
+          status: string | null
+          storyboard: Json | null
+          synopsis: string | null
+          title: string
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          content?: string | null
+          created_at?: string | null
+          episode_number: number
+          id?: string
+          project_id: string
+          script?: string | null
+          season?: number | null
+          status?: string | null
+          storyboard?: Json | null
+          synopsis?: string | null
+          title: string
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          content?: string | null
+          created_at?: string | null
+          episode_number?: number
+          id?: string
+          project_id?: string
+          script?: string | null
+          season?: number | null
+          status?: string | null
+          storyboard?: Json | null
+          synopsis?: string | null
+          title?: string
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "episodes_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      media_assets: {
+        Row: {
+          asset_type: string
+          asset_url: string
+          created_at: string | null
+          episode_id: string | null
+          id: string
+          metadata: Json | null
+          project_id: string | null
+          user_id: string
+        }
+        Insert: {
+          asset_type: string
+          asset_url: string
+          created_at?: string | null
+          episode_id?: string | null
+          id?: string
+          metadata?: Json | null
+          project_id?: string | null
+          user_id: string
+        }
+        Update: {
+          asset_type?: string
+          asset_url?: string
+          created_at?: string | null
+          episode_id?: string | null
+          id?: string
+          metadata?: Json | null
+          project_id?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "media_assets_episode_id_fkey"
+            columns: ["episode_id"]
+            isOneToOne: false
+            referencedRelation: "episodes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "media_assets_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      profiles: {
+        Row: {
+          avatar_url: string | null
+          created_at: string | null
+          full_name: string | null
+          id: string
+          updated_at: string | null
+          username: string | null
+        }
+        Insert: {
+          avatar_url?: string | null
+          created_at?: string | null
+          full_name?: string | null
+          id: string
+          updated_at?: string | null
+          username?: string | null
+        }
+        Update: {
+          avatar_url?: string | null
+          created_at?: string | null
+          full_name?: string | null
+          id?: string
+          updated_at?: string | null
+          username?: string | null
+        }
+        Relationships: []
+      }
+      projects: {
+        Row: {
+          created_at: string | null
+          description: string | null
+          genre: string | null
+          id: string
+          mood: string | null
+          status: string | null
+          theme: string | null
+          title: string
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          description?: string | null
+          genre?: string | null
+          id?: string
+          mood?: string | null
+          status?: string | null
+          theme?: string | null
+          title: string
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          description?: string | null
+          genre?: string | null
+          id?: string
+          mood?: string | null
+          status?: string | null
+          theme?: string | null
+          title?: string
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
+      user_roles: {
+        Row: {
+          id: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Insert: {
+          id?: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Update: {
+          id?: string
+          role?: Database["public"]["Enums"]["app_role"]
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      has_role: {
+        Args: {
+          _role: Database["public"]["Enums"]["app_role"]
+          _user_id: string
+        }
+        Returns: boolean
+      }
     }
     Enums: {
-      [_ in never]: never
+      app_role: "admin" | "creator" | "viewer"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -150,6 +399,8 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      app_role: ["admin", "creator", "viewer"],
+    },
   },
 } as const
