@@ -9,6 +9,7 @@ import Characters from "./pages/Characters";
 import Episodes from "./pages/Episodes";
 import Workflow from "./pages/Workflow";
 import Auth from "./pages/Auth";
+import CreateProject from "./pages/CreateProject";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -26,6 +27,7 @@ const App = () => (
           <Route path="/characters" element={<Characters />} />
           <Route path="/episodes" element={<Episodes />} />
           <Route path="/workflow" element={<Workflow />} />
+          <Route path="/create" element={<CreateProject />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
         </Routes>

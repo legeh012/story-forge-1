@@ -32,7 +32,7 @@ const Index = () => {
             </p>
             
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
-              <Link to="/dashboard">
+              <Link to="/create">
                 <Button size="lg" className="bg-gradient-to-r from-primary to-accent hover:opacity-90 transition-opacity text-lg px-8">
                   Get Started Free
                   <ArrowRight className="ml-2 h-5 w-5" />
@@ -131,7 +131,7 @@ const Index = () => {
             <p className="text-lg text-foreground/80 mb-8">
               Join thousands of creators building the next generation of interactive experiences.
             </p>
-            <Link to="/dashboard">
+            <Link to="/create">
               <Button size="lg" className="bg-gradient-to-r from-primary to-accent hover:opacity-90 transition-opacity text-lg px-8">
                 Start Creating Now
                 <ArrowRight className="ml-2 h-5 w-5" />
