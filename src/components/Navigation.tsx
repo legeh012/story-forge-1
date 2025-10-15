@@ -1,6 +1,6 @@
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { Sparkles } from "lucide-react";
+import { Sparkles, FolderOpen } from "lucide-react";
 
 const Navigation = () => {
   return (
@@ -19,6 +19,10 @@ const Navigation = () => {
           <div className="hidden md:flex items-center gap-8">
             <Link to="/create" className="text-foreground/80 hover:text-foreground transition-colors">
               Create
+            </Link>
+            <Link to="/media" className="text-foreground/80 hover:text-foreground transition-colors flex items-center gap-1">
+              <FolderOpen className="h-4 w-4" />
+              Media
             </Link>
             <Link to="/workflow" className="text-foreground/80 hover:text-foreground transition-colors">
               Workflow
