@@ -11,6 +11,7 @@ import Workflow from "./pages/Workflow";
 import Auth from "./pages/Auth";
 import CreateProject from "./pages/CreateProject";
 import MediaLibrary from "./pages/MediaLibrary";
+import Analytics from "./pages/Analytics";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -30,6 +31,7 @@ const App = () => (
           <Route path="/workflow" element={<Workflow />} />
           <Route path="/create" element={<CreateProject />} />
           <Route path="/media" element={<MediaLibrary />} />
+          <Route path="/analytics" element={<Analytics />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
         </Routes>

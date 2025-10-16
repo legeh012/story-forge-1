@@ -1,4 +1,5 @@
 import Navigation from "@/components/Navigation";
+import SEOHead from "@/components/SEOHead";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { ArrowRight, Sparkles, Users, BookOpen, Zap, Globe, Palette } from "lucide-react";
@@ -7,6 +8,11 @@ import { Link } from "react-router-dom";
 const Index = () => {
   return (
     <div className="min-h-screen bg-background">
+      <SEOHead 
+        title="StoryForge - Create Viral AI Stories | YouTube, TikTok, Instagram Automation"
+        description="Create viral interactive stories with AI. Auto-publish to YouTube, TikTok, Instagram. Trending hashtags, SEO optimization, and viral analytics built-in. Start going viral today!"
+        keywords={['viral content', 'AI storytelling', 'YouTube automation', 'TikTok viral', 'Instagram reels', 'content creator', 'trending videos', 'social media automation']}
+      />
       <Navigation />
       
       {/* Hero Section */}
