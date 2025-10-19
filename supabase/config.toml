@@ -1,5 +1,14 @@
 project_id = "akmeovotnnqbxotlerie"
 
+[functions.godlike-voice-bot]
+verify_jwt = true
+
+[functions.audio-mixer-bot]
+verify_jwt = true
+
+[functions.sound-effects-bot]
+verify_jwt = true
+
 [functions.performance-optimizer-bot]
 verify_jwt = true
 
