@@ -18,22 +18,32 @@ const Index = () => {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
 
   useEffect(() => {
-    checkAuth();
-  }, []);
-
-  const checkAuth = async () => {
-    try {
-      const { data: { user } } = await supabase.auth.getUser();
-      setIsAuthenticated(!!user);
-      if (user) {
-        await fetchData();
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(
+      (event, session) => {
+        if (!session) {
+          navigate("/auth", { replace: true });
+        } else {
+          setIsAuthenticated(true);
+          setTimeout(() => {
+            fetchData();
+          }, 0);
+        }
+        setLoading(false);
       }
-    } catch (error) {
-      console.error('Auth check error:', error);
-    } finally {
+    );
+
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      if (!session) {
+        navigate("/auth", { replace: true });
+      } else {
+        setIsAuthenticated(true);
+        fetchData();
+      }
       setLoading(false);
-    }
-  };
+    });
+
+    return () => subscription.unsubscribe();
+  }, [navigate]);
 
   const fetchData = async () => {
     try {
@@ -50,7 +60,7 @@ const Index = () => {
         supabase
           .from('episodes')
           .select('*, projects!inner(title)')
-          .eq('projects.user_id', user.id)
+          .eq('user_id', user.id)
           .order('created_at', { ascending: false })
           .limit(6)
       ]);
@@ -65,6 +75,14 @@ const Index = () => {
       });
     }
   };
+
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-background">
