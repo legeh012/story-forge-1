@@ -41,9 +41,9 @@ const Analytics = () => {
   };
 
   const platforms = [
-    { name: 'YouTube', icon: Youtube, color: 'text-red-600', metrics: sampleMetrics.youtube },
-    { name: 'TikTok', icon: Share2, color: 'text-black', metrics: sampleMetrics.tiktok },
-    { name: 'Instagram', icon: Instagram, color: 'text-pink-600', metrics: sampleMetrics.instagram },
+    { name: 'YouTube', icon: Youtube, color: 'text-[hsl(0_100%_45%)]', metrics: sampleMetrics.youtube },
+    { name: 'TikTok', icon: Share2, color: 'text-foreground', metrics: sampleMetrics.tiktok },
+    { name: 'Instagram', icon: Instagram, color: 'text-[hsl(330_100%_50%)]', metrics: sampleMetrics.instagram },
   ];
 
   return (
