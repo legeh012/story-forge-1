@@ -283,10 +283,20 @@ const ViralBots = () => {
   const creatorBots = bots.filter(b => ['script_generator', 'thumbnail_designer', 'video_assembly', 'voiceover'].includes(b.bot_type));
   const analyticsBots = bots.filter(b => ['performance_tracker', 'ab_testing', 'roi_analyzer', 'feedback_loop'].includes(b.bot_type));
   const aiAgentBots = bots.filter(b => ['llm_reflection', 'bot_orchestrator', 'persona_bot'].includes(b.bot_type));
+  
+  // IaaS - Infrastructure as a Service: Handles compute-heavy generation tasks and backups
   const iaasBots = bots.filter(b => ['infrastructure_monitor', 'gpu_scaler'].includes(b.bot_type));
+  
+  // PaaS - Platform as a Service: Hosts the generation engine and dashboard UI
   const paasBots = bots.filter(b => ['module_deployer', 'runtime_validator', 'app_logic_manager'].includes(b.bot_type));
+  
+  // BaaS - Backend as a Service: Stores user sessions, generated assets, and app logic
   const baasBots = bots.filter(b => ['auth_flow_handler', 'database_sync', 'api_orchestrator'].includes(b.bot_type));
+  
+  // SaaS - Software as a Service: Delivers the user-facing dashboard and preview tools
   const saasBots = bots.filter(b => ['dashboard_manager', 'confessional_editor', 'cast_branding'].includes(b.bot_type));
+  
+  // XaaS - Anything as a Service: Orchestrates bots, agents, and chaos consoles
   const xaasBots = bots.filter(b => ['ai_model_connector', 'payment_gateway', 'cultural_library'].includes(b.bot_type));
 
   return (
@@ -404,7 +414,7 @@ const ViralBots = () => {
 
               <BotCategory
                 title="IaaS - Infrastructure Layer"
-                description="Monitor infrastructure health and scale GPU usage for video rendering"
+                description="Handles compute-heavy generation tasks and backups"
                 icon={<Bot className="h-8 w-8 text-cyan-600" />}
                 bots={iaasBots}
                 runningBots={runningBots}
@@ -415,7 +425,7 @@ const ViralBots = () => {
 
               <BotCategory
                 title="PaaS - Platform Layer"
-                description="Deploy modules, validate runtime configs, and manage application logic"
+                description="Hosts the generation engine and dashboard UI"
                 icon={<Rocket className="h-8 w-8 text-blue-600" />}
                 bots={paasBots}
                 runningBots={runningBots}
@@ -426,7 +436,7 @@ const ViralBots = () => {
 
               <BotCategory
                 title="BaaS - Backend Layer"
-                description="Handle auth flows, database syncs, and API orchestration"
+                description="Stores user sessions, generated assets, and app logic"
                 icon={<Zap className="h-8 w-8 text-indigo-600" />}
                 bots={baasBots}
                 runningBots={runningBots}
@@ -437,7 +447,7 @@ const ViralBots = () => {
 
               <BotCategory
                 title="SaaS - Software Layer"
-                description="Power user-facing dashboard, confessional editors, and cast branding"
+                description="Delivers the user-facing dashboard and preview tools"
                 icon={<Wand2 className="h-8 w-8 text-purple-600" />}
                 bots={saasBots}
                 runningBots={runningBots}
@@ -447,8 +457,8 @@ const ViralBots = () => {
               />
 
               <BotCategory
-                title="XaaS - External Services"
-                description="Connect to AI models, payment gateways, and cultural libraries on demand"
+                title="XaaS - Anything as a Service"
+                description="Orchestrates bots, agents, and chaos consoles"
                 icon={<TrendingUp className="h-8 w-8 text-pink-600" />}
                 bots={xaasBots}
                 runningBots={runningBots}
