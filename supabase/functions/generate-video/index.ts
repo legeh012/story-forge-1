@@ -191,15 +191,19 @@ Professional lighting, 4K quality, cinematic composition, anatomically accurate,
       }
     }
 
-    // Create video metadata
+    // Create video metadata with downloadable clips
     const videoMetadata = {
       episodeId,
-      scenes: scenes.map((scene, i) => ({
-        ...scene,
-        frameUrl: frameUrls[i]
+      clips: scenes.map((scene, i) => ({
+        clipNumber: i + 1,
+        description: scene.description,
+        duration: scene.duration,
+        dialogue: scene.dialogue || '',
+        frameUrl: frameUrls[i],
+        downloadUrl: frameUrls[i] // Image can be downloaded
       })),
       totalDuration: scenes.reduce((sum, scene) => sum + scene.duration, 0),
-      frameCount: sceneFrames.length,
+      clipCount: sceneFrames.length,
       generatedAt: new Date().toISOString()
     };
 

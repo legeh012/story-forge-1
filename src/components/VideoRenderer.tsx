@@ -5,7 +5,7 @@ import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
-import { Video, Play, Loader2, AlertCircle, CheckCircle2, Camera, Sparkles } from 'lucide-react';
+import { Video, Play, Loader2, AlertCircle, CheckCircle2, Camera, Sparkles, Download } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 
@@ -131,7 +131,7 @@ export const VideoRenderer = ({ episode, onStatusChange }: VideoRendererProps) =
     }
   };
 
-  const viewVideo = async () => {
+  const downloadClips = async () => {
     if (!episode.video_url) return;
 
     try {
@@ -143,13 +143,33 @@ export const VideoRenderer = ({ episode, onStatusChange }: VideoRendererProps) =
         const text = await data.text();
         const metadata = JSON.parse(text);
         
-        toast({
-          title: 'Video Metadata',
-          description: `${metadata.scenes.length} scenes, ${metadata.totalDuration}s duration`,
-        });
+        if (metadata.clips) {
+          // Download each clip
+          for (const clip of metadata.clips) {
+            const link = document.createElement('a');
+            link.href = clip.downloadUrl;
+            link.download = `${episode.title}_clip_${clip.clipNumber}.png`;
+            link.target = '_blank';
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            
+            // Small delay between downloads
+            await new Promise(resolve => setTimeout(resolve, 500));
+          }
+
+          toast({
+            title: 'Downloading clips',
+            description: `Downloading ${metadata.clips.length} clips from ${episode.title}`,
+          });
+        }
       }
     } catch (error) {
-      // Error viewing video
+      toast({
+        title: 'Download failed',
+        description: 'Could not download video clips',
+        variant: 'destructive',
+      });
     }
   };
 
@@ -262,12 +282,11 @@ export const VideoRenderer = ({ episode, onStatusChange }: VideoRendererProps) =
 
           {episode.video_status === 'completed' && (
             <Button
-              onClick={viewVideo}
-              variant="outline"
-              className="w-full"
+              onClick={downloadClips}
+              className="w-full bg-gradient-to-r from-green-500 to-emerald-600"
             >
-              <Play className="h-4 w-4 mr-2" />
-              View Video Details
+              <Download className="h-4 w-4 mr-2" />
+              Download Clips
             </Button>
           )}
 

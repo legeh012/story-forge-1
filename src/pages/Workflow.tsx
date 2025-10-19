@@ -19,6 +19,7 @@ import { VideoRenderer } from "@/components/VideoRenderer";
 import { RealismAudit } from "@/components/RealismAudit";
 import { ActiveBotsPanel } from "@/components/ActiveBotsPanel";
 import { ScalabilityInfo } from "@/components/ScalabilityInfo";
+import { PromptGenerator } from "@/components/PromptGenerator";
 import { sayWalahiCharacters } from "@/data/sayWalahiCharacters";
 
 interface Project {
@@ -801,6 +802,12 @@ const Workflow = () => {
             <TabsContent value="episodes" className="space-y-6">
               {currentProject ? (
                 <>
+                  {/* AI Prompt Generator */}
+                  <PromptGenerator 
+                    projectId={selectedProject!}
+                    onEpisodeGenerated={() => fetchProjectDetails(selectedProject!)}
+                  />
+
                   {/* Realism Audit */}
                   <RealismAudit
                     totalEpisodes={episodes.length}
