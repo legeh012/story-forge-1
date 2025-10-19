@@ -39,8 +39,8 @@ verify_jwt = true
 [functions.production-team]
 verify_jwt = true
 
-[functions.scene-orchestration]
+[functions.ai-engineer]
 verify_jwt = true
 
-[functions.ai-engineer]
+[functions.ai-copilot]
 verify_jwt = true
