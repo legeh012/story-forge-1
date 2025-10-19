@@ -17,6 +17,7 @@ import MediaLibrary from "./pages/MediaLibrary";
 import Analytics from "./pages/Analytics";
 import SystemMonitor from "./pages/SystemMonitor";
 import ViralBots from "./pages/ViralBots";
+import Install from "./pages/Install";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -35,6 +36,7 @@ const App = () => (
         <Routes>
           <Route path="/" element={<Index />} />
           <Route path="/auth" element={<Auth />} />
+          <Route path="/install" element={<Install />} />
           <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
           <Route path="/characters" element={<ProtectedRoute><Characters /></ProtectedRoute>} />
           <Route path="/episodes" element={<ProtectedRoute><Episodes /></ProtectedRoute>} />
