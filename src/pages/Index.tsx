@@ -1,11 +1,71 @@
 import Navigation from "@/components/Navigation";
 import SEOHead from "@/components/SEOHead";
 import { Button } from "@/components/ui/button";
-import { Card } from "@/components/ui/card";
-import { ArrowRight, Sparkles, Users, BookOpen, Zap, Globe, Palette } from "lucide-react";
-import { Link } from "react-router-dom";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { ArrowRight, Sparkles, Users, BookOpen, Zap, Globe, Palette, Clapperboard, Play } from "lucide-react";
+import { Link, useNavigate } from "react-router-dom";
+import { useState, useEffect } from "react";
+import { supabase } from "@/integrations/supabase/client";
+import { useToast } from "@/hooks/use-toast";
 
 const Index = () => {
+  const navigate = useNavigate();
+  const { toast } = useToast();
+  const [projects, setProjects] = useState<any[]>([]);
+  const [episodes, setEpisodes] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+
+  useEffect(() => {
+    checkAuth();
+  }, []);
+
+  const checkAuth = async () => {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      setIsAuthenticated(!!user);
+      if (user) {
+        await fetchData();
+      }
+    } catch (error) {
+      console.error('Auth check error:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const fetchData = async () => {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+
+      const [projectsRes, episodesRes] = await Promise.all([
+        supabase
+          .from('projects')
+          .select('*')
+          .eq('user_id', user.id)
+          .order('created_at', { ascending: false })
+          .limit(3),
+        supabase
+          .from('episodes')
+          .select('*, projects!inner(title)')
+          .eq('projects.user_id', user.id)
+          .order('created_at', { ascending: false })
+          .limit(6)
+      ]);
+
+      setProjects(projectsRes.data || []);
+      setEpisodes(episodesRes.data || []);
+    } catch (error: any) {
+      toast({
+        title: "Error loading data",
+        description: error.message,
+        variant: "destructive"
+      });
+    }
+  };
+
   return (
     <div className="min-h-screen bg-background">
       <SEOHead 
@@ -126,6 +186,114 @@ const Index = () => {
         </div>
       </section>
 
+      {/* Recent Projects & Episodes Section */}
+      {isAuthenticated && !loading && (projects.length > 0 || episodes.length > 0) && (
+        <section className="py-20 container mx-auto px-4 bg-muted/30">
+          <div className="max-w-6xl mx-auto">
+            {/* Recent Projects */}
+            {projects.length > 0 && (
+              <div className="mb-12">
+                <div className="flex items-center justify-between mb-6">
+                  <h2 className="text-3xl font-bold">Your Recent Projects</h2>
+                  <Link to="/workflow">
+                    <Button variant="outline">
+                      View All
+                      <ArrowRight className="ml-2 h-4 w-4" />
+                    </Button>
+                  </Link>
+                </div>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                  {projects.map((project) => (
+                    <Card 
+                      key={project.id}
+                      className="cursor-pointer hover:border-primary/50 transition-all"
+                      onClick={() => navigate('/workflow')}
+                    >
+                      <CardHeader>
+                        <div className="flex items-start justify-between">
+                          <CardTitle className="text-lg">{project.title}</CardTitle>
+                          <Badge variant={project.status === 'published' ? 'default' : 'secondary'}>
+                            {project.status}
+                          </Badge>
+                        </div>
+                        <CardDescription className="line-clamp-2">
+                          {project.description}
+                        </CardDescription>
+                      </CardHeader>
+                      <CardContent>
+                        <div className="flex flex-wrap gap-2">
+                          <Badge variant="outline">{project.genre}</Badge>
+                          <Badge variant="outline">{project.mood}</Badge>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Recent Episodes */}
+            {episodes.length > 0 && (
+              <div>
+                <div className="flex items-center justify-between mb-6">
+                  <h2 className="text-3xl font-bold">Latest Episodes</h2>
+                  <Link to="/workflow?tab=episodes">
+                    <Button variant="outline">
+                      View All
+                      <ArrowRight className="ml-2 h-4 w-4" />
+                    </Button>
+                  </Link>
+                </div>
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                  {episodes.map((episode) => (
+                    <Card 
+                      key={episode.id}
+                      className="cursor-pointer hover:border-primary/50 transition-all"
+                      onClick={() => navigate('/workflow?tab=episodes')}
+                    >
+                      <CardHeader>
+                        <div className="flex items-start justify-between">
+                          <div className="flex-1">
+                            <div className="flex items-center gap-2 mb-2">
+                              <Clapperboard className="h-4 w-4 text-muted-foreground" />
+                              <span className="text-sm text-muted-foreground">
+                                {(episode as any).projects?.title}
+                              </span>
+                            </div>
+                            <CardTitle className="text-lg">{episode.title}</CardTitle>
+                          </div>
+                          <Badge variant={episode.video_status === 'completed' ? 'default' : 'secondary'}>
+                            {episode.video_status || 'draft'}
+                          </Badge>
+                        </div>
+                        <CardDescription className="line-clamp-2">
+                          Episode {episode.episode_number} • Season {episode.season}
+                        </CardDescription>
+                      </CardHeader>
+                      {episode.video_url && (
+                        <CardContent>
+                          <Button 
+                            size="sm" 
+                            className="w-full"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              window.open(episode.video_url, '_blank');
+                            }}
+                          >
+                            <Play className="mr-2 h-4 w-4" />
+                            Watch Episode
+                          </Button>
+                        </CardContent>
+                      )}
+                    </Card>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
+        </section>
+      )}
+
       {/* CTA Section */}
       <section className="py-20 container mx-auto px-4">
         <Card className="relative overflow-hidden p-12 bg-gradient-to-br from-primary/20 to-accent/20 border-primary/30">
@@ -137,9 +305,9 @@ const Index = () => {
             <p className="text-lg text-foreground/80 mb-8">
               Join thousands of creators building the next generation of interactive experiences.
             </p>
-            <Link to="/create">
+            <Link to={isAuthenticated ? "/workflow" : "/auth"}>
               <Button size="lg" className="bg-gradient-to-r from-primary to-accent hover:opacity-90 transition-opacity text-lg px-8">
-                Start Creating Now
+                {isAuthenticated ? "Go to Workflow" : "Start Creating Now"}
                 <ArrowRight className="ml-2 h-5 w-5" />
               </Button>
             </Link>
