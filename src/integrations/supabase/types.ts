@@ -14,6 +14,112 @@ export type Database = {
   }
   public: {
     Tables: {
+      ab_tests: {
+        Row: {
+          activity_id: string | null
+          completed_at: string | null
+          id: string
+          metadata: Json | null
+          started_at: string | null
+          status: string | null
+          test_name: string
+          user_id: string
+          variant_a: Json
+          variant_a_performance: Json | null
+          variant_b: Json
+          variant_b_performance: Json | null
+          winner: string | null
+        }
+        Insert: {
+          activity_id?: string | null
+          completed_at?: string | null
+          id?: string
+          metadata?: Json | null
+          started_at?: string | null
+          status?: string | null
+          test_name: string
+          user_id: string
+          variant_a: Json
+          variant_a_performance?: Json | null
+          variant_b: Json
+          variant_b_performance?: Json | null
+          winner?: string | null
+        }
+        Update: {
+          activity_id?: string | null
+          completed_at?: string | null
+          id?: string
+          metadata?: Json | null
+          started_at?: string | null
+          status?: string | null
+          test_name?: string
+          user_id?: string
+          variant_a?: Json
+          variant_a_performance?: Json | null
+          variant_b?: Json
+          variant_b_performance?: Json | null
+          winner?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ab_tests_activity_id_fkey"
+            columns: ["activity_id"]
+            isOneToOne: false
+            referencedRelation: "bot_activities"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      affiliate_links: {
+        Row: {
+          activity_id: string | null
+          affiliate_url: string
+          clicks: number | null
+          commission_rate: number | null
+          conversions: number | null
+          created_at: string | null
+          id: string
+          metadata: Json | null
+          product_name: string
+          revenue: number | null
+          user_id: string
+        }
+        Insert: {
+          activity_id?: string | null
+          affiliate_url: string
+          clicks?: number | null
+          commission_rate?: number | null
+          conversions?: number | null
+          created_at?: string | null
+          id?: string
+          metadata?: Json | null
+          product_name: string
+          revenue?: number | null
+          user_id: string
+        }
+        Update: {
+          activity_id?: string | null
+          affiliate_url?: string
+          clicks?: number | null
+          commission_rate?: number | null
+          conversions?: number | null
+          created_at?: string | null
+          id?: string
+          metadata?: Json | null
+          product_name?: string
+          revenue?: number | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "affiliate_links_activity_id_fkey"
+            columns: ["activity_id"]
+            isOneToOne: false
+            referencedRelation: "bot_activities"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       bot_activities: {
         Row: {
           bot_id: string | null
@@ -199,6 +305,50 @@ export type Database = {
           },
         ]
       }
+      engagement_actions: {
+        Row: {
+          action_type: string
+          activity_id: string | null
+          created_at: string | null
+          executed_at: string | null
+          id: string
+          platform: string
+          result: Json | null
+          target_url: string | null
+          user_id: string
+        }
+        Insert: {
+          action_type: string
+          activity_id?: string | null
+          created_at?: string | null
+          executed_at?: string | null
+          id?: string
+          platform: string
+          result?: Json | null
+          target_url?: string | null
+          user_id: string
+        }
+        Update: {
+          action_type?: string
+          activity_id?: string | null
+          created_at?: string | null
+          executed_at?: string | null
+          id?: string
+          platform?: string
+          result?: Json | null
+          target_url?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "engagement_actions_activity_id_fkey"
+            columns: ["activity_id"]
+            isOneToOne: false
+            referencedRelation: "bot_activities"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       episodes: {
         Row: {
           content: string | null
@@ -294,6 +444,94 @@ export type Database = {
         }
         Relationships: []
       }
+      generated_scripts: {
+        Row: {
+          activity_id: string | null
+          created_at: string | null
+          id: string
+          metadata: Json | null
+          script_content: string
+          script_type: string
+          used: boolean | null
+          user_id: string
+          viral_score: number | null
+        }
+        Insert: {
+          activity_id?: string | null
+          created_at?: string | null
+          id?: string
+          metadata?: Json | null
+          script_content: string
+          script_type: string
+          used?: boolean | null
+          user_id: string
+          viral_score?: number | null
+        }
+        Update: {
+          activity_id?: string | null
+          created_at?: string | null
+          id?: string
+          metadata?: Json | null
+          script_content?: string
+          script_type?: string
+          used?: boolean | null
+          user_id?: string
+          viral_score?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "generated_scripts_activity_id_fkey"
+            columns: ["activity_id"]
+            isOneToOne: false
+            referencedRelation: "bot_activities"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      generated_thumbnails: {
+        Row: {
+          activity_id: string | null
+          concept: string | null
+          created_at: string | null
+          id: string
+          metadata: Json | null
+          predicted_ctr: number | null
+          thumbnail_url: string
+          used: boolean | null
+          user_id: string
+        }
+        Insert: {
+          activity_id?: string | null
+          concept?: string | null
+          created_at?: string | null
+          id?: string
+          metadata?: Json | null
+          predicted_ctr?: number | null
+          thumbnail_url: string
+          used?: boolean | null
+          user_id: string
+        }
+        Update: {
+          activity_id?: string | null
+          concept?: string | null
+          created_at?: string | null
+          id?: string
+          metadata?: Json | null
+          predicted_ctr?: number | null
+          thumbnail_url?: string
+          used?: boolean | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "generated_thumbnails_activity_id_fkey"
+            columns: ["activity_id"]
+            isOneToOne: false
+            referencedRelation: "bot_activities"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       hook_optimizations: {
         Row: {
           activity_id: string | null
@@ -334,6 +572,50 @@ export type Database = {
         Relationships: [
           {
             foreignKeyName: "hook_optimizations_activity_id_fkey"
+            columns: ["activity_id"]
+            isOneToOne: false
+            referencedRelation: "bot_activities"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      lead_captures: {
+        Row: {
+          activity_id: string | null
+          captured_at: string | null
+          id: string
+          lead_email: string | null
+          lead_name: string | null
+          metadata: Json | null
+          source_content: string | null
+          source_platform: string | null
+          user_id: string
+        }
+        Insert: {
+          activity_id?: string | null
+          captured_at?: string | null
+          id?: string
+          lead_email?: string | null
+          lead_name?: string | null
+          metadata?: Json | null
+          source_content?: string | null
+          source_platform?: string | null
+          user_id: string
+        }
+        Update: {
+          activity_id?: string | null
+          captured_at?: string | null
+          id?: string
+          lead_email?: string | null
+          lead_name?: string | null
+          metadata?: Json | null
+          source_content?: string | null
+          source_platform?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "lead_captures_activity_id_fkey"
             columns: ["activity_id"]
             isOneToOne: false
             referencedRelation: "bot_activities"
@@ -385,6 +667,65 @@ export type Database = {
             columns: ["project_id"]
             isOneToOne: false
             referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      performance_metrics: {
+        Row: {
+          activity_id: string | null
+          content_id: string | null
+          conversions: number | null
+          ctr: number | null
+          engagement_rate: number | null
+          id: string
+          metadata: Json | null
+          platform: string
+          recorded_at: string | null
+          retention_rate: number | null
+          revenue: number | null
+          user_id: string
+          views: number | null
+          watch_time: number | null
+        }
+        Insert: {
+          activity_id?: string | null
+          content_id?: string | null
+          conversions?: number | null
+          ctr?: number | null
+          engagement_rate?: number | null
+          id?: string
+          metadata?: Json | null
+          platform: string
+          recorded_at?: string | null
+          retention_rate?: number | null
+          revenue?: number | null
+          user_id: string
+          views?: number | null
+          watch_time?: number | null
+        }
+        Update: {
+          activity_id?: string | null
+          content_id?: string | null
+          conversions?: number | null
+          ctr?: number | null
+          engagement_rate?: number | null
+          id?: string
+          metadata?: Json | null
+          platform?: string
+          recorded_at?: string | null
+          retention_rate?: number | null
+          revenue?: number | null
+          user_id?: string
+          views?: number | null
+          watch_time?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "performance_metrics_activity_id_fkey"
+            columns: ["activity_id"]
+            isOneToOne: false
+            referencedRelation: "bot_activities"
             referencedColumns: ["id"]
           },
         ]
@@ -454,6 +795,59 @@ export type Database = {
           user_id?: string
         }
         Relationships: []
+      }
+      scheduled_posts: {
+        Row: {
+          activity_id: string | null
+          content: string
+          created_at: string | null
+          id: string
+          media_urls: string[] | null
+          metadata: Json | null
+          platform: string
+          post_url: string | null
+          posted_at: string | null
+          scheduled_time: string
+          status: string | null
+          user_id: string
+        }
+        Insert: {
+          activity_id?: string | null
+          content: string
+          created_at?: string | null
+          id?: string
+          media_urls?: string[] | null
+          metadata?: Json | null
+          platform: string
+          post_url?: string | null
+          posted_at?: string | null
+          scheduled_time: string
+          status?: string | null
+          user_id: string
+        }
+        Update: {
+          activity_id?: string | null
+          content?: string
+          created_at?: string | null
+          id?: string
+          media_urls?: string[] | null
+          metadata?: Json | null
+          platform?: string
+          post_url?: string | null
+          posted_at?: string | null
+          scheduled_time?: string
+          status?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "scheduled_posts_activity_id_fkey"
+            columns: ["activity_id"]
+            isOneToOne: false
+            referencedRelation: "bot_activities"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       system_health: {
         Row: {
@@ -598,6 +992,25 @@ export type Database = {
         | "hook_optimization"
         | "remix"
         | "cultural_injection"
+        | "cross_platform_poster"
+        | "multi_channel_uploader"
+        | "engagement_amplifier"
+        | "live_view_booster"
+        | "affiliate_bot"
+        | "lead_capture"
+        | "sales_funnel"
+        | "digital_product"
+        | "script_generator"
+        | "thumbnail_designer"
+        | "video_assembly"
+        | "voiceover"
+        | "performance_tracker"
+        | "ab_testing"
+        | "roi_analyzer"
+        | "feedback_loop"
+        | "llm_reflection"
+        | "bot_orchestrator"
+        | "persona_bot"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -732,6 +1145,25 @@ export const Constants = {
         "hook_optimization",
         "remix",
         "cultural_injection",
+        "cross_platform_poster",
+        "multi_channel_uploader",
+        "engagement_amplifier",
+        "live_view_booster",
+        "affiliate_bot",
+        "lead_capture",
+        "sales_funnel",
+        "digital_product",
+        "script_generator",
+        "thumbnail_designer",
+        "video_assembly",
+        "voiceover",
+        "performance_tracker",
+        "ab_testing",
+        "roi_analyzer",
+        "feedback_loop",
+        "llm_reflection",
+        "bot_orchestrator",
+        "persona_bot",
       ],
     },
   },

@@ -14,3 +14,15 @@ verify_jwt = true
 
 [functions.cultural-injection-bot]
 verify_jwt = true
+
+[functions.script-generator-bot]
+verify_jwt = true
+
+[functions.performance-tracker-bot]
+verify_jwt = true
+
+[functions.cross-platform-poster]
+verify_jwt = true
+
+[functions.bot-orchestrator]
+verify_jwt = true
