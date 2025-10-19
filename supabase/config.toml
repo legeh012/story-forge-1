@@ -45,6 +45,9 @@ verify_jwt = true
 [functions.ai-character-designer]
 verify_jwt = true
 
+[functions.import-characters]
+verify_jwt = true
+
 [functions.ai-copilot]
 verify_jwt = true
 
