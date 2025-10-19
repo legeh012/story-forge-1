@@ -9,7 +9,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { 
   Plus, Play, Pause, Video, Users, FileText, TrendingUp, 
   Clapperboard, Sparkles, Clock, CheckCircle2, AlertCircle,
-  Upload, Settings, BarChart3, Loader2
+  Upload, Settings, BarChart3, Loader2, Download, Paperclip, X
 } from "lucide-react";
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
@@ -51,6 +51,18 @@ interface Character {
   background: string;
 }
 
+interface GenerationAttachment {
+  id: string;
+  file_name: string;
+  file_path: string;
+  file_size: number | null;
+  file_type: string | null;
+  description: string | null;
+  created_at: string;
+  project_id: string | null;
+  episode_id: string | null;
+}
+
 const Workflow = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
@@ -58,9 +70,11 @@ const Workflow = () => {
   const [projects, setProjects] = useState<Project[]>([]);
   const [episodes, setEpisodes] = useState<Episode[]>([]);
   const [characters, setCharacters] = useState<Character[]>([]);
+  const [attachments, setAttachments] = useState<GenerationAttachment[]>([]);
   const [loading, setLoading] = useState(true);
   const [authLoading, setAuthLoading] = useState(true);
   const [importing, setImporting] = useState(false);
+  const [uploading, setUploading] = useState(false);
   const [selectedProject, setSelectedProject] = useState<string | null>(null);
   
   // New project form state
@@ -131,13 +145,15 @@ const Workflow = () => {
 
   const fetchProjectDetails = async (projectId: string) => {
     try {
-      const [episodesRes, charactersRes] = await Promise.all([
+      const [episodesRes, charactersRes, attachmentsRes] = await Promise.all([
         supabase.from("episodes").select("*").eq("project_id", projectId).order("episode_number"),
-        supabase.from("characters").select("*").eq("project_id", projectId)
+        supabase.from("characters").select("*").eq("project_id", projectId),
+        supabase.from("generation_attachments").select("*").eq("project_id", projectId).order("created_at", { ascending: false })
       ]);
 
       setEpisodes(episodesRes.data || []);
       setCharacters(charactersRes.data || []);
+      setAttachments(attachmentsRes.data || []);
     } catch (error: any) {
       toast({
         title: "Error loading project details",
@@ -263,6 +279,129 @@ const Workflow = () => {
         variant: "destructive"
       });
     }
+  };
+
+  const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    if (!selectedProject || !event.target.files || event.target.files.length === 0) return;
+
+    setUploading(true);
+    const file = event.target.files[0];
+
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error("Not authenticated");
+
+      const fileExt = file.name.split('.').pop();
+      const fileName = `${user.id}/${selectedProject}/${Date.now()}.${fileExt}`;
+
+      const { error: uploadError } = await supabase.storage
+        .from('generation-attachments')
+        .upload(fileName, file);
+
+      if (uploadError) throw uploadError;
+
+      const { data: { publicUrl } } = supabase.storage
+        .from('generation-attachments')
+        .getPublicUrl(fileName);
+
+      const { error: dbError } = await supabase
+        .from('generation_attachments')
+        .insert([{
+          user_id: user.id,
+          project_id: selectedProject,
+          file_name: file.name,
+          file_path: fileName,
+          file_size: file.size,
+          file_type: file.type
+        }]);
+
+      if (dbError) throw dbError;
+
+      toast({
+        title: "File uploaded",
+        description: `${file.name} has been uploaded successfully`
+      });
+
+      await fetchProjectDetails(selectedProject);
+    } catch (error: any) {
+      toast({
+        title: "Upload failed",
+        description: error.message,
+        variant: "destructive"
+      });
+    } finally {
+      setUploading(false);
+      if (event.target) event.target.value = '';
+    }
+  };
+
+  const handleDownload = async (attachment: GenerationAttachment) => {
+    try {
+      const { data, error } = await supabase.storage
+        .from('generation-attachments')
+        .download(attachment.file_path);
+
+      if (error) throw error;
+
+      const url = URL.createObjectURL(data);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = attachment.file_name;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+
+      toast({
+        title: "Download started",
+        description: `Downloading ${attachment.file_name}`
+      });
+    } catch (error: any) {
+      toast({
+        title: "Download failed",
+        description: error.message,
+        variant: "destructive"
+      });
+    }
+  };
+
+  const handleDeleteAttachment = async (attachmentId: string, filePath: string) => {
+    try {
+      const { error: storageError } = await supabase.storage
+        .from('generation-attachments')
+        .remove([filePath]);
+
+      if (storageError) throw storageError;
+
+      const { error: dbError } = await supabase
+        .from('generation_attachments')
+        .delete()
+        .eq('id', attachmentId);
+
+      if (dbError) throw dbError;
+
+      toast({
+        title: "File deleted",
+        description: "Attachment removed successfully"
+      });
+
+      if (selectedProject) {
+        await fetchProjectDetails(selectedProject);
+      }
+    } catch (error: any) {
+      toast({
+        title: "Delete failed",
+        description: error.message,
+        variant: "destructive"
+      });
+    }
+  };
+
+  const formatFileSize = (bytes: number | null) => {
+    if (!bytes) return 'Unknown size';
+    const kb = bytes / 1024;
+    if (kb < 1024) return `${kb.toFixed(1)} KB`;
+    return `${(kb / 1024).toFixed(1)} MB`;
   };
 
   const currentProject = projects.find(p => p.id === selectedProject);
@@ -442,65 +581,153 @@ const Workflow = () => {
             {/* Cast Tab */}
             <TabsContent value="cast" className="space-y-6">
               {currentProject ? (
-                <Card>
-                  <CardHeader>
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <CardTitle>Cast for {currentProject.title}</CardTitle>
-                        <CardDescription>
-                          {characters.length} character{characters.length !== 1 ? 's' : ''} defined
-                        </CardDescription>
-                      </div>
-                      <Button
-                        onClick={handleImportTemplate}
-                        disabled={importing}
-                        variant="outline"
-                        className="border-accent/30 hover:bg-accent/10"
-                      >
-                        {importing ? (
-                          <>
-                            <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                            Importing...
-                          </>
-                        ) : (
-                          <>
-                            <Upload className="h-4 w-4 mr-2" />
-                            Load Say Walahi Cast
-                          </>
-                        )}
-                      </Button>
-                    </div>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      {characters.map((character) => (
-                        <div
-                          key={character.id}
-                          className="p-4 border rounded-lg hover:shadow-md transition-shadow"
+                <>
+                  <Card>
+                    <CardHeader>
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <CardTitle>Cast for {currentProject.title}</CardTitle>
+                          <CardDescription>
+                            {characters.length} character{characters.length !== 1 ? 's' : ''} defined
+                          </CardDescription>
+                        </div>
+                        <Button
+                          onClick={handleImportTemplate}
+                          disabled={importing}
+                          variant="outline"
+                          className="border-accent/30 hover:bg-accent/10"
                         >
-                          <div className="flex items-start gap-3">
-                            <div className="p-2 rounded-full bg-accent/10">
-                              <Users className="h-5 w-5 text-accent" />
-                            </div>
-                            <div className="flex-1">
-                              <h4 className="font-semibold">{character.name}</h4>
-                              <p className="text-sm text-muted-foreground mb-2">{character.role}</p>
-                              <p className="text-xs text-foreground/60 line-clamp-2">
-                                {character.personality}
-                              </p>
+                          {importing ? (
+                            <>
+                              <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                              Importing...
+                            </>
+                          ) : (
+                            <>
+                              <Upload className="h-4 w-4 mr-2" />
+                              Load Say Walahi Cast
+                            </>
+                          )}
+                        </Button>
+                      </div>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        {characters.map((character) => (
+                          <div
+                            key={character.id}
+                            className="p-4 border rounded-lg hover:shadow-md transition-shadow"
+                          >
+                            <div className="flex items-start gap-3">
+                              <div className="p-2 rounded-full bg-accent/10">
+                                <Users className="h-5 w-5 text-accent" />
+                              </div>
+                              <div className="flex-1">
+                                <h4 className="font-semibold">{character.name}</h4>
+                                <p className="text-sm text-muted-foreground mb-2">{character.role}</p>
+                                <p className="text-xs text-foreground/60 line-clamp-2">
+                                  {character.personality}
+                                </p>
+                              </div>
                             </div>
                           </div>
+                        ))}
+                        {characters.length === 0 && (
+                          <div className="col-span-2 text-center py-8 text-muted-foreground">
+                            <Users className="h-12 w-12 mx-auto mb-2 opacity-50" />
+                            <p>No cast members yet. Add characters to your project!</p>
+                          </div>
+                        )}
+                      </div>
+                    </CardContent>
+                  </Card>
+
+                  {/* Generation Attachments */}
+                  <Card>
+                    <CardHeader>
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <CardTitle>Generation Attachments</CardTitle>
+                          <CardDescription>
+                            Upload and manage files for your generations ({attachments.length} file{attachments.length !== 1 ? 's' : ''})
+                          </CardDescription>
                         </div>
-                      ))}
-                      {characters.length === 0 && (
-                        <div className="col-span-2 text-center py-8 text-muted-foreground">
-                          <Users className="h-12 w-12 mx-auto mb-2 opacity-50" />
-                          <p>No cast members yet. Add characters to your project!</p>
+                        <div>
+                          <Input
+                            id="file-upload"
+                            type="file"
+                            className="hidden"
+                            onChange={handleFileUpload}
+                            disabled={uploading}
+                          />
+                          <Button
+                            onClick={() => document.getElementById('file-upload')?.click()}
+                            disabled={uploading}
+                            variant="outline"
+                          >
+                            {uploading ? (
+                              <>
+                                <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                                Uploading...
+                              </>
+                            ) : (
+                              <>
+                                <Paperclip className="h-4 w-4 mr-2" />
+                                Upload File
+                              </>
+                            )}
+                          </Button>
                         </div>
-                      )}
-                    </div>
-                  </CardContent>
-                </Card>
+                      </div>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="space-y-3">
+                        {attachments.map((attachment) => (
+                          <div
+                            key={attachment.id}
+                            className="flex items-center justify-between p-3 border rounded-lg hover:bg-accent/5 transition-colors"
+                          >
+                            <div className="flex items-center gap-3 flex-1 min-w-0">
+                              <div className="p-2 rounded-lg bg-primary/10">
+                                <FileText className="h-4 w-4 text-primary" />
+                              </div>
+                              <div className="flex-1 min-w-0">
+                                <p className="font-medium truncate">{attachment.file_name}</p>
+                                <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                                  <span>{formatFileSize(attachment.file_size)}</span>
+                                  <span>•</span>
+                                  <span>{new Date(attachment.created_at).toLocaleDateString()}</span>
+                                </div>
+                              </div>
+                            </div>
+                            <div className="flex items-center gap-2">
+                              <Button
+                                size="sm"
+                                variant="ghost"
+                                onClick={() => handleDownload(attachment)}
+                              >
+                                <Download className="h-4 w-4" />
+                              </Button>
+                              <Button
+                                size="sm"
+                                variant="ghost"
+                                onClick={() => handleDeleteAttachment(attachment.id, attachment.file_path)}
+                              >
+                                <X className="h-4 w-4" />
+                              </Button>
+                            </div>
+                          </div>
+                        ))}
+                        {attachments.length === 0 && (
+                          <div className="text-center py-8 text-muted-foreground">
+                            <Paperclip className="h-12 w-12 mx-auto mb-2 opacity-50" />
+                            <p>No attachments yet. Upload files to get started!</p>
+                          </div>
+                        )}
+                      </div>
+                    </CardContent>
+                  </Card>
+                </>
               ) : (
                 <Card>
                   <CardContent className="py-12 text-center">
