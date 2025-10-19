@@ -15,6 +15,7 @@ import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import { VideoRenderer } from "@/components/VideoRenderer";
 
 interface Project {
   id: string;
@@ -358,47 +359,23 @@ const Workflow = () => {
             <TabsContent value="episodes" className="space-y-6">
               {currentProject ? (
                 <>
-                  <Card>
-                    <CardHeader>
-                      <CardTitle>Episodes for {currentProject.title}</CardTitle>
-                      <CardDescription>
-                        {episodes.length} episode{episodes.length !== 1 ? 's' : ''} created
-                      </CardDescription>
-                    </CardHeader>
-                    <CardContent>
-                      <div className="space-y-3">
-                        {episodes.map((episode) => (
-                          <div
-                            key={episode.id}
-                            className="flex items-center justify-between p-4 border rounded-lg hover:bg-accent/5"
-                          >
-                            <div className="flex items-center gap-4">
-                              <div className="p-2 rounded-lg bg-primary/10">
-                                <Video className="h-5 w-5 text-primary" />
-                              </div>
-                              <div>
-                                <h4 className="font-semibold">
-                                  S{episode.season}E{episode.episode_number}: {episode.title}
-                                </h4>
-                                <p className="text-sm text-muted-foreground line-clamp-1">
-                                  {episode.synopsis}
-                                </p>
-                              </div>
-                            </div>
-                            <Badge variant={episode.status === 'published' ? 'default' : 'secondary'}>
-                              {episode.status}
-                            </Badge>
-                          </div>
-                        ))}
-                        {episodes.length === 0 && (
-                          <div className="text-center py-8 text-muted-foreground">
-                            <Clapperboard className="h-12 w-12 mx-auto mb-2 opacity-50" />
-                            <p>No episodes yet. Use the Script Generator bot to create content!</p>
-                          </div>
-                        )}
-                      </div>
-                    </CardContent>
-                  </Card>
+                  <div className="grid grid-cols-1 gap-4">
+                    {episodes.map((episode) => (
+                      <VideoRenderer
+                        key={episode.id}
+                        episode={episode as any}
+                        onStatusChange={() => fetchProjectDetails(selectedProject!)}
+                      />
+                    ))}
+                    {episodes.length === 0 && (
+                      <Card>
+                        <CardContent className="py-12 text-center">
+                          <Clapperboard className="h-12 w-12 mx-auto mb-4 opacity-50 text-muted-foreground" />
+                          <p className="text-muted-foreground">No episodes yet. Use the AI copilot to create episodes!</p>
+                        </CardContent>
+                      </Card>
+                    )}
+                  </div>
                 </>
               ) : (
                 <Card>
