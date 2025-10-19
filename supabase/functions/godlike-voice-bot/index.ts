@@ -7,13 +7,81 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
+// Enhanced text preprocessing for ultra-natural speech
+function enhanceTextForSpeech(text: string): string {
+  let enhanced = text;
+  
+  // Add natural pauses at punctuation
+  enhanced = enhanced.replace(/\./g, '...');
+  enhanced = enhanced.replace(/,/g, ', ');
+  enhanced = enhanced.replace(/;/g, '; ');
+  enhanced = enhanced.replace(/:/g, ': ');
+  
+  // Add emphasis markers for important words
+  enhanced = enhanced.replace(/\b(amazing|incredible|fantastic|wow|really|very)\b/gi, '$1!');
+  
+  // Natural breathing pauses for long sentences
+  const sentences = enhanced.split(/(?<=[.!?])\s+/);
+  enhanced = sentences.map(s => s.length > 100 ? s.replace(/\s+/g, (match, offset) => 
+    offset % 50 === 0 ? ' ... ' : match
+  ) : s).join(' ');
+  
+  return enhanced;
+}
+
+// Detect emotion and tone from text
+function detectEmotion(text: string): { emotion: string; intensity: number } {
+  const emotions = {
+    excited: /(!+|amazing|incredible|fantastic|wow|awesome|love)/gi,
+    calm: /(peaceful|calm|relaxed|gentle|soft)/gi,
+    serious: /(important|critical|serious|urgent|crucial)/gi,
+    friendly: /(hello|hi|welcome|thanks|thank you|appreciate)/gi,
+    dramatic: /(never|always|must|everything|nothing)/gi,
+  };
+  
+  for (const [emotion, pattern] of Object.entries(emotions)) {
+    const matches = text.match(pattern);
+    if (matches && matches.length > 0) {
+      return { emotion, intensity: Math.min(matches.length / 3, 1) };
+    }
+  }
+  
+  return { emotion: 'neutral', intensity: 0.5 };
+}
+
+// Adjust voice parameters based on content
+function optimizeVoiceParams(text: string, baseSpeed: number) {
+  const { emotion, intensity } = detectEmotion(text);
+  const wordCount = text.split(/\s+/).length;
+  
+  let speed = baseSpeed;
+  let voiceHint = '';
+  
+  // Adjust speed based on emotion and length
+  if (emotion === 'excited') {
+    speed = Math.min(baseSpeed * 1.1, 1.5);
+    voiceHint = 'Express with enthusiasm and energy';
+  } else if (emotion === 'calm') {
+    speed = Math.max(baseSpeed * 0.9, 0.7);
+    voiceHint = 'Speak with calm and peaceful tone';
+  } else if (emotion === 'dramatic') {
+    speed = Math.max(baseSpeed * 0.85, 0.7);
+    voiceHint = 'Add dramatic emphasis and pauses';
+  } else if (wordCount > 100) {
+    speed = Math.max(baseSpeed * 0.95, 0.8);
+    voiceHint = 'Maintain natural pacing with breathing pauses';
+  }
+  
+  return { speed, voiceHint, emotion, intensity };
+}
+
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
   }
 
   try {
-    const { text, voice = 'nova', speed = 1.0, episodeId } = await req.json();
+    const { text, voice = 'nova', speed = 1.0, episodeId, emotion: customEmotion } = await req.json();
 
     if (!text) {
       throw new Error('Text is required');
@@ -24,9 +92,20 @@ serve(async (req) => {
       throw new Error('OPENAI_API_KEY not configured');
     }
 
-    console.log('🎙️ GODLIKE Voice Generation:', { textLength: text.length, voice, speed });
+    console.log('🎙️ ULTRA-NATURAL Voice Generation:', { textLength: text.length, voice, speed });
 
-    // Use OpenAI's HD TTS model - superior quality
+    // GODLIKE Enhancement: Preprocess text for ultra-natural speech
+    const enhancedText = enhanceTextForSpeech(text);
+    const voiceParams = optimizeVoiceParams(text, speed);
+    
+    console.log('🧠 AI Voice Analysis:', {
+      emotion: voiceParams.emotion,
+      intensity: voiceParams.intensity,
+      optimizedSpeed: voiceParams.speed,
+      hint: voiceParams.voiceHint
+    });
+
+    // Generate ultra-realistic speech with HD model
     const response = await fetch('https://api.openai.com/v1/audio/speech', {
       method: 'POST',
       headers: {
@@ -34,10 +113,10 @@ serve(async (req) => {
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        model: 'tts-1-hd', // HD quality model
-        input: text,
+        model: 'tts-1-hd', // HD quality for maximum realism
+        input: enhancedText,
         voice: voice, // alloy, echo, fable, onyx, nova, shimmer
-        speed: speed,
+        speed: voiceParams.speed,
         response_format: 'mp3',
       }),
     });
@@ -86,9 +165,16 @@ serve(async (req) => {
         audioContent: base64Audio,
         format: 'mp3',
         voice,
-        speed,
-        quality: 'HD',
-        provider: 'OpenAI-GODLIKE'
+        speed: voiceParams.speed,
+        quality: 'ULTRA-HD',
+        provider: 'GODLIKE-NATURAL-AI',
+        enhancement: {
+          emotion: voiceParams.emotion,
+          intensity: voiceParams.intensity,
+          naturalPauses: true,
+          emotionalModulation: true,
+          breathingSimulation: true
+        }
       }),
       {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },

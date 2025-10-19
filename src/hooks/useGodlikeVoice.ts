@@ -34,8 +34,8 @@ export const useGodlikeVoice = () => {
       setAudioUrl(url);
 
       toast({
-        title: "⚡ GODLIKE Voice Generated",
-        description: `${data.quality} quality audio with ${voice} voice`,
+        title: "⚡ ULTRA-NATURAL Voice Generated",
+        description: `${data.quality} quality with ${data.enhancement?.emotion || 'natural'} emotion • ${voice} voice`,
       });
 
       return { audioUrl: url, ...data };
