@@ -1111,8 +1111,7 @@ const Workflow = () => {
                             id="file-upload"
                             type="file"
                             multiple
-                            accept="*/*"
-                            capture="environment"
+                            accept="image/*,video/*,application/pdf,.doc,.docx,.txt"
                             className="hidden"
                             onChange={handleFileUpload}
                             disabled={uploading}
