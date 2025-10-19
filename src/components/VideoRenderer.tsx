@@ -163,17 +163,25 @@ export const VideoRenderer = ({ episode, onStatusChange }: VideoRendererProps) =
         
         console.log('Clip metadata:', metadata);
         
-        if (metadata.clips && metadata.clips.length > 0) {
+        // Handle both 'clips' and 'scenes' formats
+        const items = metadata.clips || metadata.scenes || [];
+        
+        if (items.length > 0) {
           toast({
             title: 'Starting download',
-            description: `Downloading ${metadata.clips.length} clips from ${episode.title}`,
+            description: `Downloading ${items.length} frames from ${episode.title}`,
           });
 
-          // Download each clip
-          for (const clip of metadata.clips) {
+          // Download each frame
+          for (let i = 0; i < items.length; i++) {
+            const item = items[i];
+            // Handle both clip and scene formats
+            const frameUrl = item.downloadUrl || item.frameUrl || 
+                           `https://akmeovotnnqbxotlerie.supabase.co/storage/v1/object/public/episode-videos/${user.id}/${episode.id}/frame_${String(item.frameIndex || i).padStart(4, '0')}.png`;
+            
             const link = document.createElement('a');
-            link.href = clip.downloadUrl;
-            link.download = `${episode.title.replace(/[^a-z0-9]/gi, '_')}_clip_${clip.clipNumber}.png`;
+            link.href = frameUrl;
+            link.download = `${episode.title.replace(/[^a-z0-9]/gi, '_')}_frame_${String(i + 1).padStart(2, '0')}.png`;
             link.target = '_blank';
             document.body.appendChild(link);
             link.click();
@@ -185,10 +193,10 @@ export const VideoRenderer = ({ episode, onStatusChange }: VideoRendererProps) =
 
           toast({
             title: 'Download complete',
-            description: `${metadata.clips.length} clips downloaded successfully`,
+            description: `${items.length} frames downloaded successfully`,
           });
         } else {
-          throw new Error('No clips found in metadata');
+          throw new Error('No frames found in metadata');
         }
       } else {
         throw new Error('Failed to retrieve metadata');
