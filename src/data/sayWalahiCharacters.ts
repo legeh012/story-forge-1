@@ -1,125 +1,127 @@
 export const sayWalahiCharacters = [
   {
-    name: "Zahra",
-    role: "Boutique Queen",
-    traits: ["strategic", "composed", "glam", "stylish"],
-    drama_hooks: "Leaks WhatsApp screenshots, feuds with Ifrah, exposes Abdi at reunion",
+    name: "Luul",
+    role: "Asset Queen & Group Home Architect",
+    traits: ["entrepreneurial", "meticulous", "corporate", "audit-minded"],
+    drama_hooks: "Runs group homes like Fortune 500s, audits emotions like tax returns, has receipts for everything since 2016",
     appearance: {
       skin_tone: "warm caramel",
-      face: "almond eyes, matte nude lips",
-      hair: "side-parted under silk hijab",
-      style: "tailored abaya with gold embroidery",
-      aura: "regal, composed"
+      face: "sharp features, calculated gaze",
+      hair: "sleek bun under tailored hijab",
+      style: "business blazers, luxury watches, crisp lines",
+      aura: "entrepreneurial auntie meets corporate disruptor"
     },
     relationships: {
-      rivalries: ["Ifrah"],
-      alliances: ["Ayaan"],
-      romantic: ["Abdi"]
+      alliances: ["Lucky", "Hani"],
+      rivalries: []
     },
     status: "active"
   },
   {
-    name: "Ifrah",
-    role: "Designer Rival",
-    traits: ["bold", "loyal", "confrontational"],
-    drama_hooks: "Accused of stealing designs, defends Amal, clashes with Zahra",
+    name: "Lucky",
+    role: "Legal Strategist & Cinematic Architect",
+    traits: ["strategic", "cinematic", "commanding", "visionary"],
+    drama_hooks: "Drafts cease-and-desists in cursive, storyboards depositions like Netflix pilots, builds empires not just cases",
     appearance: {
       skin_tone: "rich espresso",
-      face: "bold brows, glossy lips, sharp contour",
-      hair: "high bun under printed headwrap",
-      style: "statement prints, chunky gold accessories",
-      aura: "fierce, unapologetic"
+      face: "commanding presence, dramatic expressions",
+      hair: "flowing waves under designer headwrap",
+      style: "power suits, statement jewelry, courtroom couture",
+      aura: "lawyer meets lore creator"
     },
     relationships: {
-      rivalries: ["Zahra"],
-      alliances: ["Amal"]
+      alliances: ["Luul", "Hani"],
+      rivalries: []
+    },
+    status: "active"
+  },
+  {
+    name: "Zahra",
+    role: "Clinical Realist & Chart Disruptor",
+    traits: ["analytical", "therapeutic", "weaponized wellness", "diagnostic"],
+    drama_hooks: "Diagnoses vibes mid-brunch, reads DSMs like tarot cards, side-eyes are therapeutic, quotes come with ICD codes",
+    appearance: {
+      skin_tone: "honey beige",
+      face: "observant eyes, knowing smile",
+      hair: "professional updo under neutral hijab",
+      style: "laminated charts, clinical chic, therapeutic aesthetic",
+      aura: "the therapist your therapist fears"
+    },
+    relationships: {
+      rivalries: ["Luul"],
+      alliances: ["Hani"]
     },
     status: "active"
   },
   {
     name: "Amal",
-    role: "Confessional Queen",
-    traits: ["stylish", "shady", "detached"],
-    drama_hooks: "Narrates drama, stirs tension with Zahra, delivers viral confessionals",
+    role: "Cultural Maven & Trauma Flipper",
+    traits: ["viral", "entrepreneurial", "aesthetic", "emotional alchemist"],
+    drama_hooks: "Monetizes meltdowns, pitches trauma docuseries while lighting incense, turns pain into platform",
     appearance: {
-      skin_tone: "honey beige",
-      face: "flawless glam, highlighter, fluttery lashes",
-      hair: "soft waves under pastel chiffon hijab",
-      style: "ring light glam, silk blouses, designer scarves",
-      aura: "detached elegance"
+      skin_tone: "warm bronze",
+      face: "ring light ready, perfect angles",
+      hair: "artistic styling under pastel chiffon hijab",
+      style: "henna, hashtags, healing aesthetic, ring light glam",
+      aura: "viral visionary of emotional alchemy"
     },
     relationships: {
-      alliances: ["Ifrah"]
-    },
-    status: "active"
-  },
-  {
-    name: "Nasra",
-    role: "Chaos Agent",
-    traits: ["calculated", "dramatic", "fearless"],
-    drama_hooks: "Crashes events, exposes secrets, calls out Abdi",
-    appearance: {
-      skin_tone: "deep mahogany",
-      face: "dark lipstick, piercing gaze",
-      hair: "slicked back under hooded jilbab",
-      style: "monochrome layers, oversized sunglasses",
-      aura: "mysterious and disruptive"
-    },
-    relationships: {
-      rivalries: ["Abdi", "Zahra", "Amal"]
-    },
-    status: "active"
-  },
-  {
-    name: "Hani",
-    role: "Protective Mom",
-    traits: ["empathetic", "reactive", "loyal"],
-    drama_hooks: "Breaks down over gang rumors, clashes with Amal",
-    appearance: {
-      skin_tone: "soft cinnamon",
-      face: "gentle features, expressive eyes",
-      hair: "loose curls under neutral hijab",
-      style: "earth tones, flowy dresses",
-      aura: "vulnerable but strong"
-    },
-    relationships: {
-      rivalries: ["Amal"]
+      alliances: ["Ayaan"],
+      rivalries: []
     },
     status: "active"
   },
   {
     name: "Ayaan",
-    role: "OG Cast Member",
-    traits: ["assertive", "nostalgic", "territorial"],
-    drama_hooks: "Feuds with Ifrah, sides with Zahra, questions Amal's loyalty",
+    role: "Activist & Asset Reclaimer",
+    traits: ["bold", "redistributive", "choreographed", "revolutionary"],
+    drama_hooks: "Reclaims couches and clout, walkouts with choreography, petitions trend before ink dries",
     appearance: {
-      skin_tone: "bronze",
-      face: "confident smile, bold lip",
-      hair: "long and sleek under designer hijab",
-      style: "heels, statement earrings, tailored blazers",
-      aura: "confident and territorial"
+      skin_tone: "deep mahogany",
+      face: "fierce determination, protest-ready",
+      hair: "natural curls under bold printed wrap",
+      style: "heels with purpose, protest chic, statement accessories",
+      aura: "redistribution in heels"
     },
     relationships: {
-      rivalries: ["Ifrah"],
-      alliances: ["Zahra"]
+      alliances: ["Amal"],
+      rivalries: []
     },
     status: "active"
   },
   {
-    name: "Abdi",
-    role: "Husband",
-    traits: ["flirty", "evasive", "charming"],
-    drama_hooks: "Flirts with Zahra, exposed by Nasra and Ifrah, fumbles at reunion",
+    name: "Hani",
+    role: "Legal Advocate & Filing Queen",
+    traits: ["organized", "litigious", "methodical", "blazer game strong"],
+    drama_hooks: "Files drama like litigation, folders have tabs and timestamps, confessional footage is admissible in court",
     appearance: {
-      skin_tone: "walnut brown",
-      face: "clean fade, trimmed beard, smug smirk",
-      hair: "short and sharp",
-      style: "tailored suits, Rolex flex",
-      aura: "smooth talker"
+      skin_tone: "soft cinnamon",
+      face: "professional demeanor, strong tone",
+      hair: "neat styling under neutral hijab",
+      style: "power blazers, organized aesthetic, filing folders as accessories",
+      aura: "courtroom ready at all times"
     },
     relationships: {
-      romantic: ["Zahra"],
-      rivalries: ["Nasra"]
+      alliances: ["Lucky", "Luul", "Zahra"],
+      rivalries: []
+    },
+    status: "active"
+  },
+  {
+    name: "Ifrah",
+    role: "Strategic Analyst & Henna Verifier",
+    traits: ["analytical", "silent processor", "detail-oriented", "receipt collector"],
+    drama_hooks: "Verifies henna, timestamps, alibis, cross-references vibes with Google Maps, spreadsheet sleuth",
+    appearance: {
+      skin_tone: "rich espresso",
+      face: "observant, calculating gaze",
+      hair: "sleek styling under minimalist hijab",
+      style: "spreadsheet chic, analytical aesthetic, verification tools",
+      aura: "the analyst behind the chaos"
+    },
+    relationships: {
+      alliances: [],
+      rivalries: []
     },
     status: "active"
   }
