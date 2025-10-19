@@ -8,10 +8,14 @@ import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { BookOpen, Sparkles, Wand2 } from "lucide-react";
 import { supabase } from '@/integrations/supabase/client';
+import { useToast } from "@/hooks/use-toast";
 
 const Episodes = () => {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(true);
+  const [prompt, setPrompt] = useState('');
+  const [isGenerating, setIsGenerating] = useState(false);
+  const { toast } = useToast();
 
   useEffect(() => {
     const checkAuth = async () => {
@@ -34,6 +38,57 @@ const Episodes = () => {
 
     return () => subscription.unsubscribe();
   }, [navigate]);
+
+  const handleGenerate = async () => {
+    if (!prompt.trim() || isGenerating) return;
+
+    setIsGenerating(true);
+    try {
+      const { data, error } = await supabase.functions.invoke('ai-copilot', {
+        body: {
+          message: prompt,
+          conversationHistory: [],
+        },
+      });
+
+      if (error) throw error;
+
+      if (data.executionResult?.success) {
+        toast({
+          title: 'Episode created!',
+          description: 'Your episode has been generated successfully.',
+        });
+        setPrompt('');
+      } else if (data.executionResult?.error) {
+        toast({
+          title: 'Generation failed',
+          description: data.executionResult.error,
+          variant: 'destructive',
+        });
+      } else {
+        toast({
+          title: 'Response received',
+          description: data.response.message,
+        });
+      }
+    } catch (error) {
+      console.error('Generation error:', error);
+      toast({
+        title: 'Error',
+        description: 'Failed to generate episode. Please try again.',
+        variant: 'destructive',
+      });
+    } finally {
+      setIsGenerating(false);
+    }
+  };
+
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter' && (e.metaKey || e.ctrlKey)) {
+      e.preventDefault();
+      handleGenerate();
+    }
+  };
 
   if (loading) {
     return <div className="flex items-center justify-center min-h-screen">Loading...</div>;
@@ -66,16 +121,25 @@ const Episodes = () => {
               
               <div className="space-y-2">
                 <Textarea 
+                  value={prompt}
+                  onChange={(e) => setPrompt(e.target.value)}
+                  onKeyDown={handleKeyDown}
                   placeholder="Example: Create episode 3 of season 1 where the main character discovers a hidden door in the library that leads to an alternate dimension..."
                   className="bg-background border-border min-h-48 resize-none"
+                  disabled={isGenerating}
                 />
+                <p className="text-xs text-muted-foreground">
+                  Press Cmd/Ctrl + Enter to generate
+                </p>
               </div>
 
               <Button 
+                onClick={handleGenerate}
+                disabled={!prompt.trim() || isGenerating}
                 className="w-full bg-gradient-to-r from-accent to-primary hover:opacity-90 transition-opacity"
               >
                 <Sparkles className="h-4 w-4 mr-2" />
-                Generate Episode
+                {isGenerating ? 'Generating...' : 'Generate Episode'}
               </Button>
             </div>
           </Card>
