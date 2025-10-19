@@ -1,5 +1,8 @@
 project_id = "akmeovotnnqbxotlerie"
 
+[functions.ultra-video-bot]
+verify_jwt = true
+
 [functions.self-healing]
 verify_jwt = true
 

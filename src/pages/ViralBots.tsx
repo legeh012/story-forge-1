@@ -53,6 +53,7 @@ const ViralBots = () => {
     if (!user) return;
 
     const allBotTypes = [
+      { type: 'ultra_video' as const, name: 'Ultra Video Bot', category: 'production' },
       { type: 'trend_detection' as const, name: 'Trend Detection Bot', category: 'viral' },
       { type: 'hook_optimization' as const, name: 'Hook Optimization Bot', category: 'viral' },
       { type: 'remix' as const, name: 'Remix Bot', category: 'viral' },
@@ -133,6 +134,7 @@ const ViralBots = () => {
     }
 
     const functionMap: Record<string, string> = {
+      ultra_video: 'ultra-video-bot',
       trend_detection: 'trend-detection-bot',
       hook_optimization: 'hook-optimization-bot',
       remix: 'remix-bot',
@@ -160,7 +162,10 @@ const ViralBots = () => {
 
     const payload: any = { bot_id: bot.id };
     
-    if (bot.bot_type === 'hook_optimization') {
+    if (bot.bot_type === 'ultra_video') {
+      payload.episodeId = 'latest';
+      payload.enhancementLevel = 'ultra';
+    } else if (bot.bot_type === 'hook_optimization') {
       payload.content_title = 'My Awesome Video';
       payload.content_description = 'This is an amazing video!';
     } else if (bot.bot_type === 'remix' || bot.bot_type === 'cultural_injection') {
@@ -205,6 +210,7 @@ const ViralBots = () => {
 
   const getBotDescription = (type: string): string => {
     const descriptions: Record<string, string> = {
+      ultra_video: 'Advanced AI video generation surpassing Leonardo & Kling - Ultra-realistic, cinematic quality with Claude Sonnet 4.5 scene analysis and multi-pass generation',
       trend_detection: 'Scrapes platforms for rising trends, hashtags, and viral formats',
       hook_optimization: 'Refines titles and descriptions for maximum CTR',
       remix: 'Auto-generates memes, duets, and viral remixes',
@@ -232,6 +238,7 @@ const ViralBots = () => {
     return descriptions[type] || 'AI-powered automation bot';
   };
 
+  const productionBots = bots.filter(b => ['ultra_video'].includes(b.bot_type));
   const viralBots = bots.filter(b => ['trend_detection', 'hook_optimization', 'remix', 'cultural_injection'].includes(b.bot_type));
   const growthBots = bots.filter(b => ['cross_platform_poster', 'multi_channel_uploader', 'engagement_amplifier', 'live_view_booster'].includes(b.bot_type));
   const monetizationBots = bots.filter(b => ['affiliate_bot', 'lead_capture', 'sales_funnel', 'digital_product'].includes(b.bot_type));
@@ -269,6 +276,17 @@ const ViralBots = () => {
             </div>
 
             <div className="space-y-6">
+              <BotCategory
+                title="🎬 Ultra Production"
+                description="Advanced AI video generation that surpasses Leonardo & Kling with multi-pass generation"
+                icon={<Bot className="h-8 w-8 text-purple-600" />}
+                bots={productionBots}
+                runningBots={runningBots}
+                onToggle={toggleBot}
+                onRun={runBot}
+                getBotDescription={getBotDescription}
+              />
+
               <BotCategory
                 title="Virality & Trend Bots"
                 description="Detect trends and optimize content for maximum viral potential"
