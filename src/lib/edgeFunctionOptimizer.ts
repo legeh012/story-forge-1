@@ -37,11 +37,11 @@ export const withCache = async <T>(
 // Batch database operations (type-safe wrapper removed due to Supabase type complexity)
 // Use directly: await supabase.from('table').insert(records)
 
-// Parallel execution with concurrency limit
+// Parallel execution with concurrency limit (AI-optimized)
 export const parallelExecute = async <T, R>(
   items: T[],
   executor: (item: T) => Promise<R>,
-  concurrency: number = 5
+  concurrency: number = 10 // Increased from 5 to 10 for better performance
 ): Promise<R[]> => {
   const results: R[] = [];
   const executing: Promise<void>[] = [];
@@ -60,6 +60,37 @@ export const parallelExecute = async <T, R>(
   }
 
   await Promise.all(executing);
+  return results;
+};
+
+// Smart batch processing with adaptive sizing
+export const smartBatch = async <T, R>(
+  items: T[],
+  executor: (batch: T[]) => Promise<R[]>,
+  initialBatchSize: number = 50
+): Promise<R[]> => {
+  const results: R[] = [];
+  let batchSize = initialBatchSize;
+  let avgTime = 0;
+  
+  for (let i = 0; i < items.length; i += batchSize) {
+    const batch = items.slice(i, i + batchSize);
+    const startTime = Date.now();
+    
+    const batchResults = await executor(batch);
+    results.push(...batchResults);
+    
+    const executionTime = Date.now() - startTime;
+    avgTime = avgTime === 0 ? executionTime : (avgTime + executionTime) / 2;
+    
+    // Adaptive batch sizing: increase if fast, decrease if slow
+    if (avgTime < 1000) {
+      batchSize = Math.min(batchSize * 1.5, 100);
+    } else if (avgTime > 3000) {
+      batchSize = Math.max(batchSize * 0.75, 10);
+    }
+  }
+  
   return results;
 };
 
