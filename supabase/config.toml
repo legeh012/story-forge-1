@@ -62,3 +62,9 @@ verify_jwt = true
 
 [functions.scene-orchestration]
 verify_jwt = true
+
+[functions.parallel-frame-generator]
+verify_jwt = false
+
+[functions.turbo-script-bot]
+verify_jwt = false

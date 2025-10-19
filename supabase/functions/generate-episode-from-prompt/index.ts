@@ -51,93 +51,51 @@ Deno.serve(async (req) => {
       throw new Error('Project not found');
     }
 
-    // Generate episode content using Lovable AI
-    const LOVABLE_API_KEY = Deno.env.get('LOVABLE_API_KEY');
-    if (!LOVABLE_API_KEY) {
-      throw new Error('LOVABLE_API_KEY not configured');
+    // Get characters for context
+    const { data: characters } = await supabase
+      .from('characters')
+      .select('name, role, personality')
+      .eq('project_id', projectId);
+
+    // Use Turbo Script Bot for ultra-fast script generation
+    console.log('🚀 Activating TURBO Script Bot...');
+    
+    const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
+    
+    const scriptBotResponse = await fetch(
+      `${Deno.env.get('SUPABASE_URL')}/functions/v1/turbo-script-bot`,
+      {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${supabaseServiceKey}`
+        },
+        body: JSON.stringify({
+          projectContext: {
+            title: project.title,
+            genre: project.genre,
+            mood: project.mood,
+            description: project.description,
+            characters: characters?.map(c => ({
+              name: c.name,
+              role: c.role,
+              personality: c.personality
+            })) || []
+          },
+          episodeNumber: episodeNumber ?? 1
+        })
+      }
+    );
+
+    if (!scriptBotResponse.ok) {
+      const errorText = await scriptBotResponse.text();
+      throw new Error(`Turbo Script Bot failed: ${errorText}`);
     }
 
-    console.log('Generating episode script and structure...');
-
-    const systemPrompt = `You are an expert TV show writer and producer. Generate a complete episode structure with exactly 3 clips/scenes.
-
-Format your response as JSON with this structure:
-{
-  "title": "Episode title",
-  "synopsis": "Brief episode summary (1-2 sentences)",
-  "script": "Full episode script with all dialogue and action",
-  "clips": [
-    {
-      "description": "Detailed visual description for clip 1 (what should be shown)",
-      "duration": duration in seconds,
-      "dialogue": "Key dialogue for this clip"
-    },
-    {
-      "description": "Detailed visual description for clip 2",
-      "duration": duration in seconds,
-      "dialogue": "Key dialogue for this clip"
-    },
-    {
-      "description": "Detailed visual description for clip 3",
-      "duration": duration in seconds,
-      "dialogue": "Key dialogue for this clip"
-    }
-  ]
-}
-
-Make the clips cinematic and suitable for ${project.genre || 'reality TV'}. Total duration should be 60-90 seconds across all 3 clips.`;
-
-    const userPrompt = `Create an episode for "${project.title}" with this prompt: ${prompt}
-
-Project details:
-- Genre: ${project.genre || 'Not specified'}
-- Mood: ${project.mood || 'Not specified'}
-- Theme: ${project.theme || 'Not specified'}
-- Description: ${project.description || 'Not specified'}
-
-Generate 3 compelling clips that tell a complete story.`;
-
-    const aiResponse = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${LOVABLE_API_KEY}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        model: 'google/gemini-2.5-flash',
-        messages: [
-          { role: 'system', content: systemPrompt },
-          { role: 'user', content: userPrompt }
-        ],
-      }),
-    });
-
-    if (!aiResponse.ok) {
-      const errorText = await aiResponse.text();
-      console.error('AI generation failed:', aiResponse.status, errorText);
-      throw new Error(`AI generation failed: ${aiResponse.status}`);
-    }
-
-    const aiData = await aiResponse.json();
-    const content = aiData.choices?.[0]?.message?.content;
-
-    if (!content) {
-      throw new Error('No content generated');
-    }
-
-    console.log('Episode content generated');
-
-    // Parse the JSON response
-    let episodeData;
-    try {
-      // Try to extract JSON from markdown code blocks if present
-      const jsonMatch = content.match(/```json\n([\s\S]*?)\n```/) || content.match(/```\n([\s\S]*?)\n```/);
-      const jsonStr = jsonMatch ? jsonMatch[1] : content;
-      episodeData = JSON.parse(jsonStr.trim());
-    } catch (parseError) {
-      console.error('Failed to parse AI response:', parseError);
-      throw new Error('Failed to parse episode data');
-    }
+    const scriptData = await scriptBotResponse.json();
+    const { script } = scriptData;
+    
+    console.log('✅ TURBO Script generated');
 
     // Determine episode number
     const { count } = await supabase
@@ -147,84 +105,82 @@ Generate 3 compelling clips that tell a complete story.`;
 
     const nextEpisodeNumber = episodeNumber ?? (count || 0) + 1;
 
-    // Create episode in database
-    const { data: episode, error: episodeError } = await supabase
+    // Create episode with generated content
+    const { data: newEpisode, error: episodeError } = await supabase
       .from('episodes')
       .insert({
-        user_id: user.id,
         project_id: projectId,
-        title: episodeData.title,
-        synopsis: episodeData.synopsis,
+        user_id: user.id,
         episode_number: nextEpisodeNumber,
         season: 1,
-        script: episodeData.script,
-        storyboard: episodeData.clips,
+        title: script.title,
+        synopsis: script.synopsis,
+        storyboard: script.storyboard,
         status: 'draft',
-        video_status: 'not_started',
-        rendering_style: 'photorealistic'
+        video_status: 'not_started'
       })
       .select()
       .single();
 
     if (episodeError) {
-      console.error('Episode creation error:', episodeError);
-      throw episodeError;
+      throw new Error(`Failed to create episode: ${episodeError.message}`);
     }
 
-    console.log(`Episode created: ${episode.id}`);
+    console.log(`Episode created: ${newEpisode.id}`);
 
-    // Orchestrate AI bots for full viral production
-    console.log('🤖 Orchestrating AI bot team...');
+    // Orchestrate bots in parallel for ultra-fast production
+    console.log('🤖 Orchestrating AI bot team in PARALLEL mode...');
     
-    const { data: botData, error: botError } = await supabase.functions.invoke('bot-orchestrator', {
-      body: {
-        campaign_type: 'full_viral_campaign',
-        topic: prompt,
-        episodeId: episode.id,
-        projectId: projectId
-      }
+    const botPromises = [
+      // Activate bot orchestrator
+      fetch(`${Deno.env.get('SUPABASE_URL')}/functions/v1/bot-orchestrator`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${supabaseServiceKey}`
+        },
+        body: JSON.stringify({
+          campaignType: 'full_viral_campaign',
+          topic: script.title,
+          episodeId: newEpisode.id,
+          projectId: projectId
+        })
+      })
+    ];
+
+    await Promise.allSettled(botPromises);
+    console.log('✅ Bot orchestration activated');
+
+    // Start parallel video generation immediately
+    console.log('🎬 Starting PARALLEL video generation...');
+    
+    const videoGenPromise = fetch(`${Deno.env.get('SUPABASE_URL')}/functions/v1/generate-video`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${supabaseServiceKey}`
+      },
+      body: JSON.stringify({ episodeId: newEpisode.id })
     });
 
-    if (botError) {
-      console.warn('Bot orchestration warning:', botError);
-    } else {
-      console.log(`✅ Activated ${botData?.activatedBots || 0} AI bots for viral optimization`);
-    }
-
-    // Now generate video clips
-    console.log('Starting video generation for clips...');
-
-    const { data: videoData, error: videoError } = await supabase.functions.invoke('generate-video', {
-      body: {
-        episodeId: episode.id,
-        scenes: episodeData.clips.map((clip: any) => ({
-          description: clip.description,
-          duration: clip.duration,
-          dialogue: clip.dialogue
-        }))
-      }
-    });
-
-    if (videoError) {
-      console.error('Video generation error:', videoError);
-    }
-
+    // Video generation is already triggered above - just return success
     return new Response(
       JSON.stringify({
         success: true,
         episode: {
-          id: episode.id,
-          title: episode.title,
-          synopsis: episode.synopsis,
-          clipCount: episodeData.clips.length
+          id: newEpisode.id,
+          title: newEpisode.title,
+          synopsis: newEpisode.synopsis,
+          clipCount: script.storyboard.length
         },
-        message: 'Episode generated successfully! Video clips are being created in the background.'
+        message: 'Episode generated successfully! Video generation in progress.'
       }),
       {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
         status: 201,
       }
     );
+
 
   } catch (error) {
     console.error('Episode generation error:', error);
