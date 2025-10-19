@@ -72,7 +72,6 @@ const Episodes = () => {
         });
       }
     } catch (error) {
-      console.error('Generation error:', error);
       toast({
         title: 'Error',
         description: 'Failed to generate episode. Please try again.',

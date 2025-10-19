@@ -27,14 +27,13 @@ export const useSelfHealing = () => {
       });
 
       if (healingError) {
-        console.error('Self-healing failed:', healingError);
+        // Self-healing failed
         return { success: false };
       }
 
-      console.log('Self-healing response:', data);
       return data;
     } catch (err) {
-      console.error('Failed to report error to self-healing system:', err);
+      // Failed to report error to self-healing system
       return { success: false };
     }
   }, []);

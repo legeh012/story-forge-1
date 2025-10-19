@@ -20,7 +20,7 @@ export class SelfHealingErrorHandler {
   }
 
   async handleError(error: Error, context?: ErrorContext): Promise<void> {
-    console.error('Error caught by self-healing handler:', error);
+    // Error logged to self-healing system
 
     const errorType = this.classifyError(error);
     
@@ -40,18 +40,18 @@ export class SelfHealingErrorHandler {
       });
 
       if (invokeError) {
-        console.error('Failed to invoke self-healing function:', invokeError);
+        // Failed to invoke self-healing function
         return;
       }
 
-      console.log('Self-healing action taken:', data);
+      // Self-healing action taken
       
       // Apply local recovery if needed
       if (data?.recovery_action?.action) {
         await this.applyLocalRecovery(data.recovery_action.action);
       }
     } catch (err) {
-      console.error('Self-healing handler failed:', err);
+      // Self-healing handler failed
     }
   }
 
@@ -75,22 +75,23 @@ export class SelfHealingErrorHandler {
           const cacheNames = await caches.keys();
           await Promise.all(cacheNames.map(name => caches.delete(name)));
         }
-        console.log('Local cache cleared');
+        // Local cache cleared
         break;
         
       case 'refresh_auth':
         // Refresh the session
         await supabase.auth.refreshSession();
-        console.log('Auth session refreshed');
+        // Auth session refreshed
         break;
         
       case 'retry_request':
-        console.log('Request queued for retry');
+        // Request queued for retry
         // Implement retry logic if needed
         break;
         
       default:
-        console.log('No local recovery action needed');
+        // No local recovery action needed
+        break;
     }
   }
 }

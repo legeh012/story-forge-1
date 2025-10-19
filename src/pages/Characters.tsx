@@ -89,7 +89,6 @@ const Characters = () => {
         setPrompt('');
       }
     } catch (error) {
-      console.error('Error generating character:', error);
       toast({
         title: "Generation failed",
         description: error instanceof Error ? error.message : "Failed to create character",

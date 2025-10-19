@@ -58,7 +58,6 @@ export const VideoRenderer = ({ episode, onStatusChange }: VideoRendererProps) =
 
       onStatusChange?.();
     } catch (error) {
-      console.error('Error updating style:', error);
       toast({
         title: 'Update failed',
         description: 'Could not change rendering style',
@@ -89,7 +88,6 @@ export const VideoRenderer = ({ episode, onStatusChange }: VideoRendererProps) =
 
       onStatusChange?.();
     } catch (error) {
-      console.error('Render error:', error);
       toast({
         title: 'Render failed',
         description: error instanceof Error ? error.message : 'Failed to render video',
@@ -151,7 +149,7 @@ export const VideoRenderer = ({ episode, onStatusChange }: VideoRendererProps) =
         });
       }
     } catch (error) {
-      console.error('Error viewing video:', error);
+      // Error viewing video
     }
   };
 

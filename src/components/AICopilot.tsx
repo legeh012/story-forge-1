@@ -74,7 +74,6 @@ export const AICopilot = () => {
         description: `${action.charAt(0).toUpperCase() + action.slice(1)} completed successfully`
       });
     } catch (error) {
-      console.error('AI Engineer error:', error);
       toast({
         title: 'Error',
         description: 'Failed to process your request. Please try again.',

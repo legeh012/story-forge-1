@@ -81,10 +81,7 @@ export const ActiveBotsPanel = ({ episodeId }: ActiveBotsPanelProps) => {
         title: 'Director Guidance Ready',
         description: `Cinematic direction: ${data.direction.cinematicFlow.substring(0, 100)}...`,
       });
-
-      console.log('Director output:', data.direction);
     } catch (error) {
-      console.error('Director error:', error);
       toast({
         title: 'Director failed',
         description: error instanceof Error ? error.message : 'Failed to run ExpertDirector',
@@ -117,10 +114,7 @@ export const ActiveBotsPanel = ({ episodeId }: ActiveBotsPanelProps) => {
         title: `Production Team (${role.replace('_', ' ')})`,
         description: 'Analysis complete - check console for details',
       });
-
-      console.log('Production Team output:', data.result);
     } catch (error) {
-      console.error('Production Team error:', error);
       toast({
         title: 'Production Team failed',
         description: error instanceof Error ? error.message : 'Failed to run module',
@@ -157,10 +151,7 @@ export const ActiveBotsPanel = ({ episodeId }: ActiveBotsPanelProps) => {
         title: 'Scene Generated Instantly!',
         description: `${data.timeSaved} using template: ${data.orchestration.matchedTemplate}`,
       });
-
-      console.log('Scene orchestration output:', data.orchestration);
     } catch (error) {
-      console.error('Scene Orchestration error:', error);
       toast({
         title: 'Orchestration failed',
         description: error instanceof Error ? error.message : 'Failed to orchestrate scene',

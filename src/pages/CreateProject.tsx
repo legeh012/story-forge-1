@@ -107,7 +107,6 @@ const CreateProject = () => {
 
       navigate("/dashboard");
     } catch (error) {
-      console.error("Error creating project:", error);
       toast({
         title: "Error",
         description: error instanceof Error ? error.message : "Failed to create project",

@@ -65,7 +65,7 @@ const Dashboard = () => {
       setRecentEpisodes(eps.data || []);
       setRecentProjects(projs.data || []);
     } catch (error) {
-      console.error('Failed to fetch dashboard data:', error);
+      // Failed to fetch dashboard data
     }
   };
 

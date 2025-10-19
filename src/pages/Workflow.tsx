@@ -239,7 +239,6 @@ const Workflow = () => {
         await fetchProjectDetails(selectedProject);
       }
     } catch (error) {
-      console.error('Error importing characters:', error);
       toast({
         title: "Import failed",
         description: error instanceof Error ? error.message : "Failed to import characters",
