@@ -9,7 +9,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { 
   Plus, Play, Pause, Video, Users, FileText, TrendingUp, 
   Clapperboard, Sparkles, Clock, CheckCircle2, AlertCircle,
-  Upload, Settings, BarChart3
+  Upload, Settings, BarChart3, Loader2
 } from "lucide-react";
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
@@ -19,6 +19,7 @@ import { VideoRenderer } from "@/components/VideoRenderer";
 import { RealismAudit } from "@/components/RealismAudit";
 import { ActiveBotsPanel } from "@/components/ActiveBotsPanel";
 import { ScalabilityInfo } from "@/components/ScalabilityInfo";
+import { sayWalahiCharacters } from "@/data/sayWalahiCharacters";
 
 interface Project {
   id: string;
@@ -59,6 +60,7 @@ const Workflow = () => {
   const [characters, setCharacters] = useState<Character[]>([]);
   const [loading, setLoading] = useState(true);
   const [authLoading, setAuthLoading] = useState(true);
+  const [importing, setImporting] = useState(false);
   const [selectedProject, setSelectedProject] = useState<string | null>(null);
   
   // New project form state
@@ -191,6 +193,44 @@ const Workflow = () => {
         description: error.message,
         variant: "destructive"
       });
+    }
+  };
+
+  const handleImportTemplate = async () => {
+    if (!selectedProject) {
+      toast({
+        title: "Project required",
+        description: "Please select a project first",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    setImporting(true);
+
+    try {
+      const { data, error } = await supabase.functions.invoke('import-characters', {
+        body: { characters: sayWalahiCharacters, projectId: selectedProject }
+      });
+
+      if (error) throw error;
+
+      if (data.success) {
+        toast({
+          title: "Say Walahi cast imported!",
+          description: `${data.imported} characters added to your project`,
+        });
+        await fetchProjectDetails(selectedProject);
+      }
+    } catch (error) {
+      console.error('Error importing characters:', error);
+      toast({
+        title: "Import failed",
+        description: error instanceof Error ? error.message : "Failed to import characters",
+        variant: "destructive"
+      });
+    } finally {
+      setImporting(false);
     }
   };
 
@@ -404,10 +444,32 @@ const Workflow = () => {
               {currentProject ? (
                 <Card>
                   <CardHeader>
-                    <CardTitle>Cast for {currentProject.title}</CardTitle>
-                    <CardDescription>
-                      {characters.length} character{characters.length !== 1 ? 's' : ''} defined
-                    </CardDescription>
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <CardTitle>Cast for {currentProject.title}</CardTitle>
+                        <CardDescription>
+                          {characters.length} character{characters.length !== 1 ? 's' : ''} defined
+                        </CardDescription>
+                      </div>
+                      <Button
+                        onClick={handleImportTemplate}
+                        disabled={importing}
+                        variant="outline"
+                        className="border-accent/30 hover:bg-accent/10"
+                      >
+                        {importing ? (
+                          <>
+                            <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                            Importing...
+                          </>
+                        ) : (
+                          <>
+                            <Upload className="h-4 w-4 mr-2" />
+                            Load Say Walahi Cast
+                          </>
+                        )}
+                      </Button>
+                    </div>
                   </CardHeader>
                   <CardContent>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">

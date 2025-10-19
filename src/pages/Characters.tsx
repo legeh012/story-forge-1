@@ -5,10 +5,9 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Sparkles, Loader2, Users } from "lucide-react";
+import { Sparkles, Loader2 } from "lucide-react";
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from "@/hooks/use-toast";
-import { sayWalahiCharacters } from "@/data/sayWalahiCharacters";
 
 const Characters = () => {
   const navigate = useNavigate();
@@ -16,7 +15,6 @@ const Characters = () => {
   const [loading, setLoading] = useState(true);
   const [prompt, setPrompt] = useState('');
   const [generating, setGenerating] = useState(false);
-  const [importing, setImporting] = useState(false);
   const [characters, setCharacters] = useState<any[]>([]);
   const { toast } = useToast();
   const projectId = searchParams.get('projectId');
@@ -102,44 +100,6 @@ const Characters = () => {
     }
   };
 
-  const handleImportTemplate = async () => {
-    if (!projectId) {
-      toast({
-        title: "Project required",
-        description: "Please select a project first",
-        variant: "destructive"
-      });
-      return;
-    }
-
-    setImporting(true);
-
-    try {
-      const { data, error } = await supabase.functions.invoke('import-characters', {
-        body: { characters: sayWalahiCharacters, projectId }
-      });
-
-      if (error) throw error;
-
-      if (data.success) {
-        toast({
-          title: "Say Walahi cast imported!",
-          description: `${data.imported} characters added to your project`,
-        });
-        setCharacters(prev => [...data.characters, ...prev]);
-      }
-    } catch (error) {
-      console.error('Error importing characters:', error);
-      toast({
-        title: "Import failed",
-        description: error instanceof Error ? error.message : "Failed to import characters",
-        variant: "destructive"
-      });
-    } finally {
-      setImporting(false);
-    }
-  };
-
   if (loading) {
     return <div className="flex items-center justify-center min-h-screen">Loading...</div>;
   }
@@ -160,28 +120,6 @@ const Characters = () => {
           </div>
 
           <Card className="p-8 bg-gradient-to-br from-card to-card/50 border-primary/20 shadow-xl">
-            <div className="mb-6 flex gap-3">
-              <Button
-                type="button"
-                variant="outline"
-                onClick={handleImportTemplate}
-                disabled={importing || !projectId}
-                className="flex-1 border-accent/30 hover:bg-accent/10"
-              >
-                {importing ? (
-                  <>
-                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                    Importing...
-                  </>
-                ) : (
-                  <>
-                    <Users className="h-4 w-4 mr-2" />
-                    Load Say Walahi Cast
-                  </>
-                )}
-              </Button>
-            </div>
-
             <form onSubmit={handleGenerateCharacter} className="space-y-6">
               <div className="space-y-3">
                 <Label htmlFor="prompt" className="text-lg font-semibold flex items-center gap-2">
