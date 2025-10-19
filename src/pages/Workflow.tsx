@@ -9,7 +9,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { 
   Plus, Play, Pause, Video, Users, FileText, TrendingUp, 
   Clapperboard, Sparkles, Clock, CheckCircle2, AlertCircle,
-  Upload, Settings, BarChart3, Loader2, Download, Paperclip, X, Trash2, UserPlus
+  Upload, Settings, BarChart3, Loader2, Download, Paperclip, X, Trash2, UserPlus, Save, FolderOpen
 } from "lucide-react";
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
@@ -480,6 +480,94 @@ const Workflow = () => {
     }
   };
 
+  const handleSaveCharacters = () => {
+    if (characters.length === 0) {
+      toast({
+        title: "No characters to save",
+        description: "Add some characters first",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    const dataStr = JSON.stringify(characters, null, 2);
+    const dataBlob = new Blob([dataStr], { type: 'application/json' });
+    const url = URL.createObjectURL(dataBlob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `${currentProject?.title || 'characters'}_cast.json`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+
+    toast({
+      title: "Characters exported",
+      description: `${characters.length} character${characters.length !== 1 ? 's' : ''} saved to file`
+    });
+  };
+
+  const handleLoadCharacters = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    if (!selectedProject || !event.target.files || event.target.files.length === 0) return;
+
+    const file = event.target.files[0];
+    if (file.type !== 'application/json') {
+      toast({
+        title: "Invalid file type",
+        description: "Please upload a JSON file",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    try {
+      const text = await file.text();
+      const importedCharacters = JSON.parse(text);
+
+      if (!Array.isArray(importedCharacters)) {
+        throw new Error("Invalid format: expected an array of characters");
+      }
+
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error("Not authenticated");
+
+      // Prepare characters for insertion
+      const charactersToInsert = importedCharacters.map((char: any) => ({
+        user_id: user.id,
+        project_id: selectedProject,
+        name: char.name,
+        role: char.role || '',
+        personality: char.personality || '',
+        background: char.background || '',
+        goals: char.goals || '',
+        age: char.age || null,
+        metadata: char.metadata || {},
+        relationships: char.relationships || []
+      }));
+
+      const { error } = await supabase
+        .from("characters")
+        .insert(charactersToInsert);
+
+      if (error) throw error;
+
+      toast({
+        title: "Characters imported!",
+        description: `${charactersToInsert.length} character${charactersToInsert.length !== 1 ? 's' : ''} added to your cast`
+      });
+
+      await fetchProjectDetails(selectedProject);
+    } catch (error: any) {
+      toast({
+        title: "Import failed",
+        description: error.message,
+        variant: "destructive"
+      });
+    } finally {
+      if (event.target) event.target.value = '';
+    }
+  };
+
   const handleDeleteCharacter = async (characterId: string) => {
     if (!selectedProject) return;
 
@@ -693,24 +781,51 @@ const Workflow = () => {
                             {characters.length} character{characters.length !== 1 ? 's' : ''} defined
                           </CardDescription>
                         </div>
-                        <Button
-                          onClick={handleImportTemplate}
-                          disabled={importing}
-                          variant="outline"
-                          className="border-accent/30 hover:bg-accent/10"
-                        >
-                          {importing ? (
-                            <>
-                              <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                              Importing...
-                            </>
-                          ) : (
-                            <>
-                              <Upload className="h-4 w-4 mr-2" />
-                              Load Say Walahi Cast
-                            </>
-                          )}
-                        </Button>
+                        <div className="flex gap-2">
+                          <Button
+                            onClick={handleSaveCharacters}
+                            disabled={characters.length === 0}
+                            variant="outline"
+                            size="sm"
+                          >
+                            <Save className="h-4 w-4 mr-2" />
+                            Export Cast
+                          </Button>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => document.getElementById('character-file-input')?.click()}
+                          >
+                            <FolderOpen className="h-4 w-4 mr-2" />
+                            Import Cast
+                          </Button>
+                          <input
+                            id="character-file-input"
+                            type="file"
+                            accept="application/json"
+                            onChange={handleLoadCharacters}
+                            className="hidden"
+                          />
+                          <Button
+                            onClick={handleImportTemplate}
+                            disabled={importing}
+                            variant="outline"
+                            size="sm"
+                            className="border-accent/30 hover:bg-accent/10"
+                          >
+                            {importing ? (
+                              <>
+                                <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                                Importing...
+                              </>
+                            ) : (
+                              <>
+                                <Upload className="h-4 w-4 mr-2" />
+                                Say Walahi Cast
+                              </>
+                            )}
+                          </Button>
+                        </div>
                       </div>
                     </CardHeader>
                     <CardContent className="space-y-6">
