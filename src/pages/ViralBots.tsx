@@ -81,9 +81,9 @@ const ViralBots = () => {
 
     const defaultBots = allBotTypes.map(bot => ({
       user_id: user.id,
-      bot_type: bot.type,
+      bot_type: bot.type as any, // Type will be updated after migration
       name: bot.name,
-      is_active: bot.category === 'viral' || bot.category === 'creator',
+      is_active: bot.category === 'viral' || bot.category === 'creator' || bot.category === 'production',
     }));
 
     const { error } = await supabase.from('viral_bots').insert(defaultBots);

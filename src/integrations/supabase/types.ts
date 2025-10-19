@@ -1164,6 +1164,7 @@ export type Database = {
         | "production_team"
         | "scene_orchestration"
         | "ai_engineer"
+        | "ultra_video"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -1321,6 +1322,7 @@ export const Constants = {
         "production_team",
         "scene_orchestration",
         "ai_engineer",
+        "ultra_video",
       ],
     },
   },
