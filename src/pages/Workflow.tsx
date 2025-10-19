@@ -18,6 +18,7 @@ import { useToast } from "@/hooks/use-toast";
 import { VideoRenderer } from "@/components/VideoRenderer";
 import { RealismAudit } from "@/components/RealismAudit";
 import { ActiveBotsPanel } from "@/components/ActiveBotsPanel";
+import { ScalabilityInfo } from "@/components/ScalabilityInfo";
 
 interface Project {
   id: string;
@@ -467,6 +468,8 @@ const Workflow = () => {
             <TabsContent value="automation" className="space-y-6">
               {currentProject ? (
                 <>
+                  <ScalabilityInfo />
+                  
                   <Card>
                     <CardHeader>
                       <CardTitle>Automated Content Pipeline</CardTitle>
