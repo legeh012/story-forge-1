@@ -32,3 +32,12 @@ verify_jwt = true
 
 [functions.render-episode-video]
 verify_jwt = true
+
+[functions.expert-director]
+verify_jwt = true
+
+[functions.production-team]
+verify_jwt = true
+
+[functions.scene-orchestration]
+verify_jwt = true

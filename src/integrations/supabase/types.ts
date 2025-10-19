@@ -161,6 +161,77 @@ export type Database = {
           },
         ]
       }
+      bot_execution_stats: {
+        Row: {
+          bot_type: Database["public"]["Enums"]["bot_type"]
+          episode_id: string | null
+          executed_at: string | null
+          execution_time_ms: number | null
+          id: string
+          metadata: Json | null
+          quality_score: number | null
+        }
+        Insert: {
+          bot_type: Database["public"]["Enums"]["bot_type"]
+          episode_id?: string | null
+          executed_at?: string | null
+          execution_time_ms?: number | null
+          id?: string
+          metadata?: Json | null
+          quality_score?: number | null
+        }
+        Update: {
+          bot_type?: Database["public"]["Enums"]["bot_type"]
+          episode_id?: string | null
+          executed_at?: string | null
+          execution_time_ms?: number | null
+          id?: string
+          metadata?: Json | null
+          quality_score?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "bot_execution_stats_episode_id_fkey"
+            columns: ["episode_id"]
+            isOneToOne: false
+            referencedRelation: "episodes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      bot_templates: {
+        Row: {
+          created_at: string | null
+          description: string | null
+          id: string
+          name: string
+          template_data: Json
+          template_type: string
+          updated_at: string | null
+          usage_count: number | null
+        }
+        Insert: {
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          name: string
+          template_data: Json
+          template_type: string
+          updated_at?: string | null
+          usage_count?: number | null
+        }
+        Update: {
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          name?: string
+          template_data?: Json
+          template_type?: string
+          updated_at?: string | null
+          usage_count?: number | null
+        }
+        Relationships: []
+      }
       characters: {
         Row: {
           age: number | null
@@ -1013,28 +1084,31 @@ export type Database = {
       bot_status: "idle" | "running" | "completed" | "failed"
       bot_type:
         | "trend_detection"
-        | "hook_optimization"
-        | "remix"
-        | "cultural_injection"
-        | "cross_platform_poster"
-        | "multi_channel_uploader"
-        | "engagement_amplifier"
         | "live_view_booster"
-        | "affiliate_bot"
+        | "cross_platform_poster"
         | "lead_capture"
-        | "sales_funnel"
-        | "digital_product"
-        | "script_generator"
-        | "thumbnail_designer"
-        | "video_assembly"
-        | "voiceover"
-        | "performance_tracker"
-        | "ab_testing"
+        | "remix"
         | "roi_analyzer"
-        | "feedback_loop"
+        | "voiceover"
+        | "multi_channel_uploader"
+        | "thumbnail_designer"
         | "llm_reflection"
+        | "video_assembly"
         | "bot_orchestrator"
         | "persona_bot"
+        | "script_generator"
+        | "cultural_injection"
+        | "affiliate_bot"
+        | "hook_optimization"
+        | "engagement_amplifier"
+        | "digital_product"
+        | "performance_tracker"
+        | "feedback_loop"
+        | "sales_funnel"
+        | "ab_testing"
+        | "expert_director"
+        | "production_team"
+        | "scene_orchestration"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -1166,28 +1240,31 @@ export const Constants = {
       bot_status: ["idle", "running", "completed", "failed"],
       bot_type: [
         "trend_detection",
-        "hook_optimization",
-        "remix",
-        "cultural_injection",
-        "cross_platform_poster",
-        "multi_channel_uploader",
-        "engagement_amplifier",
         "live_view_booster",
-        "affiliate_bot",
+        "cross_platform_poster",
         "lead_capture",
-        "sales_funnel",
-        "digital_product",
-        "script_generator",
-        "thumbnail_designer",
-        "video_assembly",
-        "voiceover",
-        "performance_tracker",
-        "ab_testing",
+        "remix",
         "roi_analyzer",
-        "feedback_loop",
+        "voiceover",
+        "multi_channel_uploader",
+        "thumbnail_designer",
         "llm_reflection",
+        "video_assembly",
         "bot_orchestrator",
         "persona_bot",
+        "script_generator",
+        "cultural_injection",
+        "affiliate_bot",
+        "hook_optimization",
+        "engagement_amplifier",
+        "digital_product",
+        "performance_tracker",
+        "feedback_loop",
+        "sales_funnel",
+        "ab_testing",
+        "expert_director",
+        "production_team",
+        "scene_orchestration",
       ],
     },
   },

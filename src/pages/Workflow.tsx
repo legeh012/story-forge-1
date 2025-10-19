@@ -17,6 +17,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { VideoRenderer } from "@/components/VideoRenderer";
 import { RealismAudit } from "@/components/RealismAudit";
+import { ActiveBotsPanel } from "@/components/ActiveBotsPanel";
 
 interface Project {
   id: string;
@@ -252,11 +253,12 @@ const Workflow = () => {
           </div>
 
           <Tabs defaultValue="projects" className="w-full">
-            <TabsList className="grid w-full grid-cols-4">
+            <TabsList className="grid w-full grid-cols-5">
               <TabsTrigger value="projects">Projects</TabsTrigger>
               <TabsTrigger value="episodes">Episodes</TabsTrigger>
               <TabsTrigger value="cast">Cast</TabsTrigger>
-              <TabsTrigger value="automation">Bot Automation</TabsTrigger>
+              <TabsTrigger value="bots">Active Bots</TabsTrigger>
+              <TabsTrigger value="automation">Automation</TabsTrigger>
             </TabsList>
 
             {/* Projects Tab */}
@@ -444,6 +446,21 @@ const Workflow = () => {
                   </CardContent>
                 </Card>
               )}
+            </TabsContent>
+
+            {/* Active Bots Tab */}
+            <TabsContent value="bots" className="space-y-6">
+              <Card>
+                <CardHeader>
+                  <CardTitle>Active Production Bots</CardTitle>
+                  <CardDescription>
+                    AI-powered automation for instant, cinematic reality TV production
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <ActiveBotsPanel episodeId={currentProject?.id} />
+                </CardContent>
+              </Card>
             </TabsContent>
 
             {/* Bot Automation Tab */}
