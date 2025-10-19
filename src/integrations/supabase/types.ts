@@ -14,6 +14,47 @@ export type Database = {
   }
   public: {
     Tables: {
+      bot_activities: {
+        Row: {
+          bot_id: string | null
+          completed_at: string | null
+          error_message: string | null
+          id: string
+          results: Json | null
+          started_at: string | null
+          status: Database["public"]["Enums"]["bot_status"] | null
+          user_id: string
+        }
+        Insert: {
+          bot_id?: string | null
+          completed_at?: string | null
+          error_message?: string | null
+          id?: string
+          results?: Json | null
+          started_at?: string | null
+          status?: Database["public"]["Enums"]["bot_status"] | null
+          user_id: string
+        }
+        Update: {
+          bot_id?: string | null
+          completed_at?: string | null
+          error_message?: string | null
+          id?: string
+          results?: Json | null
+          started_at?: string | null
+          status?: Database["public"]["Enums"]["bot_status"] | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "bot_activities_bot_id_fkey"
+            columns: ["bot_id"]
+            isOneToOne: false
+            referencedRelation: "viral_bots"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       characters: {
         Row: {
           age: number | null
@@ -66,6 +107,94 @@ export type Database = {
             columns: ["project_id"]
             isOneToOne: false
             referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      content_remixes: {
+        Row: {
+          activity_id: string | null
+          created_at: string | null
+          id: string
+          metadata: Json | null
+          remix_type: string
+          remixed_content: string | null
+          source_content: string | null
+          user_id: string
+          viral_score: number | null
+        }
+        Insert: {
+          activity_id?: string | null
+          created_at?: string | null
+          id?: string
+          metadata?: Json | null
+          remix_type: string
+          remixed_content?: string | null
+          source_content?: string | null
+          user_id: string
+          viral_score?: number | null
+        }
+        Update: {
+          activity_id?: string | null
+          created_at?: string | null
+          id?: string
+          metadata?: Json | null
+          remix_type?: string
+          remixed_content?: string | null
+          source_content?: string | null
+          user_id?: string
+          viral_score?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "content_remixes_activity_id_fkey"
+            columns: ["activity_id"]
+            isOneToOne: false
+            referencedRelation: "bot_activities"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      cultural_injections: {
+        Row: {
+          activity_id: string | null
+          created_at: string | null
+          cultural_relevance_score: number | null
+          id: string
+          injected_content: string | null
+          injection_type: string
+          metadata: Json | null
+          original_content: string | null
+          user_id: string
+        }
+        Insert: {
+          activity_id?: string | null
+          created_at?: string | null
+          cultural_relevance_score?: number | null
+          id?: string
+          injected_content?: string | null
+          injection_type: string
+          metadata?: Json | null
+          original_content?: string | null
+          user_id: string
+        }
+        Update: {
+          activity_id?: string | null
+          created_at?: string | null
+          cultural_relevance_score?: number | null
+          id?: string
+          injected_content?: string | null
+          injection_type?: string
+          metadata?: Json | null
+          original_content?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "cultural_injections_activity_id_fkey"
+            columns: ["activity_id"]
+            isOneToOne: false
+            referencedRelation: "bot_activities"
             referencedColumns: ["id"]
           },
         ]
@@ -164,6 +293,53 @@ export type Database = {
           user_id?: string | null
         }
         Relationships: []
+      }
+      hook_optimizations: {
+        Row: {
+          activity_id: string | null
+          created_at: string | null
+          id: string
+          optimized_description: string | null
+          optimized_title: string | null
+          original_description: string | null
+          original_title: string | null
+          predicted_ctr: number | null
+          thumbnail_suggestions: Json | null
+          user_id: string
+        }
+        Insert: {
+          activity_id?: string | null
+          created_at?: string | null
+          id?: string
+          optimized_description?: string | null
+          optimized_title?: string | null
+          original_description?: string | null
+          original_title?: string | null
+          predicted_ctr?: number | null
+          thumbnail_suggestions?: Json | null
+          user_id: string
+        }
+        Update: {
+          activity_id?: string | null
+          created_at?: string | null
+          id?: string
+          optimized_description?: string | null
+          optimized_title?: string | null
+          original_description?: string | null
+          original_title?: string | null
+          predicted_ctr?: number | null
+          thumbnail_suggestions?: Json | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "hook_optimizations_activity_id_fkey"
+            columns: ["activity_id"]
+            isOneToOne: false
+            referencedRelation: "bot_activities"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       media_assets: {
         Row: {
@@ -303,6 +479,53 @@ export type Database = {
         }
         Relationships: []
       }
+      trend_detections: {
+        Row: {
+          activity_id: string | null
+          content: string
+          detected_at: string | null
+          engagement_score: number | null
+          hashtags: string[] | null
+          id: string
+          metadata: Json | null
+          platform: string
+          trend_type: string
+          user_id: string
+        }
+        Insert: {
+          activity_id?: string | null
+          content: string
+          detected_at?: string | null
+          engagement_score?: number | null
+          hashtags?: string[] | null
+          id?: string
+          metadata?: Json | null
+          platform: string
+          trend_type: string
+          user_id: string
+        }
+        Update: {
+          activity_id?: string | null
+          content?: string
+          detected_at?: string | null
+          engagement_score?: number | null
+          hashtags?: string[] | null
+          id?: string
+          metadata?: Json | null
+          platform?: string
+          trend_type?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "trend_detections_activity_id_fkey"
+            columns: ["activity_id"]
+            isOneToOne: false
+            referencedRelation: "bot_activities"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       user_roles: {
         Row: {
           id: string
@@ -317,6 +540,39 @@ export type Database = {
         Update: {
           id?: string
           role?: Database["public"]["Enums"]["app_role"]
+          user_id?: string
+        }
+        Relationships: []
+      }
+      viral_bots: {
+        Row: {
+          bot_type: Database["public"]["Enums"]["bot_type"]
+          config: Json | null
+          created_at: string | null
+          id: string
+          is_active: boolean | null
+          name: string
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          bot_type: Database["public"]["Enums"]["bot_type"]
+          config?: Json | null
+          created_at?: string | null
+          id?: string
+          is_active?: boolean | null
+          name: string
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          bot_type?: Database["public"]["Enums"]["bot_type"]
+          config?: Json | null
+          created_at?: string | null
+          id?: string
+          is_active?: boolean | null
+          name?: string
+          updated_at?: string | null
           user_id?: string
         }
         Relationships: []
@@ -336,6 +592,12 @@ export type Database = {
     }
     Enums: {
       app_role: "admin" | "creator" | "viewer"
+      bot_status: "idle" | "running" | "completed" | "failed"
+      bot_type:
+        | "trend_detection"
+        | "hook_optimization"
+        | "remix"
+        | "cultural_injection"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -464,6 +726,13 @@ export const Constants = {
   public: {
     Enums: {
       app_role: ["admin", "creator", "viewer"],
+      bot_status: ["idle", "running", "completed", "failed"],
+      bot_type: [
+        "trend_detection",
+        "hook_optimization",
+        "remix",
+        "cultural_injection",
+      ],
     },
   },
 } as const

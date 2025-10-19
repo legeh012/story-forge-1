@@ -2,3 +2,15 @@ project_id = "akmeovotnnqbxotlerie"
 
 [functions.self-healing]
 verify_jwt = false
+
+[functions.trend-detection-bot]
+verify_jwt = true
+
+[functions.hook-optimization-bot]
+verify_jwt = true
+
+[functions.remix-bot]
+verify_jwt = true
+
+[functions.cultural-injection-bot]
+verify_jwt = true

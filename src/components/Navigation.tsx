@@ -1,6 +1,6 @@
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { Sparkles, FolderOpen, TrendingUp, Activity } from "lucide-react";
+import { Sparkles, FolderOpen, TrendingUp, Activity, Bot } from "lucide-react";
 
 const Navigation = () => {
   return (
@@ -31,6 +31,10 @@ const Navigation = () => {
             <Link to="/system-monitor" className="text-foreground/80 hover:text-foreground transition-colors flex items-center gap-1">
               <Activity className="h-4 w-4" />
               Monitor
+            </Link>
+            <Link to="/viral-bots" className="text-foreground/80 hover:text-foreground transition-colors flex items-center gap-1">
+              <Bot className="h-4 w-4" />
+              Viral Bots
             </Link>
             <Link to="/workflow" className="text-foreground/80 hover:text-foreground transition-colors">
               Workflow
