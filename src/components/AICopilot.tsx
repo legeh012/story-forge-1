@@ -36,32 +36,45 @@ export const AICopilot = () => {
     setIsLoading(true);
 
     try {
-      const { data, error } = await supabase.functions.invoke('ai-copilot', {
-        body: {
+      // Determine action based on keywords
+      let action: 'diagnose' | 'fix' | 'orchestrate' | 'generate_project' | undefined;
+      const lowerInput = userMessage.toLowerCase();
+      
+      if (lowerInput.includes('fix') || lowerInput.includes('repair') || lowerInput.includes('solve')) {
+        action = 'fix';
+      } else if (lowerInput.includes('orchestrate') || lowerInput.includes('coordinate') || lowerInput.includes('run bots')) {
+        action = 'orchestrate';
+      } else if (lowerInput.includes('generate project') || lowerInput.includes('create project') || lowerInput.includes('new project')) {
+        action = 'generate_project';
+      } else {
+        action = 'diagnose';
+      }
+
+      // Gather context
+      const context = {
+        currentPage: window.location.pathname,
+      };
+
+      const { data, error } = await supabase.functions.invoke('ai-engineer', {
+        body: { 
           message: userMessage,
-          conversationHistory: messages,
-        },
+          action,
+          context,
+          conversationHistory: messages
+        }
       });
 
       if (error) throw error;
 
-      const assistantMessage = data.response.message || 'Task completed!';
+      const assistantMessage = data.response || 'Task completed!';
       setMessages(prev => [...prev, { role: 'assistant', content: assistantMessage }]);
 
-      if (data.executionResult?.success) {
-        toast({
-          title: 'Action completed',
-          description: 'Your request has been processed successfully.',
-        });
-      } else if (data.executionResult?.error) {
-        toast({
-          title: 'Action failed',
-          description: data.executionResult.error,
-          variant: 'destructive',
-        });
-      }
+      toast({
+        title: 'AI Engineer',
+        description: `${action.charAt(0).toUpperCase() + action.slice(1)} completed successfully`
+      });
     } catch (error) {
-      console.error('Copilot error:', error);
+      console.error('AI Engineer error:', error);
       toast({
         title: 'Error',
         description: 'Failed to process your request. Please try again.',
@@ -69,7 +82,7 @@ export const AICopilot = () => {
       });
       setMessages(prev => [...prev, { 
         role: 'assistant', 
-        content: 'Sorry, I encountered an error. Please try again.' 
+        content: 'I encountered an error processing your request. Please try again or rephrase your question.' 
       }]);
     } finally {
       setIsLoading(false);
@@ -101,7 +114,10 @@ export const AICopilot = () => {
       <div className="flex items-center justify-between p-4 border-b border-border bg-gradient-to-r from-accent/10 to-primary/10">
         <div className="flex items-center gap-2">
           <MessageCircle className="h-5 w-5 text-accent" />
-          <h3 className="font-semibold">AI Copilot</h3>
+          <div>
+            <h3 className="font-semibold">AI Engineer</h3>
+            <p className="text-xs text-muted-foreground">Diagnose, fix, orchestrate & generate</p>
+          </div>
         </div>
         <Button
           variant="ghost"
@@ -117,9 +133,15 @@ export const AICopilot = () => {
       <div className="flex-1 overflow-y-auto p-4 space-y-4">
         {messages.length === 0 && (
           <div className="text-center text-muted-foreground text-sm mt-8">
-            <p className="mb-2">👋 Hi! I'm your AI copilot.</p>
-            <p>I can help you create characters, episodes, and projects.</p>
-            <p className="mt-4 text-xs">Try: "Create a sci-fi character named Nova"</p>
+            <p className="mb-2 font-semibold">👋 AI Computer Engineer at your service!</p>
+            <p className="text-xs">I can:</p>
+            <ul className="text-xs mt-2 space-y-1 text-left max-w-xs mx-auto">
+              <li>🔍 <strong>Diagnose</strong> - Analyze issues in your app</li>
+              <li>🔧 <strong>Fix</strong> - Repair bugs and errors</li>
+              <li>🎯 <strong>Orchestrate</strong> - Coordinate bot workflows</li>
+              <li>🚀 <strong>Generate</strong> - Create complete projects</li>
+            </ul>
+            <p className="mt-4 text-xs italic">Try: "Fix the video rendering issue" or "Generate a new viral campaign project"</p>
           </div>
         )}
         

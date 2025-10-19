@@ -41,3 +41,6 @@ verify_jwt = true
 
 [functions.scene-orchestration]
 verify_jwt = true
+
+[functions.ai-engineer]
+verify_jwt = true
