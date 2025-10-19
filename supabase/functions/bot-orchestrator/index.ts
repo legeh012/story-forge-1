@@ -25,7 +25,19 @@ Deno.serve(async (req) => {
 
     if (userError || !user) throw new Error('Unauthorized');
 
-    const { campaign_type, topic } = await req.json();
+    const { campaign_type, topic, episodeId, projectId } = await req.json();
+
+    // Check user role for autonomous orchestration
+    const { data: userRole, error: roleError } = await supabase
+      .from('user_roles')
+      .select('role')
+      .eq('user_id', user.id)
+      .single();
+
+    const isAdmin = userRole?.role === 'admin';
+    const isCreator = userRole?.role === 'creator';
+
+    console.log(`🤖 Autonomous Orchestrator activated for ${isAdmin ? 'ADMIN' : 'CREATOR'}`);
 
     // Get user's active bots
     const { data: bots, error: botsError } = await supabase
@@ -37,68 +49,122 @@ Deno.serve(async (req) => {
     if (botsError) throw botsError;
 
     const orchestrationSteps = [];
+    let autonomousMode = 'standard';
 
-    // Orchestrate multi-bot campaign
-    if (campaign_type === 'full_viral_campaign') {
-      // Step 1: Generate trending content ideas
+    // ADMIN: Full autonomous orchestration with advanced AI decision-making
+    if (isAdmin && campaign_type === 'full_viral_campaign') {
+      autonomousMode = 'god_tier_autonomous';
+      
+      console.log('🎯 ADMIN MODE: Activating GOD-TIER autonomous orchestration');
+      
+      // Admin gets ALL bots with intelligent auto-sequencing
+      orchestrationSteps.push(
+        { bot: 'Trend Detection', action: 'AI-powered trend analysis with predictive modeling', status: 'queued', priority: 1 },
+        { bot: 'Script Generator', action: 'Multi-variant viral script generation', status: 'queued', priority: 2 },
+        { bot: 'Cultural Injection', action: 'Deep cultural context integration', status: 'queued', priority: 3 },
+        { bot: 'Expert Director', action: 'Cinematic direction with advanced techniques', status: 'queued', priority: 4 },
+        { bot: 'Scene Orchestration', action: 'Reality TV-style scene optimization', status: 'queued', priority: 5 },
+        { bot: 'Hook Optimization', action: 'Multi-platform hook testing and optimization', status: 'queued', priority: 6 },
+        { bot: 'Ultra Video Bot', action: 'GEN-3 ALPHA TURBO photorealistic generation', status: 'queued', priority: 7 },
+        { bot: 'Remix Bot', action: 'AI-driven content variations for all platforms', status: 'queued', priority: 8 },
+        { bot: 'Cross-Platform Poster', action: 'Intelligent scheduling across all platforms', status: 'queued', priority: 9 },
+        { bot: 'Performance Tracker', action: 'Real-time analytics with auto-optimization', status: 'queued', priority: 10 }
+      );
+
+      // Log admin orchestration
+      await supabase.from('bot_activities').insert({
+        bot_id: null,
+        user_id: user.id,
+        status: 'running',
+        results: { 
+          mode: 'god_tier_autonomous',
+          topic,
+          episodeId,
+          projectId,
+          activatedBots: orchestrationSteps.length
+        }
+      });
+    }
+    // CREATOR: Smart autonomous orchestration with essential bots
+    else if (isCreator && campaign_type === 'full_viral_campaign') {
+      autonomousMode = 'creator_autonomous';
+      
+      console.log('⚡ CREATOR MODE: Activating smart autonomous orchestration');
+      
+      // Creator gets core viral optimization bots
       const trendBot = bots.find(b => b.bot_type === 'trend_detection');
       if (trendBot) {
         orchestrationSteps.push({
           bot: 'Trend Detection',
-          action: 'Analyze trending topics',
-          status: 'queued'
+          action: 'Analyze trending topics for viral opportunities',
+          status: 'queued',
+          priority: 1
         });
       }
 
-      // Step 2: Generate script
       const scriptBot = bots.find(b => b.bot_type === 'script_generator');
       if (scriptBot) {
         orchestrationSteps.push({
           bot: 'Script Generator',
-          action: 'Create viral script',
-          status: 'queued'
+          action: 'Create viral-optimized script',
+          status: 'queued',
+          priority: 2
         });
       }
 
-      // Step 3: Optimize hooks
       const hookBot = bots.find(b => b.bot_type === 'hook_optimization');
       if (hookBot) {
         orchestrationSteps.push({
           bot: 'Hook Optimization',
-          action: 'Optimize title and description',
-          status: 'queued'
+          action: 'Optimize title and description for CTR',
+          status: 'queued',
+          priority: 3
         });
       }
 
-      // Step 4: Create remixes
       const remixBot = bots.find(b => b.bot_type === 'remix');
       if (remixBot) {
         orchestrationSteps.push({
           bot: 'Remix Bot',
-          action: 'Generate content variations',
-          status: 'queued'
+          action: 'Generate platform-specific variations',
+          status: 'queued',
+          priority: 4
         });
       }
 
-      // Step 5: Cross-platform distribution
       const posterBot = bots.find(b => b.bot_type === 'cross_platform_poster');
       if (posterBot) {
         orchestrationSteps.push({
           bot: 'Cross-Platform Poster',
           action: 'Schedule posts across platforms',
-          status: 'queued'
+          status: 'queued',
+          priority: 5
         });
       }
 
-      // Step 6: Track performance
       const trackerBot = bots.find(b => b.bot_type === 'performance_tracker');
       if (trackerBot) {
         orchestrationSteps.push({
           bot: 'Performance Tracker',
           action: 'Monitor campaign metrics',
-          status: 'queued'
+          status: 'queued',
+          priority: 6
         });
       }
+
+      // Log creator orchestration
+      await supabase.from('bot_activities').insert({
+        bot_id: null,
+        user_id: user.id,
+        status: 'running',
+        results: { 
+          mode: 'creator_autonomous',
+          topic,
+          episodeId,
+          projectId,
+          activatedBots: orchestrationSteps.length
+        }
+      });
     }
 
     return new Response(
@@ -106,9 +172,14 @@ Deno.serve(async (req) => {
         success: true, 
         campaign: campaign_type,
         topic,
-        bots_activated: orchestrationSteps.length,
+        autonomousMode,
+        userRole: isAdmin ? 'admin' : isCreator ? 'creator' : 'user',
+        activatedBots: orchestrationSteps.length,
         execution_plan: orchestrationSteps,
-        estimated_completion: '15-30 minutes',
+        estimated_completion: isAdmin ? '10-20 minutes (God-Tier)' : '15-30 minutes',
+        message: isAdmin 
+          ? '🎯 God-Tier Autonomous Orchestration activated - All bots working in perfect harmony'
+          : '⚡ Smart Autonomous Orchestration activated - Core viral bots engaged'
       }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
