@@ -84,41 +84,47 @@ const Dashboard = () => {
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-          <Card className="p-6 bg-card border-border hover:border-primary/50 transition-all cursor-pointer group">
-            <div className="flex items-center gap-4">
-              <div className="p-3 rounded-xl bg-primary/10 group-hover:bg-primary/20 transition-colors">
-                <Users className="h-6 w-6 text-primary" />
+          <Link to="/characters" className="block">
+            <Card className="p-6 bg-card border-border hover:border-primary/50 transition-all cursor-pointer group">
+              <div className="flex items-center gap-4">
+                <div className="p-3 rounded-xl bg-primary/10 group-hover:bg-primary/20 transition-colors">
+                  <Users className="h-6 w-6 text-primary" />
+                </div>
+                <div>
+                  <p className="text-3xl font-bold">{stats.characters}</p>
+                  <p className="text-muted-foreground">Characters</p>
+                </div>
               </div>
-              <div>
-                <p className="text-3xl font-bold">{stats.characters}</p>
-                <p className="text-muted-foreground">Characters</p>
-              </div>
-            </div>
-          </Card>
+            </Card>
+          </Link>
 
-          <Card className="p-6 bg-card border-border hover:border-accent/50 transition-all cursor-pointer group">
-            <div className="flex items-center gap-4">
-              <div className="p-3 rounded-xl bg-accent/10 group-hover:bg-accent/20 transition-colors">
-                <BookOpen className="h-6 w-6 text-accent" />
+          <Link to="/episodes" className="block">
+            <Card className="p-6 bg-card border-border hover:border-accent/50 transition-all cursor-pointer group">
+              <div className="flex items-center gap-4">
+                <div className="p-3 rounded-xl bg-accent/10 group-hover:bg-accent/20 transition-colors">
+                  <BookOpen className="h-6 w-6 text-accent" />
+                </div>
+                <div>
+                  <p className="text-3xl font-bold">{stats.episodes}</p>
+                  <p className="text-muted-foreground">Episodes</p>
+                </div>
               </div>
-              <div>
-                <p className="text-3xl font-bold">{stats.episodes}</p>
-                <p className="text-muted-foreground">Episodes</p>
-              </div>
-            </div>
-          </Card>
+            </Card>
+          </Link>
 
-          <Card className="p-6 bg-card border-border hover:border-primary-glow/50 transition-all cursor-pointer group">
-            <div className="flex items-center gap-4">
-              <div className="p-3 rounded-xl bg-primary-glow/10 group-hover:bg-primary-glow/20 transition-colors">
-                <Sparkles className="h-6 w-6 text-primary-glow" />
+          <Link to="/create" className="block">
+            <Card className="p-6 bg-card border-border hover:border-primary-glow/50 transition-all cursor-pointer group">
+              <div className="flex items-center gap-4">
+                <div className="p-3 rounded-xl bg-primary-glow/10 group-hover:bg-primary-glow/20 transition-colors">
+                  <Sparkles className="h-6 w-6 text-primary-glow" />
+                </div>
+                <div>
+                  <p className="text-3xl font-bold">{stats.projects}</p>
+                  <p className="text-muted-foreground">Active Projects</p>
+                </div>
               </div>
-              <div>
-                <p className="text-3xl font-bold">{stats.projects}</p>
-                <p className="text-muted-foreground">Active Projects</p>
-              </div>
-            </div>
-          </Card>
+            </Card>
+          </Link>
         </div>
 
         <div className="mb-8">
