@@ -1,15 +1,33 @@
 export const sayWalahiCharacters = [
   {
+    name: "Lucky",
+    role: "The Founder - Visionary Architect",
+    traits: ["chaos-native", "schema-driven", "visionary", "ten steps ahead"],
+    drama_hooks: "Builds cinematic OSs while flipping tropes into monetization, always architecting the next cultural disruption",
+    appearance: {
+      skin_tone: "rich espresso",
+      face: "commanding presence, visionary gaze",
+      hair: "flowing waves under designer headwrap",
+      style: "power suits, statement jewelry, architectural aesthetic",
+      aura: "visionary architect meets cultural disruptor"
+    },
+    relationships: {
+      alliances: ["Luul", "Samara"],
+      rivalries: []
+    },
+    status: "active"
+  },
+  {
     name: "Luul",
-    role: "Asset Queen & Group Home Architect",
-    traits: ["entrepreneurial", "meticulous", "corporate", "audit-minded"],
-    drama_hooks: "Runs group homes like Fortune 500s, audits emotions like tax returns, has receipts for everything since 2016",
+    role: "The Flamekeeper - Cultural Anchor",
+    traits: ["ancestral", "legacy-keeper", "confessional fire", "pure presence"],
+    drama_hooks: "Holds the ancestral line and lights the confessional fire, her presence is pure legacy and cultural wisdom",
     appearance: {
       skin_tone: "warm caramel",
-      face: "sharp features, calculated gaze",
-      hair: "sleek bun under tailored hijab",
-      style: "business blazers, luxury watches, crisp lines",
-      aura: "entrepreneurial auntie meets corporate disruptor"
+      face: "sharp features, ancestral wisdom in her gaze",
+      hair: "sleek bun under traditional hijab",
+      style: "elegant traditional meets modern power, heritage fabrics",
+      aura: "ancestral flame meets generational keeper"
     },
     relationships: {
       alliances: ["Lucky", "Hani"],
@@ -18,145 +36,109 @@ export const sayWalahiCharacters = [
     status: "active"
   },
   {
-    name: "Lucky",
-    role: "Legal Strategist & Cinematic Architect",
-    traits: ["strategic", "cinematic", "commanding", "visionary"],
-    drama_hooks: "Drafts cease-and-desists in cursive, storyboards depositions like Netflix pilots, builds empires not just cases",
-    appearance: {
-      skin_tone: "rich espresso",
-      face: "commanding presence, dramatic expressions",
-      hair: "flowing waves under designer headwrap",
-      style: "power suits, statement jewelry, courtroom couture",
-      aura: "lawyer meets lore creator"
-    },
-    relationships: {
-      alliances: ["Luul", "Hani"],
-      rivalries: []
-    },
-    status: "active"
-  },
-  {
-    name: "Zahra",
-    role: "Clinical Realist & Chart Disruptor",
-    traits: ["analytical", "therapeutic", "weaponized wellness", "diagnostic"],
-    drama_hooks: "Diagnoses vibes mid-brunch, reads DSMs like tarot cards, side-eyes are therapeutic, quotes come with ICD codes",
+    name: "Samara",
+    role: "The Strategist - Quiet Architect",
+    traits: ["precise", "emotional logic coder", "monetization visionary", "quiet power"],
+    drama_hooks: "Precision over noise. Codes emotional logic into every scene and sees monetization arcs before they drop",
     appearance: {
       skin_tone: "honey beige",
-      face: "observant eyes, knowing smile",
-      hair: "professional updo under neutral hijab",
-      style: "laminated charts, clinical chic, therapeutic aesthetic",
-      aura: "the therapist your therapist fears"
+      face: "calculating eyes, strategic smile",
+      hair: "sleek styling under minimalist hijab",
+      style: "architectural precision, clean lines, strategic aesthetic",
+      aura: "quiet architect of emotional systems"
     },
     relationships: {
-      rivalries: ["Luul"],
-      alliances: ["Hani"]
-    },
-    status: "active"
-  },
-  {
-    name: "Amal",
-    role: "Cultural Maven & Trauma Flipper",
-    traits: ["viral", "entrepreneurial", "aesthetic", "emotional alchemist"],
-    drama_hooks: "Monetizes meltdowns, pitches trauma docuseries while lighting incense, turns pain into platform",
-    appearance: {
-      skin_tone: "warm bronze",
-      face: "ring light ready, perfect angles",
-      hair: "artistic styling under pastel chiffon hijab",
-      style: "henna, hashtags, healing aesthetic, ring light glam",
-      aura: "viral visionary of emotional alchemy"
-    },
-    relationships: {
-      alliances: ["Ayaan"],
+      alliances: ["Lucky", "Ayaan"],
       rivalries: []
     },
     status: "active"
   },
   {
     name: "Ayaan",
-    role: "Activist & Asset Reclaimer",
-    traits: ["bold", "redistributive", "choreographed", "revolutionary"],
-    drama_hooks: "Reclaims couches and clout, walkouts with choreography, petitions trend before ink dries",
+    role: "The Architect - Systems Queen",
+    traits: ["backend brilliant", "front-end finesse", "schema poet", "systems thinker"],
+    drama_hooks: "Builds backend brilliance and front-end finesse. Her overlays are schema poetry in motion",
     appearance: {
       skin_tone: "deep mahogany",
-      face: "fierce determination, protest-ready",
+      face: "focused intensity, architectural vision",
       hair: "natural curls under bold printed wrap",
-      style: "heels with purpose, protest chic, statement accessories",
-      aura: "redistribution in heels"
+      style: "tech-forward elegance, systematic aesthetic",
+      aura: "systems queen meets code poetry"
     },
     relationships: {
-      alliances: ["Amal"],
+      alliances: ["Samara", "Amal"],
       rivalries: []
     },
     status: "active"
   },
   {
     name: "Hani",
-    role: "Legal Advocate & Filing Queen",
-    traits: ["organized", "litigious", "methodical", "blazer game strong"],
-    drama_hooks: "Files drama like litigation, folders have tabs and timestamps, confessional footage is admissible in court",
+    role: "The Oracle - Spiritual Strategist",
+    traits: ["trauma map reader", "energy grid keeper", "emotional compass", "spiritual"],
+    drama_hooks: "Reads trauma maps like episode scripts. Her energy grid is the show's emotional compass and spiritual north",
     appearance: {
       skin_tone: "soft cinnamon",
-      face: "professional demeanor, strong tone",
-      hair: "neat styling under neutral hijab",
-      style: "power blazers, organized aesthetic, filing folders as accessories",
-      aura: "courtroom ready at all times"
+      face: "knowing eyes, spiritual presence",
+      hair: "flowing under elegant hijab",
+      style: "spiritual elegance, energy-aware aesthetic, mystical touches",
+      aura: "oracle meets emotional cartographer"
     },
     relationships: {
-      alliances: ["Lucky", "Luul", "Zahra"],
+      alliances: ["Luul", "Nasra"],
       rivalries: []
     },
     status: "active"
   },
   {
-    name: "Ifrah",
-    role: "Strategic Analyst & Henna Verifier",
-    traits: ["analytical", "silent processor", "detail-oriented", "receipt collector"],
-    drama_hooks: "Verifies henna, timestamps, alibis, cross-references vibes with Google Maps, spreadsheet sleuth",
+    name: "Zahra",
+    role: "The Flame - Satirical Provocateur",
+    traits: ["satirical", "trope dismantler", "viral thinker", "weaponized humor"],
+    drama_hooks: "Weaponizes humor to dismantle tropes. Her confessionals are viral think pieces that break the internet",
     appearance: {
-      skin_tone: "rich espresso",
-      face: "observant, calculating gaze",
-      hair: "sleek styling under minimalist hijab",
-      style: "spreadsheet chic, analytical aesthetic, verification tools",
-      aura: "the analyst behind the chaos"
+      skin_tone: "honey beige",
+      face: "sharp wit, provocative smile",
+      hair: "bold styling under statement hijab",
+      style: "provocateur chic, satirical aesthetic, viral ready",
+      aura: "flame meets satirical genius"
     },
     relationships: {
-      alliances: [],
-      rivalries: []
-    },
-    status: "active"
-  },
-  {
-    name: "Samira",
-    role: "Cultural Connector & Tradition Keeper",
-    traits: ["wise", "grounded", "community-oriented", "storyteller"],
-    drama_hooks: "Says 'all you need is Farah and samasa', bridges generations, keeps cultural wisdom alive while navigating modern life",
-    appearance: {
-      skin_tone: "warm bronze",
-      face: "knowing smile, gentle wisdom",
-      hair: "natural curls under elegant headwrap",
-      style: "traditional meets modern, henna artistry, cultural pride",
-      aura: "the anchor everyone needs"
-    },
-    relationships: {
-      alliances: ["Luul", "Zahra"],
+      alliances: ["Amal", "Nasra"],
       rivalries: []
     },
     status: "active"
   },
   {
     name: "Nasra",
-    role: "Style Icon & Boundary Setter",
-    traits: ["confident", "unapologetic", "fashion-forward", "protective"],
-    drama_hooks: "Wears sunglasses indoors, sets boundaries without explanation, protects her energy like it's designer",
+    role: "Sweetheart - Emotional Core",
+    traits: ["vulnerable", "emotional superpower", "soft chaos", "storyline magnet"],
+    drama_hooks: "The softness in the chaos. Her vulnerability is her superpower and her storyline always lands perfectly",
     appearance: {
       skin_tone: "deep mahogany",
-      face: "striking features, unbothered expression",
-      hair: "sleek styling under black hijab",
-      style: "all black everything, designer sunglasses, effortless elegance",
-      aura: "mystery meets mastery"
+      face: "gentle features, heartfelt expression",
+      hair: "soft styling under pastel hijab",
+      style: "sweetheart aesthetic, emotional elegance, vulnerability as power",
+      aura: "emotional core meets gentle strength"
     },
     relationships: {
-      alliances: ["Ayaan"],
+      alliances: ["Hani", "Zahra"],
+      rivalries: []
+    },
+    status: "active"
+  },
+  {
+    name: "Amal",
+    role: "The Instigator - Chaos Console",
+    traits: ["pivot master", "plot twist queen", "viral disruptor", "cinematic upgrader"],
+    drama_hooks: "Thrives on pivots, plot twists, and viral disruption. Every scene she enters becomes a cinematic upgrade",
+    appearance: {
+      skin_tone: "warm bronze",
+      face: "mischievous energy, instigator smile",
+      hair: "dynamic styling under bold chiffon hijab",
+      style: "chaos chic, plot twist aesthetic, viral energy",
+      aura: "instigator meets cinematic chaos architect"
+    },
+    relationships: {
+      alliances: ["Ayaan", "Zahra"],
       rivalries: []
     },
     status: "active"
