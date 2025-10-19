@@ -4,11 +4,21 @@ import Navigation from "@/components/Navigation";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Plus, Users, BookOpen, Sparkles, Zap, Play } from "lucide-react";
+import { Plus, Users, BookOpen, Sparkles, Zap, Play, Trash2 } from "lucide-react";
 import { Link } from "react-router-dom";
 import { SystemHealthMonitor } from "@/components/SystemHealthMonitor";
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from "@/hooks/use-toast";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 
 const Dashboard = () => {
   const navigate = useNavigate();
@@ -16,6 +26,8 @@ const Dashboard = () => {
   const [loading, setLoading] = useState(true);
   const [generatingEpisode, setGeneratingEpisode] = useState(false);
   const [activatingBots, setActivatingBots] = useState(false);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [projectToDelete, setProjectToDelete] = useState<string | null>(null);
   const [stats, setStats] = useState({
     characters: 0,
     episodes: 0,
@@ -193,6 +205,40 @@ const Dashboard = () => {
     }
   };
 
+  const handleDeleteProject = async () => {
+    if (!projectToDelete) return;
+
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+
+      const { error } = await supabase
+        .from('projects')
+        .delete()
+        .eq('id', projectToDelete)
+        .eq('user_id', user.id);
+
+      if (error) throw error;
+
+      toast({
+        title: "Project Deleted",
+        description: "The project has been permanently removed",
+      });
+
+      // Refresh dashboard
+      fetchDashboardData(user.id);
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to delete project",
+        variant: "destructive",
+      });
+    } finally {
+      setDeleteDialogOpen(false);
+      setProjectToDelete(null);
+    }
+  };
+
   if (loading) {
     return <div className="flex items-center justify-center min-h-screen">Loading...</div>;
   }
@@ -299,7 +345,7 @@ const Dashboard = () => {
             ) : (
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 {recentProjects.map((project) => (
-                  <Card key={project.id} className="p-6 bg-card border-border hover:border-primary/30 transition-all cursor-pointer group">
+                  <Card key={project.id} className="p-6 bg-card border-border hover:border-primary/30 transition-all group">
                     <div className="space-y-3">
                       <div className="flex items-start justify-between">
                         <div className="flex-1">
@@ -317,9 +363,22 @@ const Dashboard = () => {
                         <Badge className={project.status === 'active' ? 'bg-success' : 'bg-muted'}>
                           {project.status || 'draft'}
                         </Badge>
-                        <Link to="/create">
-                          <Button variant="ghost" size="sm">Manage</Button>
-                        </Link>
+                        <div className="flex gap-2">
+                          <Link to="/create">
+                            <Button variant="ghost" size="sm">Manage</Button>
+                          </Link>
+                          <Button 
+                            variant="ghost" 
+                            size="sm"
+                            className="text-destructive hover:text-destructive hover:bg-destructive/10"
+                            onClick={() => {
+                              setProjectToDelete(project.id);
+                              setDeleteDialogOpen(true);
+                            }}
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        </div>
                       </div>
                     </div>
                   </Card>
@@ -405,6 +464,26 @@ const Dashboard = () => {
           </div>
         </div>
       </main>
+
+      <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete Project?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This will permanently delete this project and all associated episodes, characters, and media. This action cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction 
+              onClick={handleDeleteProject}
+              className="bg-destructive hover:bg-destructive/90"
+            >
+              Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 };
