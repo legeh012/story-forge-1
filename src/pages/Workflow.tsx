@@ -304,44 +304,59 @@ const Workflow = () => {
     if (!selectedProject || !event.target.files || event.target.files.length === 0) return;
 
     setUploading(true);
-    const file = event.target.files[0];
+    const files = Array.from(event.target.files);
+    const totalFiles = files.length;
+    let successCount = 0;
+    let failCount = 0;
 
     try {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error("Not authenticated");
 
-      const fileExt = file.name.split('.').pop();
-      const fileName = `${user.id}/${selectedProject}/${Date.now()}.${fileExt}`;
+      // Upload all files in parallel
+      await Promise.all(
+        files.map(async (file) => {
+          try {
+            const fileExt = file.name.split('.').pop();
+            const fileName = `${user.id}/${selectedProject}/${Date.now()}_${Math.random().toString(36).substring(7)}.${fileExt}`;
 
-      const { error: uploadError } = await supabase.storage
-        .from('generation-attachments')
-        .upload(fileName, file);
+            const { error: uploadError } = await supabase.storage
+              .from('generation-attachments')
+              .upload(fileName, file);
 
-      if (uploadError) throw uploadError;
+            if (uploadError) throw uploadError;
 
-      const { data: { publicUrl } } = supabase.storage
-        .from('generation-attachments')
-        .getPublicUrl(fileName);
+            const { error: dbError } = await supabase
+              .from('generation_attachments')
+              .insert([{
+                user_id: user.id,
+                project_id: selectedProject,
+                file_name: file.name,
+                file_path: fileName,
+                file_size: file.size,
+                file_type: file.type
+              }]);
 
-      const { error: dbError } = await supabase
-        .from('generation_attachments')
-        .insert([{
-          user_id: user.id,
-          project_id: selectedProject,
-          file_name: file.name,
-          file_path: fileName,
-          file_size: file.size,
-          file_type: file.type
-        }]);
+            if (dbError) throw dbError;
+            successCount++;
+          } catch (error) {
+            console.error(`Failed to upload ${file.name}:`, error);
+            failCount++;
+          }
+        })
+      );
 
-      if (dbError) throw dbError;
-
-      toast({
-        title: "File uploaded",
-        description: `${file.name} has been uploaded successfully`
-      });
-
-      await fetchProjectDetails(selectedProject);
+      if (successCount > 0) {
+        toast({
+          title: `${successCount} file${successCount > 1 ? 's' : ''} uploaded`,
+          description: failCount > 0 
+            ? `${failCount} file${failCount > 1 ? 's' : ''} failed to upload`
+            : "All files uploaded successfully"
+        });
+        await fetchProjectDetails(selectedProject);
+      } else {
+        throw new Error("All uploads failed");
+      }
     } catch (error: any) {
       toast({
         title: "Upload failed",
@@ -1095,6 +1110,9 @@ const Workflow = () => {
                           <Input
                             id="file-upload"
                             type="file"
+                            multiple
+                            accept="*/*"
+                            capture="environment"
                             className="hidden"
                             onChange={handleFileUpload}
                             disabled={uploading}
@@ -1112,7 +1130,7 @@ const Workflow = () => {
                             ) : (
                               <>
                                 <Paperclip className="h-4 w-4 mr-2" />
-                                Upload File
+                                Upload Files
                               </>
                             )}
                           </Button>
