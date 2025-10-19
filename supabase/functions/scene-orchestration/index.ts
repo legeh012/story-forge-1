@@ -51,7 +51,7 @@ Deno.serve(async (req) => {
     const LOVABLE_API_KEY = Deno.env.get('LOVABLE_API_KEY');
     if (!LOVABLE_API_KEY) throw new Error('LOVABLE_API_KEY not configured');
 
-    const matchingPrompt = `Match this short prompt to the best scene template and generate instant scene details:
+    const matchingPrompt = `You are the 22nd century AI Scene Orchestrator for REALITY TV production. Generate instant, dramatic reality show scenes with minimum effort.
 
 SHORT PROMPT: "${shortPrompt}"
 
@@ -62,28 +62,48 @@ TEMPLATE DETAILS:
 ${JSON.stringify(sceneTemplates.map(t => ({ name: t.name, data: t.template_data })), null, 2)}
 
 Instructions:
-1. Select the BEST matching template (or "custom" if none fit well)
-2. Extract character names and specific actions from the prompt
-3. Generate complete scene using the template as a foundation
-4. Add specific dialogue snippets and key moments
-5. Ensure photorealistic, Netflix-grade quality specifications
+1. Match to BEST reality TV template (or "custom" if none fit)
+2. Extract character names and DRAMA TRIGGERS from the prompt
+3. Generate REALITY TV scene with:
+   - Unscripted-style conflict
+   - Confessional moments (talking heads)
+   - Reaction shots and shade
+   - Natural build to explosive moment
+   - Multiple camera angles (reality TV style)
+4. Include specific REALITY TV elements:
+   - Side-eyes, receipts, confrontations
+   - Alliance dynamics
+   - Strategic gameplay
+   - Emotional confessionals
+5. Ensure Netflix-grade photorealistic quality
+
+CRITICAL: This is REALITY TV - think Real Housewives, Selling Sunset, Love & Hip Hop. Maximum drama, authentic conflict, strategic confessionals.
 
 Return JSON:
 {
   "matchedTemplate": "template name or custom",
   "scene": {
-    "title": "scene title",
-    "setting": "detailed setting from template",
-    "characters": ["character names extracted"],
-    "action": "what happens in detail",
-    "dialogue": [{"character": "name", "line": "dialogue"}],
-    "cameraAngles": ["from template"],
-    "lighting": "from template",
-    "duration": number,
-    "dramaticBeats": ["beat 1", "beat 2", ...]
+    "title": "reality TV scene title",
+    "setting": "detailed location from template",
+    "characters": ["cast members extracted"],
+    "mainConflict": "what's the tea?",
+    "action": "scene breakdown with drama escalation",
+    "keyMoments": [
+      {"type": "tension", "description": "micro-aggression or shade"},
+      {"type": "confrontation", "description": "explosive moment"},
+      {"type": "confessional", "character": "name", "commentary": "talking head reaction"}
+    ],
+    "dialogue": [{"character": "name", "line": "reality TV dialogue", "tone": "shade/confrontational/emotional"}],
+    "cameraAngles": ["reality TV multi-cam shots", "confessional close-up", "reaction shots"],
+    "lighting": "reality TV naturalistic with dramatic confessional",
+    "duration": 180,
+    "dramaticBeats": ["build", "explosion", "aftermath", "confessional"],
+    "receipts": ["evidence character brings", "proof of betrayal"],
+    "allianceDynamics": "who's with who, who switches sides"
   },
   "renderingTimeEstimate": "in seconds",
-  "templateUsed": true/false
+  "templateUsed": true/false,
+  "realityTVIntensity": 8
 }`;
 
     const aiResponse = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
@@ -97,7 +117,7 @@ Return JSON:
         messages: [
           {
             role: 'system',
-            content: 'You are the Scene Orchestration Engine. Match short prompts to pre-generated templates for instant scene generation. Always respond with valid JSON.'
+            content: 'You are the 22nd century AI Scene Orchestration Engine for REALITY TV. Generate instant, dramatic reality show scenes from short prompts. Think Real Housewives meets Selling Sunset - maximum drama, authentic conflict, strategic confessionals. Always respond with valid JSON.'
           },
           {
             role: 'user',

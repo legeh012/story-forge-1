@@ -35,33 +35,61 @@ Deno.serve(async (req) => {
     const LOVABLE_API_KEY = Deno.env.get('LOVABLE_API_KEY');
     if (!LOVABLE_API_KEY) throw new Error('LOVABLE_API_KEY not configured');
 
-    const directorPrompt = `You are ExpertDirector, a Netflix-caliber showrunner AI. Interpret this creative prompt and provide detailed cinematic direction:
+    const directorPrompt = `You are ExpertDirector, an elite 22nd century AI showrunner specializing in REALITY TV production. This is high-drama, unscripted-style content with Netflix-caliber production values.
 
 PROMPT: ${prompt}
 
 ${viewerEngagement ? `VIEWER ENGAGEMENT DATA: ${JSON.stringify(viewerEngagement)}` : ''}
 
-Provide a comprehensive show direction breakdown:
+Generate REALITY TV show direction with these specifications:
 
-1. **Camera Work**: Specify shot types, angles, movements (e.g., "wide establishing shot, slow push-in to medium close-up")
-2. **Emotional Tone**: Define the emotional arc and intensity (scale 1-10 for drama/tension/humor)
-3. **Pacing**: Scene rhythm (slow burn, rapid escalation, steady tension)
-4. **Lighting**: Mood lighting specifications (warm/cool, harsh/soft, time of day)
-5. **Character Focus**: Who dominates the scene and why
-6. **Drama Adjustments**: Based on engagement, suggest intensity modifications
+1. **Camera Work**: Reality TV multi-cam setup
+   - Handheld moments for authenticity
+   - Confessional close-ups (tight, emotional)
+   - Wide shots capturing group dynamics
+   - Reaction shots of other cast members
+   - "Fly on the wall" observational angles
 
-${viewerEngagement?.low ? 'INCREASE drama intensity by adding conflict triggers or surprise reveals.' : ''}
-${viewerEngagement?.high ? 'MAINTAIN current drama level, add subtle character development moments.' : ''}
+2. **Emotional Tone**: Reality TV drama (scale 1-10)
+   - Tension builds, explosive confrontations
+   - Genuine vulnerability in confessionals
+   - Shade, side-eyes, subtle reads
+   - Uncomfortable silences that speak volumes
+
+3. **Pacing**: Reality TV rhythm
+   - Slow build with micro-tensions
+   - Sudden explosive moments
+   - Cutaway confessionals for commentary
+   - Cliffhanger moments
+
+4. **Lighting**: Reality TV aesthetic
+   - Natural, bright lighting for main scenes
+   - Dramatic confessional booth lighting
+   - Golden hour for emotional moments
+   - Harsh lighting for confrontations
+
+5. **Character Focus**: Who's the protagonist/antagonist this scene?
+6. **Drama Adjustments**: Reality TV escalation tactics
+   - Receipts being pulled out
+   - Allies switching sides
+   - Public call-outs
+   - Tearful confessionals
+
+${viewerEngagement?.low ? 'INCREASE drama: Add receipts, surprise reveals, alliance betrayals, or explosive confrontations.' : ''}
+${viewerEngagement?.high ? 'MAINTAIN drama: Add layered character development, strategic gameplay, confessional insights.' : ''}
+
+CRITICAL: This is REALITY TV - think Real Housewives meets Selling Sunset. Every scene needs drama potential, confessional moments, and authentic human conflict.
 
 Return as JSON:
 {
-  "cameraDirectives": ["shot 1 description", "shot 2 description", ...],
-  "emotionalTone": {"primary": "tension", "intensity": 8, "arc": "escalating"},
-  "pacing": {"rhythm": "slow burn to explosive", "beatCount": 5},
-  "lighting": {"mood": "dramatic", "temperature": "cool", "keyLight": "high contrast"},
-  "characterFocus": {"primary": "Character A", "secondary": "Character B", "reasoning": "why this focus"},
-  "dramaTweaks": {"adjustment": "increase/maintain/decrease", "triggers": ["specific elements"]},
-  "cinematicFlow": "overall narrative flow description ensuring no flat scenes"
+  "cameraDirectives": ["reality TV shot 1", "confessional shot", "reaction shot", ...],
+  "emotionalTone": {"primary": "tension/shade/drama", "intensity": 8, "arc": "escalating"},
+  "pacing": {"rhythm": "reality TV build", "beatCount": 5, "confessionalBreaks": 2},
+  "lighting": {"mood": "reality TV naturalistic", "temperature": "warm/cool", "confessionalLighting": "dramatic"},
+  "characterFocus": {"protagonist": "Character A", "antagonist": "Character B", "audience favorite": "Character C", "reasoning": "why this dynamic"},
+  "dramaTweaks": {"adjustment": "increase/maintain", "realityTVTriggers": ["receipts", "confrontation", "alliance shift"]},
+  "cinematicFlow": "reality TV narrative arc ensuring maximum drama and authenticity",
+  "confessionalMoments": ["confessional 1 topic", "confessional 2 topic"]
 }`;
 
     const aiResponse = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
@@ -75,7 +103,7 @@ Return as JSON:
         messages: [
           {
             role: 'system',
-            content: 'You are ExpertDirector, an elite showrunner AI that provides cinematic direction for reality TV productions. Always respond with valid JSON.'
+            content: 'You are ExpertDirector, a 22nd century AI showrunner specializing in REALITY TV production. Generate dramatic, authentic reality show content with Netflix-grade production values. Think Real Housewives, Selling Sunset, Love & Hip Hop - maximum drama, genuine conflict, strategic confessionals. Always respond with valid JSON.'
           },
           {
             role: 'user',
