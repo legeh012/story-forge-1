@@ -11,6 +11,13 @@ import { supabase } from '@/integrations/supabase/client';
 const Dashboard = () => {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(true);
+  const [stats, setStats] = useState({
+    characters: 0,
+    episodes: 0,
+    projects: 0
+  });
+  const [recentCharacters, setRecentCharacters] = useState<any[]>([]);
+  const [recentEpisodes, setRecentEpisodes] = useState<any[]>([]);
 
   useEffect(() => {
     const checkAuth = async () => {
@@ -20,6 +27,7 @@ const Dashboard = () => {
         return;
       }
       setLoading(false);
+      fetchDashboardData(session.user.id);
     };
     checkAuth();
 
@@ -33,6 +41,29 @@ const Dashboard = () => {
 
     return () => subscription.unsubscribe();
   }, [navigate]);
+
+  const fetchDashboardData = async (userId: string) => {
+    try {
+      const [charCount, epCount, projCount, chars, eps] = await Promise.all([
+        supabase.from('characters').select('*', { count: 'exact', head: true }).eq('user_id', userId),
+        supabase.from('episodes').select('*', { count: 'exact', head: true }).eq('user_id', userId),
+        supabase.from('projects').select('*', { count: 'exact', head: true }).eq('user_id', userId),
+        supabase.from('characters').select('name, role').eq('user_id', userId).order('created_at', { ascending: false }).limit(3),
+        supabase.from('episodes').select('title, status, episode_number').eq('user_id', userId).order('created_at', { ascending: false }).limit(3)
+      ]);
+
+      setStats({
+        characters: charCount.count || 0,
+        episodes: epCount.count || 0,
+        projects: projCount.count || 0
+      });
+
+      setRecentCharacters(chars.data || []);
+      setRecentEpisodes(eps.data || []);
+    } catch (error) {
+      console.error('Failed to fetch dashboard data:', error);
+    }
+  };
 
   if (loading) {
     return <div className="flex items-center justify-center min-h-screen">Loading...</div>;
@@ -59,7 +90,7 @@ const Dashboard = () => {
                 <Users className="h-6 w-6 text-primary" />
               </div>
               <div>
-                <p className="text-3xl font-bold">12</p>
+                <p className="text-3xl font-bold">{stats.characters}</p>
                 <p className="text-muted-foreground">Characters</p>
               </div>
             </div>
@@ -71,7 +102,7 @@ const Dashboard = () => {
                 <BookOpen className="h-6 w-6 text-accent" />
               </div>
               <div>
-                <p className="text-3xl font-bold">8</p>
+                <p className="text-3xl font-bold">{stats.episodes}</p>
                 <p className="text-muted-foreground">Episodes</p>
               </div>
             </div>
@@ -83,7 +114,7 @@ const Dashboard = () => {
                 <Sparkles className="h-6 w-6 text-primary-glow" />
               </div>
               <div>
-                <p className="text-3xl font-bold">3</p>
+                <p className="text-3xl font-bold">{stats.projects}</p>
                 <p className="text-muted-foreground">Active Projects</p>
               </div>
             </div>
@@ -107,21 +138,28 @@ const Dashboard = () => {
             </div>
             
             <div className="space-y-3">
-              {[
-                { name: "Elena Storm", type: "Protagonist", episodes: 5 },
-                { name: "Marcus Vale", type: "Antagonist", episodes: 3 },
-                { name: "Aria Chen", type: "Supporting", episodes: 4 },
-              ].map((character) => (
-                <Card key={character.name} className="p-4 bg-card border-border hover:border-primary/30 transition-all cursor-pointer">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <h3 className="font-semibold">{character.name}</h3>
-                      <p className="text-sm text-muted-foreground">{character.type} • {character.episodes} episodes</p>
+              {recentCharacters.length === 0 ? (
+                <div className="text-center py-8 text-muted-foreground">
+                  <p className="mb-4">No characters yet</p>
+                  <Link to="/characters">
+                    <Button size="sm">Create your first character</Button>
+                  </Link>
+                </div>
+              ) : (
+                recentCharacters.map((character) => (
+                  <Card key={character.name} className="p-4 bg-card border-border hover:border-primary/30 transition-all cursor-pointer">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <h3 className="font-semibold">{character.name}</h3>
+                        <p className="text-sm text-muted-foreground">{character.role || 'Character'}</p>
+                      </div>
+                      <Link to="/characters">
+                        <Button variant="ghost" size="sm">Edit</Button>
+                      </Link>
                     </div>
-                    <Button variant="ghost" size="sm">Edit</Button>
-                  </div>
-                </Card>
-              ))}
+                  </Card>
+                ))
+              )}
             </div>
           </div>
 
@@ -137,21 +175,28 @@ const Dashboard = () => {
             </div>
             
             <div className="space-y-3">
-              {[
-                { title: "The Awakening", status: "Published", characters: 3 },
-                { title: "Shadows Rising", status: "Draft", characters: 4 },
-                { title: "Breaking Point", status: "In Progress", characters: 2 },
-              ].map((episode) => (
-                <Card key={episode.title} className="p-4 bg-card border-border hover:border-accent/30 transition-all cursor-pointer">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <h3 className="font-semibold">{episode.title}</h3>
-                      <p className="text-sm text-muted-foreground">{episode.status} • {episode.characters} characters</p>
+              {recentEpisodes.length === 0 ? (
+                <div className="text-center py-8 text-muted-foreground">
+                  <p className="mb-4">No episodes yet</p>
+                  <Link to="/episodes">
+                    <Button size="sm">Create your first episode</Button>
+                  </Link>
+                </div>
+              ) : (
+                recentEpisodes.map((episode) => (
+                  <Card key={episode.title} className="p-4 bg-card border-border hover:border-accent/30 transition-all cursor-pointer">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <h3 className="font-semibold">{episode.title}</h3>
+                        <p className="text-sm text-muted-foreground">{episode.status || 'Draft'} • Episode {episode.episode_number}</p>
+                      </div>
+                      <Link to="/episodes">
+                        <Button variant="ghost" size="sm">View</Button>
+                      </Link>
                     </div>
-                    <Button variant="ghost" size="sm">View</Button>
-                  </div>
-                </Card>
-              ))}
+                  </Card>
+                ))
+              )}
             </div>
           </div>
         </div>
