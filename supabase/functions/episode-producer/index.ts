@@ -176,8 +176,42 @@ Deno.serve(async (req) => {
       status: updateError ? 'failed' : 'completed'
     });
 
+    // Step 7: Trigger video generation with actual scenes
+    console.log('Step 7: Generating video...');
+    const scenes = sceneResult.data?.scenes || [];
+    
+    if (scenes.length > 0) {
+      const videoResult = await supabase.functions.invoke('generate-video', {
+        body: {
+          episodeId,
+          scenes: scenes.map((scene: any) => ({
+            description: scene.description || scene.visual_description || 'Scene from the episode',
+            duration: scene.duration || 5,
+            dialogue: scene.dialogue || scene.voiceover
+          }))
+        }
+      });
+
+      productionSteps.push({
+        step: 'Video Generation',
+        status: videoResult.error ? 'failed' : 'started',
+        result: videoResult.data
+      });
+
+      if (videoResult.error) {
+        console.error('Video generation error:', videoResult.error);
+      }
+    } else {
+      console.log('No scenes available for video generation');
+      productionSteps.push({
+        step: 'Video Generation',
+        status: 'skipped',
+        result: { message: 'No scenes available' }
+      });
+    }
+
     // Log execution stats
-    const completedSteps = productionSteps.filter(s => s.status === 'completed').length;
+    const completedSteps = productionSteps.filter(s => s.status === 'completed' || s.status === 'started').length;
     const successRate = (completedSteps / productionSteps.length) * 100;
 
     await supabase.from('bot_execution_stats').insert({
@@ -198,7 +232,7 @@ Deno.serve(async (req) => {
         episodeId,
         productionSteps,
         successRate,
-        message: 'Episode production completed',
+        message: 'Episode production completed. Video generation started in background.',
         readyForVideo: successRate >= 80
       }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
