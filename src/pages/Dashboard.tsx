@@ -4,14 +4,18 @@ import Navigation from "@/components/Navigation";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Plus, Users, BookOpen, Sparkles } from "lucide-react";
+import { Plus, Users, BookOpen, Sparkles, Zap, Play } from "lucide-react";
 import { Link } from "react-router-dom";
 import { SystemHealthMonitor } from "@/components/SystemHealthMonitor";
 import { supabase } from '@/integrations/supabase/client';
+import { useToast } from "@/hooks/use-toast";
 
 const Dashboard = () => {
   const navigate = useNavigate();
+  const { toast } = useToast();
   const [loading, setLoading] = useState(true);
+  const [generatingEpisode, setGeneratingEpisode] = useState(false);
+  const [activatingBots, setActivatingBots] = useState(false);
   const [stats, setStats] = useState({
     characters: 0,
     episodes: 0,
@@ -69,6 +73,126 @@ const Dashboard = () => {
     }
   };
 
+  const activateProductionBots = async () => {
+    setActivatingBots(true);
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+
+      // Activate essential bots for production
+      const essentialBots = [
+        'ultra_video',
+        'script_generator',
+        'cultural_injection',
+        'hook_optimization',
+        'performance_tracker'
+      ] as const;
+
+      const { error } = await supabase
+        .from('viral_bots')
+        .update({ is_active: true })
+        .eq('user_id', user.id)
+        .in('bot_type', essentialBots as any);
+
+      if (error) throw error;
+
+      toast({
+        title: "Bots Activated",
+        description: "Production bots are now active and ready",
+      });
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to activate bots",
+        variant: "destructive",
+      });
+    } finally {
+      setActivatingBots(false);
+    }
+  };
+
+  const generateFirstEpisode = async () => {
+    setGeneratingEpisode(true);
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+
+      const projectId = 'ebae852a-56f4-4199-bea8-1b78f66d88c4'; // Real Sisters in the diaspora
+
+      // Check if episode 1 already exists
+      const { data: existingEpisode } = await supabase
+        .from('episodes')
+        .select('*')
+        .eq('project_id', projectId)
+        .eq('episode_number', 1)
+        .maybeSingle();
+
+      if (existingEpisode) {
+        toast({
+          title: "Episode Exists",
+          description: "Episode 1 already exists. Regenerating...",
+        });
+      }
+
+      // Create or update episode 1
+      const episodeData = {
+        project_id: projectId,
+        user_id: user.id,
+        episode_number: 1,
+        season: 1,
+        title: "Say Walahi, We're Live",
+        synopsis: "The sisters make their grand entrance with glam confessionals. Ayaan and Ifrah clash over boutique drama while Zahra leaks receipts. Nasra crashes the launch with her own documentation.",
+        script: "FADE IN: CONFESSIONAL - AYAAN (in hijab and designer blazer): 'When they said reality TV, I said reality CHECK. These sisters better bring receipts because I INVENTED the paper trail.' [Cut to boutique launch chaos]",
+        status: 'draft',
+        video_status: 'not_started'
+      };
+
+      let episodeId;
+      if (existingEpisode) {
+        const { error } = await supabase
+          .from('episodes')
+          .update(episodeData)
+          .eq('id', existingEpisode.id);
+        if (error) throw error;
+        episodeId = existingEpisode.id;
+      } else {
+        const { data, error } = await supabase
+          .from('episodes')
+          .insert(episodeData)
+          .select()
+          .single();
+        if (error) throw error;
+        episodeId = data.id;
+      }
+
+      // Trigger Ultra Video Bot
+      const { error: botError } = await supabase.functions.invoke('ultra-video-bot', {
+        body: { 
+          episodeId,
+          enhancementLevel: 'ultra'
+        }
+      });
+
+      if (botError) throw botError;
+
+      toast({
+        title: "Episode Generation Started",
+        description: "Ultra Video Bot is creating Episode 1 with advanced AI",
+      });
+
+      // Refresh dashboard data
+      fetchDashboardData(user.id);
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: error instanceof Error ? error.message : "Failed to generate episode",
+        variant: "destructive",
+      });
+    } finally {
+      setGeneratingEpisode(false);
+    }
+  };
+
   if (loading) {
     return <div className="flex items-center justify-center min-h-screen">Loading...</div>;
   }
@@ -79,12 +203,34 @@ const Dashboard = () => {
       
       <main className="container mx-auto px-4 pt-24 pb-16">
         <div className="mb-8">
-          <h1 className="text-4xl font-bold mb-2 bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
-            Your Creative Studio
-          </h1>
-          <p className="text-muted-foreground text-lg">
-            Manage your characters, episodes, and projects
-          </p>
+          <div className="flex items-center justify-between">
+            <div>
+              <h1 className="text-4xl font-bold mb-2 bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
+                Your Creative Studio
+              </h1>
+              <p className="text-muted-foreground text-lg">
+                Manage your characters, episodes, and projects
+              </p>
+            </div>
+            <div className="flex gap-3">
+              <Button 
+                onClick={activateProductionBots}
+                disabled={activatingBots}
+                className="bg-gradient-to-r from-purple-600 to-pink-600 hover:opacity-90"
+              >
+                <Zap className="h-4 w-4 mr-2" />
+                {activatingBots ? "Activating..." : "Activate Bots"}
+              </Button>
+              <Button 
+                onClick={generateFirstEpisode}
+                disabled={generatingEpisode}
+                className="bg-gradient-to-r from-primary to-accent hover:opacity-90"
+              >
+                <Play className="h-4 w-4 mr-2" />
+                {generatingEpisode ? "Generating..." : "Generate Episode 1"}
+              </Button>
+            </div>
+          </div>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
