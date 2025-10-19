@@ -3,6 +3,7 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Plus, Users, BookOpen, Sparkles } from "lucide-react";
 import { Link } from "react-router-dom";
+import { SystemHealthMonitor } from "@/components/SystemHealthMonitor";
 
 const Dashboard = () => {
   return (
@@ -55,6 +56,10 @@ const Dashboard = () => {
               </div>
             </div>
           </Card>
+        </div>
+
+        <div className="mb-8">
+          <SystemHealthMonitor />
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">

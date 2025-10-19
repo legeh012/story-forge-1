@@ -1,1 +1,4 @@
 project_id = "akmeovotnnqbxotlerie"
+
+[functions.self-healing]
+verify_jwt = false

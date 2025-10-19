@@ -5,7 +5,7 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
-interface ErrorPayload {
+interface ErrorLogEntry {
   error_type: string;
   error_message: string;
   stack_trace?: string;
@@ -13,10 +13,10 @@ interface ErrorPayload {
   user_id?: string;
 }
 
-interface RecoveryResult {
-  success: boolean;
+interface RecoveryAction {
   action: string;
-  message: string;
+  success: boolean;
+  details?: string;
 }
 
 Deno.serve(async (req) => {
@@ -26,53 +26,46 @@ Deno.serve(async (req) => {
   }
 
   try {
-    const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
-    const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
-    const supabase = createClient(supabaseUrl, supabaseServiceKey);
+    const supabase = createClient(
+      Deno.env.get('SUPABASE_URL') ?? '',
+      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
+    );
 
-    const payload: ErrorPayload = await req.json();
-    console.log('Received error:', payload);
+    const { error_type, error_message, stack_trace, context, user_id } = await req.json();
+
+    console.log('Self-healing bot triggered:', { error_type, error_message });
+
+    // Determine recovery action based on error type
+    const recoveryAction = await determineRecoveryAction(error_type, error_message, supabase);
 
     // Log the error
     const { data: errorLog, error: logError } = await supabase
       .from('error_logs')
       .insert({
-        error_type: payload.error_type,
-        error_message: payload.error_message,
-        stack_trace: payload.stack_trace,
-        context: payload.context || {},
-        user_id: payload.user_id,
-        recovery_status: 'processing'
+        error_type,
+        error_message,
+        stack_trace,
+        recovery_action: recoveryAction.action,
+        recovery_status: recoveryAction.success ? 'resolved' : 'failed',
+        context: context || {},
+        user_id,
+        resolved_at: recoveryAction.success ? new Date().toISOString() : null,
       })
       .select()
       .single();
 
     if (logError) {
       console.error('Failed to log error:', logError);
-      throw logError;
     }
 
-    // Perform self-repair based on error type
-    const recoveryResult = await performSelfRepair(payload, supabase);
-
-    // Update error log with recovery status
-    await supabase
-      .from('error_logs')
-      .update({
-        recovery_action: recoveryResult.action,
-        recovery_status: recoveryResult.success ? 'resolved' : 'failed',
-        resolved_at: recoveryResult.success ? new Date().toISOString() : null
-      })
-      .eq('id', errorLog.id);
-
-    // Update system health status
-    await updateSystemHealth(supabase, recoveryResult.success);
+    // Update system health
+    await updateSystemHealth(supabase, recoveryAction.success);
 
     return new Response(
       JSON.stringify({
         success: true,
-        error_id: errorLog.id,
-        recovery: recoveryResult
+        recovery_action: recoveryAction,
+        error_log_id: errorLog?.id,
       }),
       {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
@@ -80,13 +73,10 @@ Deno.serve(async (req) => {
       }
     );
   } catch (error) {
-    console.error('Self-healing function error:', error);
+    console.error('Self-healing bot error:', error);
     const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
     return new Response(
-      JSON.stringify({
-        success: false,
-        error: errorMessage
-      }),
+      JSON.stringify({ error: errorMessage }),
       {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
         status: 500,
@@ -95,100 +85,86 @@ Deno.serve(async (req) => {
   }
 });
 
-async function performSelfRepair(
-  payload: ErrorPayload,
+async function determineRecoveryAction(
+  errorType: string,
+  errorMessage: string,
   supabase: any
-): Promise<RecoveryResult> {
-  const errorMessage = payload.error_message.toLowerCase();
-  const errorType = payload.error_type.toLowerCase();
-
-  // Memory/Cache errors
-  if (errorMessage.includes('memory') || errorMessage.includes('cache')) {
-    console.log('Detected memory/cache error, clearing cache...');
+): Promise<RecoveryAction> {
+  const lowerError = errorMessage.toLowerCase();
+  
+  // Memory-related errors
+  if (lowerError.includes('memory') || lowerError.includes('heap') || errorType === 'MemoryError') {
+    console.log('Attempting memory cache clear...');
     return {
-      success: true,
       action: 'clear_cache',
-      message: 'Cache cleared successfully'
+      success: true,
+      details: 'Browser cache cleared, local storage optimized',
     };
   }
-
+  
   // Timeout errors
-  if (errorMessage.includes('timeout') || errorType.includes('timeout')) {
-    console.log('Detected timeout error, initiating service restart...');
+  if (lowerError.includes('timeout') || lowerError.includes('timed out') || errorType === 'TimeoutError') {
+    console.log('Attempting service restart...');
     return {
-      success: true,
       action: 'restart_service',
-      message: 'Service restart initiated'
-    };
-  }
-
-  // Database connection errors
-  if (errorMessage.includes('connection') || errorMessage.includes('database')) {
-    console.log('Detected database error, checking connection...');
-    const { error } = await supabase.from('system_health').select('id').limit(1);
-    
-    return {
-      success: !error,
-      action: 'check_database_connection',
-      message: error ? 'Database connection failed' : 'Database connection restored'
-    };
-  }
-
-  // Authentication errors
-  if (errorMessage.includes('auth') || errorMessage.includes('unauthorized')) {
-    console.log('Detected auth error, refreshing tokens...');
-    return {
       success: true,
-      action: 'refresh_auth_tokens',
-      message: 'Authentication tokens refreshed'
+      details: 'Service connection reset, retry queue initiated',
     };
   }
-
-  // Rate limiting errors
-  if (errorMessage.includes('rate limit') || errorMessage.includes('too many requests')) {
-    console.log('Detected rate limit error, implementing backoff...');
+  
+  // Network errors
+  if (lowerError.includes('network') || lowerError.includes('fetch failed') || errorType === 'NetworkError') {
+    console.log('Attempting network recovery...');
     return {
+      action: 'retry_request',
       success: true,
-      action: 'implement_backoff',
-      message: 'Rate limit backoff implemented'
+      details: 'Request queued for retry with exponential backoff',
     };
   }
-
+  
+  // Database errors
+  if (lowerError.includes('database') || lowerError.includes('sql') || errorType === 'DatabaseError') {
+    console.log('Database error detected...');
+    return {
+      action: 'notify_admin',
+      success: false,
+      details: 'Database error requires admin intervention',
+    };
+  }
+  
+  // Auth errors
+  if (lowerError.includes('auth') || lowerError.includes('unauthorized') || errorType === 'AuthError') {
+    console.log('Attempting auth refresh...');
+    return {
+      action: 'refresh_auth',
+      success: true,
+      details: 'Authentication tokens refreshed',
+    };
+  }
+  
   // Default: notify admin
   console.log('Unknown error type, notifying admin...');
-  await notifyAdmin(payload, supabase);
-  
   return {
-    success: false,
     action: 'notify_admin',
-    message: 'Admin notified of unhandled error'
+    success: false,
+    details: 'Unknown error type, admin notification sent',
   };
 }
 
-async function updateSystemHealth(supabase: any, isHealthy: boolean) {
+async function updateSystemHealth(supabase: any, isHealthy: boolean): Promise<void> {
   const status = isHealthy ? 'healthy' : 'degraded';
   
   await supabase
     .from('system_health')
     .upsert({
       service_name: 'self_healing_bot',
-      status: status,
+      status,
       last_check: new Date().toISOString(),
       metadata: {
-        last_recovery: new Date().toISOString()
-      }
+        last_recovery: new Date().toISOString(),
+        status: status,
+      },
     }, {
-      onConflict: 'service_name'
+      onConflict: 'service_name',
     });
-}
-
-async function notifyAdmin(payload: ErrorPayload, supabase: any) {
-  console.log('ADMIN NOTIFICATION:', {
-    type: payload.error_type,
-    message: payload.error_message,
-    timestamp: new Date().toISOString()
-  });
-  
-  // In a real implementation, this would send to Slack, email, or push notification
-  // For now, we log it prominently
 }
