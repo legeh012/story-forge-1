@@ -44,37 +44,68 @@ const Episodes = () => {
 
     setIsGenerating(true);
     try {
-      const { data, error } = await supabase.functions.invoke('ai-copilot', {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error('Not authenticated');
+
+      // Get first project or create a default one
+      let projectId;
+      const { data: projects } = await supabase
+        .from('projects')
+        .select('id')
+        .eq('user_id', user.id)
+        .limit(1);
+
+      if (projects && projects.length > 0) {
+        projectId = projects[0].id;
+      } else {
+        // Create a default project
+        const { data: newProject, error: projectError } = await supabase
+          .from('projects')
+          .insert({
+            title: 'My Story Project',
+            description: 'AI-generated episodes',
+            genre: 'Drama',
+            user_id: user.id,
+            status: 'active'
+          })
+          .select()
+          .single();
+
+        if (projectError) throw projectError;
+        projectId = newProject.id;
+      }
+
+      console.log('🚀 Generating episode with bot orchestration...');
+
+      // Call the generate-episode-from-prompt function
+      const { data, error } = await supabase.functions.invoke('generate-episode-from-prompt', {
         body: {
-          message: prompt,
-          conversationHistory: [],
-        },
+          projectId,
+          prompt: prompt.trim()
+        }
       });
 
       if (error) throw error;
 
-      if (data.executionResult?.success) {
-        toast({
-          title: 'Episode created!',
-          description: 'Your episode has been generated successfully.',
-        });
-        setPrompt('');
-      } else if (data.executionResult?.error) {
-        toast({
-          title: 'Generation failed',
-          description: data.executionResult.error,
-          variant: 'destructive',
-        });
-      } else {
-        toast({
-          title: 'Response received',
-          description: data.response.message,
-        });
-      }
-    } catch (error) {
+      console.log('✅ Episode generation response:', data);
+
       toast({
-        title: 'Error',
-        description: 'Failed to generate episode. Please try again.',
+        title: '🎬 Episode Generation Started!',
+        description: `${data.message || 'Episode created successfully'}\n\n🤖 AI bots are now working on optimization and video generation.`,
+      });
+      
+      setPrompt('');
+      
+      // Navigate to dashboard to see the episode
+      setTimeout(() => {
+        navigate('/dashboard');
+      }, 2000);
+
+    } catch (error) {
+      console.error('Episode generation error:', error);
+      toast({
+        title: 'Generation Failed',
+        description: error instanceof Error ? error.message : 'Failed to generate episode. Please try again.',
         variant: 'destructive',
       });
     } finally {
