@@ -1,7 +1,7 @@
 project_id = "akmeovotnnqbxotlerie"
 
 [functions.self-healing]
-verify_jwt = false
+verify_jwt = true
 
 [functions.trend-detection-bot]
 verify_jwt = true

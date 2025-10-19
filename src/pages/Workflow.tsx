@@ -54,6 +54,7 @@ const Workflow = () => {
   const [episodes, setEpisodes] = useState<Episode[]>([]);
   const [characters, setCharacters] = useState<Character[]>([]);
   const [loading, setLoading] = useState(true);
+  const [authLoading, setAuthLoading] = useState(true);
   const [selectedProject, setSelectedProject] = useState<string | null>(null);
   
   // New project form state
@@ -66,8 +67,32 @@ const Workflow = () => {
   });
 
   useEffect(() => {
-    fetchProjects();
-  }, []);
+    const checkAuth = async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) {
+        navigate('/auth');
+        return;
+      }
+      setAuthLoading(false);
+    };
+    checkAuth();
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(
+      (event, session) => {
+        if (!session) {
+          navigate('/auth');
+        }
+      }
+    );
+
+    return () => subscription.unsubscribe();
+  }, [navigate]);
+
+  useEffect(() => {
+    if (!authLoading) {
+      fetchProjects();
+    }
+  }, [authLoading]);
 
   useEffect(() => {
     if (selectedProject) {
@@ -197,6 +222,10 @@ const Workflow = () => {
   };
 
   const currentProject = projects.find(p => p.id === selectedProject);
+
+  if (authLoading) {
+    return <div className="flex items-center justify-center min-h-screen">Loading...</div>;
+  }
 
   return (
     <div className="min-h-screen bg-background">
