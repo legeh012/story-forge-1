@@ -20,6 +20,7 @@ import { RealismAudit } from "@/components/RealismAudit";
 import { ActiveBotsPanel } from "@/components/ActiveBotsPanel";
 import { ScalabilityInfo } from "@/components/ScalabilityInfo";
 import { PromptGenerator } from "@/components/PromptGenerator";
+import { ProductionDashboard } from "@/components/ProductionDashboard";
 import { sayWalahiCharacters } from "@/data/sayWalahiCharacters";
 
 interface Project {
@@ -242,16 +243,22 @@ const Workflow = () => {
         body: { characters: sayWalahiCharacters, projectId: selectedProject }
       });
 
-      if (error) throw error;
+      if (error) {
+        console.error('Import error:', error);
+        throw error;
+      }
 
-      if (data.success) {
+      if (data?.success) {
         toast({
           title: "Say Walahi cast imported!",
           description: `${data.imported} characters added to your project`,
         });
         await fetchProjectDetails(selectedProject);
+      } else {
+        throw new Error(data?.error || 'Import failed');
       }
     } catch (error) {
+      console.error('Import failed:', error);
       toast({
         title: "Import failed",
         description: error instanceof Error ? error.message : "Failed to import characters",
@@ -802,6 +809,16 @@ const Workflow = () => {
             <TabsContent value="episodes" className="space-y-6">
               {currentProject ? (
                 <>
+                  {/* Production Dashboard */}
+                  <ProductionDashboard
+                    stats={{
+                      totalEpisodes: episodes.length,
+                      renderingEpisodes: episodes.filter((e: any) => e.video_status === 'rendering').length,
+                      completedEpisodes: episodes.filter((e: any) => e.video_status === 'completed').length,
+                      failedEpisodes: episodes.filter((e: any) => e.video_status === 'failed').length,
+                    }}
+                  />
+
                   {/* AI Prompt Generator */}
                   <PromptGenerator 
                     projectId={selectedProject!}

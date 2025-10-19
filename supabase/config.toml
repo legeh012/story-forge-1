@@ -50,3 +50,12 @@ verify_jwt = true
 
 [functions.generate-video]
 verify_jwt = true
+
+[functions.generate-episode-from-prompt]
+verify_jwt = true
+
+[functions.episode-producer]
+verify_jwt = true
+
+[functions.scene-orchestration]
+verify_jwt = true

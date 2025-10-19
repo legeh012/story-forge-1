@@ -30,9 +30,11 @@ export const PromptGenerator = ({ projectId, onEpisodeGenerated }: PromptGenerat
     setIsGenerating(true);
 
     try {
+      console.log('Generating episode from prompt:', prompt);
+      
       toast({
-        title: 'Generating episode',
-        description: 'Creating 3 clips from your prompt...',
+        title: 'AI Episode Generator',
+        description: 'Creating 3 clips with Netflix-grade photorealistic quality...',
       });
 
       const { data, error } = await supabase.functions.invoke('generate-episode-from-prompt', {
@@ -42,19 +44,25 @@ export const PromptGenerator = ({ projectId, onEpisodeGenerated }: PromptGenerat
         },
       });
 
-      if (error) throw error;
+      if (error) {
+        console.error('Generation error:', error);
+        throw error;
+      }
+
+      console.log('Episode generated:', data);
 
       toast({
-        title: 'Episode generated!',
-        description: data.message || 'Your episode with 3 clips is being created',
+        title: 'Episode generated successfully!',
+        description: data?.message || 'Your episode with 3 cinematic clips is being created. Video rendering started in background.',
       });
 
       setPrompt('');
       onEpisodeGenerated?.();
     } catch (error) {
+      console.error('Episode generation failed:', error);
       toast({
         title: 'Generation failed',
-        description: error instanceof Error ? error.message : 'Failed to generate episode',
+        description: error instanceof Error ? error.message : 'Failed to generate episode. Please try again.',
         variant: 'destructive',
       });
     } finally {

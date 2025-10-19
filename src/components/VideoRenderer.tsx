@@ -132,42 +132,68 @@ export const VideoRenderer = ({ episode, onStatusChange }: VideoRendererProps) =
   };
 
   const downloadClips = async () => {
-    if (!episode.video_url) return;
+    if (!episode.video_url) {
+      toast({
+        title: 'No clips available',
+        description: 'Video rendering not completed yet',
+        variant: 'destructive',
+      });
+      return;
+    }
 
     try {
-      const { data } = await supabase.storage
+      console.log('Downloading clips for episode:', episode.id);
+      
+      const { data, error: downloadError } = await supabase.storage
         .from('episode-videos')
         .download(`${episode.id}/metadata.json`);
+
+      if (downloadError) {
+        console.error('Metadata download error:', downloadError);
+        throw downloadError;
+      }
 
       if (data) {
         const text = await data.text();
         const metadata = JSON.parse(text);
         
-        if (metadata.clips) {
+        console.log('Clip metadata:', metadata);
+        
+        if (metadata.clips && metadata.clips.length > 0) {
+          toast({
+            title: 'Starting download',
+            description: `Downloading ${metadata.clips.length} clips from ${episode.title}`,
+          });
+
           // Download each clip
           for (const clip of metadata.clips) {
             const link = document.createElement('a');
             link.href = clip.downloadUrl;
-            link.download = `${episode.title}_clip_${clip.clipNumber}.png`;
+            link.download = `${episode.title.replace(/[^a-z0-9]/gi, '_')}_clip_${clip.clipNumber}.png`;
             link.target = '_blank';
             document.body.appendChild(link);
             link.click();
             document.body.removeChild(link);
             
             // Small delay between downloads
-            await new Promise(resolve => setTimeout(resolve, 500));
+            await new Promise(resolve => setTimeout(resolve, 800));
           }
 
           toast({
-            title: 'Downloading clips',
-            description: `Downloading ${metadata.clips.length} clips from ${episode.title}`,
+            title: 'Download complete',
+            description: `${metadata.clips.length} clips downloaded successfully`,
           });
+        } else {
+          throw new Error('No clips found in metadata');
         }
+      } else {
+        throw new Error('Failed to retrieve metadata');
       }
     } catch (error) {
+      console.error('Clip download error:', error);
       toast({
         title: 'Download failed',
-        description: 'Could not download video clips',
+        description: error instanceof Error ? error.message : 'Could not download video clips',
         variant: 'destructive',
       });
     }
