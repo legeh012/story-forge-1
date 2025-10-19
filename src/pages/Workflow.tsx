@@ -9,7 +9,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { 
   Plus, Play, Pause, Video, Users, FileText, TrendingUp, 
   Clapperboard, Sparkles, Clock, CheckCircle2, AlertCircle,
-  Upload, Settings, BarChart3, Loader2, Download, Paperclip, X
+  Upload, Settings, BarChart3, Loader2, Download, Paperclip, X, Trash2, UserPlus
 } from "lucide-react";
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
@@ -75,7 +75,18 @@ const Workflow = () => {
   const [authLoading, setAuthLoading] = useState(true);
   const [importing, setImporting] = useState(false);
   const [uploading, setUploading] = useState(false);
+  const [creatingCharacter, setCreatingCharacter] = useState(false);
   const [selectedProject, setSelectedProject] = useState<string | null>(null);
+  
+  // New character form state
+  const [newCharacter, setNewCharacter] = useState({
+    name: "",
+    role: "",
+    personality: "",
+    background: "",
+    goals: "",
+    age: ""
+  });
   
   // New project form state
   const [newProject, setNewProject] = useState({
@@ -403,6 +414,98 @@ const Workflow = () => {
     return `${(kb / 1024).toFixed(1)} MB`;
   };
 
+  const handleCreateCharacter = async () => {
+    if (!selectedProject) {
+      toast({
+        title: "Project required",
+        description: "Please select a project first",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    if (!newCharacter.name || !newCharacter.role) {
+      toast({
+        title: "Missing fields",
+        description: "Name and role are required",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    setCreatingCharacter(true);
+
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error("Not authenticated");
+
+      const { error } = await supabase
+        .from("characters")
+        .insert([{
+          user_id: user.id,
+          project_id: selectedProject,
+          name: newCharacter.name,
+          role: newCharacter.role,
+          personality: newCharacter.personality,
+          background: newCharacter.background,
+          goals: newCharacter.goals,
+          age: newCharacter.age ? parseInt(newCharacter.age) : null
+        }]);
+
+      if (error) throw error;
+
+      toast({
+        title: "Character created!",
+        description: `${newCharacter.name} has been added to your cast`
+      });
+
+      setNewCharacter({
+        name: "",
+        role: "",
+        personality: "",
+        background: "",
+        goals: "",
+        age: ""
+      });
+
+      await fetchProjectDetails(selectedProject);
+    } catch (error: any) {
+      toast({
+        title: "Error creating character",
+        description: error.message,
+        variant: "destructive"
+      });
+    } finally {
+      setCreatingCharacter(false);
+    }
+  };
+
+  const handleDeleteCharacter = async (characterId: string) => {
+    if (!selectedProject) return;
+
+    try {
+      const { error } = await supabase
+        .from("characters")
+        .delete()
+        .eq("id", characterId);
+
+      if (error) throw error;
+
+      toast({
+        title: "Character deleted",
+        description: "Character removed from cast"
+      });
+
+      await fetchProjectDetails(selectedProject);
+    } catch (error: any) {
+      toast({
+        title: "Delete failed",
+        description: error.message,
+        variant: "destructive"
+      });
+    }
+  };
+
   const currentProject = projects.find(p => p.id === selectedProject);
 
   if (authLoading) {
@@ -610,23 +713,118 @@ const Workflow = () => {
                         </Button>
                       </div>
                     </CardHeader>
-                    <CardContent>
+                    <CardContent className="space-y-6">
+                      {/* Create Character Form */}
+                      <div className="p-4 border rounded-lg bg-accent/5">
+                        <h4 className="font-semibold mb-4 flex items-center gap-2">
+                          <UserPlus className="h-4 w-4" />
+                          Add New Character
+                        </h4>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                          <div className="space-y-2">
+                            <Label htmlFor="char-name">Name *</Label>
+                            <Input
+                              id="char-name"
+                              placeholder="Character name"
+                              value={newCharacter.name}
+                              onChange={(e) => setNewCharacter({...newCharacter, name: e.target.value})}
+                            />
+                          </div>
+                          <div className="space-y-2">
+                            <Label htmlFor="char-role">Role *</Label>
+                            <Input
+                              id="char-role"
+                              placeholder="e.g., Protagonist, Villain"
+                              value={newCharacter.role}
+                              onChange={(e) => setNewCharacter({...newCharacter, role: e.target.value})}
+                            />
+                          </div>
+                          <div className="space-y-2">
+                            <Label htmlFor="char-age">Age</Label>
+                            <Input
+                              id="char-age"
+                              type="number"
+                              placeholder="Age"
+                              value={newCharacter.age}
+                              onChange={(e) => setNewCharacter({...newCharacter, age: e.target.value})}
+                            />
+                          </div>
+                          <div className="space-y-2">
+                            <Label htmlFor="char-personality">Personality</Label>
+                            <Input
+                              id="char-personality"
+                              placeholder="Brief personality traits"
+                              value={newCharacter.personality}
+                              onChange={(e) => setNewCharacter({...newCharacter, personality: e.target.value})}
+                            />
+                          </div>
+                          <div className="space-y-2 md:col-span-2">
+                            <Label htmlFor="char-background">Background</Label>
+                            <Textarea
+                              id="char-background"
+                              placeholder="Character backstory..."
+                              value={newCharacter.background}
+                              onChange={(e) => setNewCharacter({...newCharacter, background: e.target.value})}
+                              rows={2}
+                            />
+                          </div>
+                          <div className="space-y-2 md:col-span-2">
+                            <Label htmlFor="char-goals">Goals</Label>
+                            <Textarea
+                              id="char-goals"
+                              placeholder="What does this character want?"
+                              value={newCharacter.goals}
+                              onChange={(e) => setNewCharacter({...newCharacter, goals: e.target.value})}
+                              rows={2}
+                            />
+                          </div>
+                        </div>
+                        <Button 
+                          onClick={handleCreateCharacter} 
+                          disabled={creatingCharacter || !newCharacter.name || !newCharacter.role}
+                          className="w-full mt-4"
+                        >
+                          {creatingCharacter ? (
+                            <>
+                              <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                              Creating...
+                            </>
+                          ) : (
+                            <>
+                              <Plus className="h-4 w-4 mr-2" />
+                              Add Character
+                            </>
+                          )}
+                        </Button>
+                      </div>
+
+                      {/* Characters List */}
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                         {characters.map((character) => (
                           <div
                             key={character.id}
-                            className="p-4 border rounded-lg hover:shadow-md transition-shadow"
+                            className="p-4 border rounded-lg hover:shadow-md transition-shadow relative group"
                           >
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity h-8 w-8 text-destructive hover:text-destructive hover:bg-destructive/10"
+                              onClick={() => handleDeleteCharacter(character.id)}
+                            >
+                              <Trash2 className="h-4 w-4" />
+                            </Button>
                             <div className="flex items-start gap-3">
                               <div className="p-2 rounded-full bg-accent/10">
                                 <Users className="h-5 w-5 text-accent" />
                               </div>
-                              <div className="flex-1">
+                              <div className="flex-1 pr-8">
                                 <h4 className="font-semibold">{character.name}</h4>
                                 <p className="text-sm text-muted-foreground mb-2">{character.role}</p>
-                                <p className="text-xs text-foreground/60 line-clamp-2">
-                                  {character.personality}
-                                </p>
+                                {character.personality && (
+                                  <p className="text-xs text-foreground/60 line-clamp-2">
+                                    {character.personality}
+                                  </p>
+                                )}
                               </div>
                             </div>
                           </div>
@@ -634,7 +832,7 @@ const Workflow = () => {
                         {characters.length === 0 && (
                           <div className="col-span-2 text-center py-8 text-muted-foreground">
                             <Users className="h-12 w-12 mx-auto mb-2 opacity-50" />
-                            <p>No cast members yet. Add characters to your project!</p>
+                            <p>No cast members yet. Add characters above or import a template!</p>
                           </div>
                         )}
                       </div>
