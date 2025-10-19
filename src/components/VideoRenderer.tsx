@@ -144,9 +144,13 @@ export const VideoRenderer = ({ episode, onStatusChange }: VideoRendererProps) =
     try {
       console.log('Downloading clips for episode:', episode.id);
       
+      // Get user ID from auth
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error('Not authenticated');
+      
       const { data, error: downloadError } = await supabase.storage
         .from('episode-videos')
-        .download(`${episode.id}/metadata.json`);
+        .download(`${user.id}/${episode.id}/metadata.json`);
 
       if (downloadError) {
         console.error('Metadata download error:', downloadError);
