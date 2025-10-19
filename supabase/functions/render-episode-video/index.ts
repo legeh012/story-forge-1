@@ -52,22 +52,51 @@ Deno.serve(async (req) => {
       })
       .eq('id', episodeId);
 
+    // Get rendering style preference
+    const renderingStyle = episode.rendering_style || 'photorealistic';
+    const realismSettings = episode.realism_settings || {
+      anatomical_accuracy: true,
+      realistic_lighting: true,
+      no_cartoon_filters: true,
+      natural_expressions: true,
+      finger_count_validation: true,
+      netflix_grade: true
+    };
+
+    // Build photorealistic quality enforcement
+    const qualityPrompt = renderingStyle === 'photorealistic' ? `
+CRITICAL QUALITY REQUIREMENTS (Netflix-grade):
+- Photorealistic rendering ONLY, absolutely NO cartoon/anime/stylized filters
+- Perfect anatomical accuracy: exactly 5 fingers per hand, natural proportions
+- Realistic skin textures, pores, natural imperfections
+- Cinematic lighting: natural shadows, proper color temperature, HDR-quality
+- Natural facial expressions, realistic eye reflections
+- 8K resolution quality, shallow depth of field
+- Professional color grading (like Netflix originals)
+- Real-world physics and materials
+- No exaggerated features, no artistic stylization
+- Film grain and cinematic bokeh effects
+` : '';
+
     // Generate scene descriptions using Lovable AI
     const LOVABLE_API_KEY = Deno.env.get('LOVABLE_API_KEY');
     if (!LOVABLE_API_KEY) throw new Error('LOVABLE_API_KEY not configured');
 
-    const scenePrompt = `Based on this episode content, generate 3-5 key visual scenes for a video:
+    const scenePrompt = `Based on this episode content, generate 3-5 key visual scenes for a ${renderingStyle} video:
     
 Title: ${episode.title}
 Synopsis: ${episode.synopsis}
 Content: ${episode.content}
 
-Return a JSON array of scenes with:
-- description: detailed visual description
-- duration: duration in seconds (3-5 seconds each)
-- voiceover: narration text for this scene
+${qualityPrompt}
 
-Format: {"scenes": [{"description": "...", "duration": 3, "voiceover": "..."}]}`;
+Return a JSON array of scenes with:
+- description: ultra-detailed PHOTOREALISTIC visual description (specify lighting, camera angle, Netflix-quality details)
+- duration: duration in seconds (3-5 seconds each)
+- voiceover: natural narration text for this scene
+- technical_specs: camera settings (focal length, aperture, ISO) for cinematic realism
+
+Format: {"scenes": [{"description": "...", "duration": 3, "voiceover": "...", "technical_specs": "..."}]}`;
 
     const aiResponse = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
       method: 'POST',
@@ -112,10 +141,33 @@ Format: {"scenes": [{"description": "...", "duration": 3, "voiceover": "..."}]}`
       ];
     }
 
-    // Generate images for each scene using Lovable AI image generation
+    // Generate images for each scene using Lovable AI with photorealism enforcement
     const sceneAssets = [];
     
     for (const scene of scenes) {
+      // Build photorealistic image prompt with strict requirements
+      const imagePrompt = renderingStyle === 'photorealistic' 
+        ? `PHOTOREALISTIC CINEMATIC SCENE (Netflix/HBO quality):
+        
+${scene.description}
+
+MANDATORY TECHNICAL SPECIFICATIONS:
+- Ultra-photorealistic, NO cartoon/anime/stylized elements whatsoever
+- Perfect human anatomy: EXACTLY 5 fingers per hand visible, natural proportions
+- Professional cinematography: ${scene.technical_specs || '50mm lens, f/2.8, natural lighting'}
+- 8K resolution quality with film grain
+- Realistic skin textures with pores and natural imperfections
+- Natural expressions, no exaggerated emotions
+- Cinematic color grading (ARRI ALEXA camera quality)
+- Proper shadows, reflections, and light bounce
+- Real-world materials and physics
+- Shallow depth of field with bokeh
+- Professional production value matching Netflix originals
+- 16:9 aspect ratio, widescreen cinematic composition
+
+Style reference: The Crown, House of Cards, Ozark (Netflix cinematography)`
+        : `${scene.description}. Style: stylized, artistic, 16:9 aspect ratio`;
+
       const imageResponse = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
         method: 'POST',
         headers: {
@@ -127,7 +179,7 @@ Format: {"scenes": [{"description": "...", "duration": 3, "voiceover": "..."}]}`
           messages: [
             {
               role: 'user',
-              content: `Generate a cinematic scene: ${scene.description}. Style: high-quality reality TV production, dramatic lighting, 16:9 aspect ratio`
+              content: imagePrompt
             }
           ],
           modalities: ['image', 'text']

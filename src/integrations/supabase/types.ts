@@ -356,6 +356,8 @@ export type Database = {
           episode_number: number
           id: string
           project_id: string
+          realism_settings: Json | null
+          rendering_style: string | null
           script: string | null
           season: number | null
           status: string | null
@@ -376,6 +378,8 @@ export type Database = {
           episode_number: number
           id?: string
           project_id: string
+          realism_settings?: Json | null
+          rendering_style?: string | null
           script?: string | null
           season?: number | null
           status?: string | null
@@ -396,6 +400,8 @@ export type Database = {
           episode_number?: number
           id?: string
           project_id?: string
+          realism_settings?: Json | null
+          rendering_style?: string | null
           script?: string | null
           season?: number | null
           status?: string | null
@@ -775,6 +781,7 @@ export type Database = {
       projects: {
         Row: {
           created_at: string | null
+          default_rendering_style: string | null
           description: string | null
           genre: string | null
           id: string
@@ -787,6 +794,7 @@ export type Database = {
         }
         Insert: {
           created_at?: string | null
+          default_rendering_style?: string | null
           description?: string | null
           genre?: string | null
           id?: string
@@ -799,6 +807,7 @@ export type Database = {
         }
         Update: {
           created_at?: string | null
+          default_rendering_style?: string | null
           description?: string | null
           genre?: string | null
           id?: string

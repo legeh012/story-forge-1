@@ -3,7 +3,9 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
-import { Video, Play, Loader2, AlertCircle, CheckCircle2 } from 'lucide-react';
+import { Label } from '@/components/ui/label';
+import { Switch } from '@/components/ui/switch';
+import { Video, Play, Loader2, AlertCircle, CheckCircle2, Camera, Sparkles } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 
@@ -14,6 +16,15 @@ interface Episode {
   video_status: string;
   video_url: string | null;
   video_render_error: string | null;
+  rendering_style: string;
+  realism_settings: {
+    anatomical_accuracy: boolean;
+    realistic_lighting: boolean;
+    no_cartoon_filters: boolean;
+    natural_expressions: boolean;
+    finger_count_validation: boolean;
+    netflix_grade: boolean;
+  };
 }
 
 interface VideoRendererProps {
@@ -23,7 +34,38 @@ interface VideoRendererProps {
 
 export const VideoRenderer = ({ episode, onStatusChange }: VideoRendererProps) => {
   const [isRendering, setIsRendering] = useState(false);
+  const [isPhotorealistic, setIsPhotorealistic] = useState(
+    episode.rendering_style === 'photorealistic'
+  );
   const { toast } = useToast();
+
+  const toggleRenderingStyle = async (photorealistic: boolean) => {
+    try {
+      const { error } = await supabase
+        .from('episodes')
+        .update({
+          rendering_style: photorealistic ? 'photorealistic' : 'stylized'
+        })
+        .eq('id', episode.id);
+
+      if (error) throw error;
+
+      setIsPhotorealistic(photorealistic);
+      toast({
+        title: 'Rendering style updated',
+        description: `Set to ${photorealistic ? 'Netflix-grade Photorealistic' : 'Stylized'} mode`,
+      });
+
+      onStatusChange?.();
+    } catch (error) {
+      console.error('Error updating style:', error);
+      toast({
+        title: 'Update failed',
+        description: 'Could not change rendering style',
+        variant: 'destructive',
+      });
+    }
+  };
 
   const startRender = async () => {
     setIsRendering(true);
@@ -133,6 +175,56 @@ export const VideoRenderer = ({ episode, onStatusChange }: VideoRendererProps) =
       </CardHeader>
 
       <CardContent className="space-y-3">
+        {/* Realism Toggle */}
+        <div className="flex items-center justify-between p-3 rounded-lg bg-muted/50 border border-border">
+          <div className="flex items-center gap-2">
+            {isPhotorealistic ? (
+              <Camera className="h-4 w-4 text-primary" />
+            ) : (
+              <Sparkles className="h-4 w-4 text-accent" />
+            )}
+            <div>
+              <Label htmlFor="realism-toggle" className="text-sm font-medium cursor-pointer">
+                {isPhotorealistic ? 'Netflix-Grade Photorealistic' : 'Stylized'}
+              </Label>
+              <p className="text-xs text-muted-foreground">
+                {isPhotorealistic 
+                  ? 'Anatomical accuracy, realistic lighting, no cartoon filters'
+                  : 'Artistic styling with creative freedom'
+                }
+              </p>
+            </div>
+          </div>
+          <Switch
+            id="realism-toggle"
+            checked={isPhotorealistic}
+            onCheckedChange={toggleRenderingStyle}
+            disabled={episode.video_status === 'rendering'}
+          />
+        </div>
+
+        {/* Quality Indicators */}
+        {isPhotorealistic && (
+          <div className="grid grid-cols-2 gap-2 p-3 rounded-lg bg-green-500/5 border border-green-500/20">
+            <div className="flex items-center gap-2 text-xs text-green-600">
+              <CheckCircle2 className="h-3 w-3" />
+              <span>5-Finger Accuracy</span>
+            </div>
+            <div className="flex items-center gap-2 text-xs text-green-600">
+              <CheckCircle2 className="h-3 w-3" />
+              <span>Realistic Lighting</span>
+            </div>
+            <div className="flex items-center gap-2 text-xs text-green-600">
+              <CheckCircle2 className="h-3 w-3" />
+              <span>No Cartoon Filters</span>
+            </div>
+            <div className="flex items-center gap-2 text-xs text-green-600">
+              <CheckCircle2 className="h-3 w-3" />
+              <span>Natural Expressions</span>
+            </div>
+          </div>
+        )}
+
         {episode.video_status === 'rendering' && (
           <div className="space-y-2">
             <div className="flex items-center justify-between text-sm">
