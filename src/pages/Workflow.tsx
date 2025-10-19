@@ -77,6 +77,7 @@ const Workflow = () => {
   const [uploading, setUploading] = useState(false);
   const [creatingCharacter, setCreatingCharacter] = useState(false);
   const [selectedProject, setSelectedProject] = useState<string | null>(null);
+  const [producingEpisodes, setProducingEpisodes] = useState(false);
   
   // New character form state
   const [newCharacter, setNewCharacter] = useState({
@@ -594,6 +595,65 @@ const Workflow = () => {
     }
   };
 
+  const handleAutoProduceAllEpisodes = async () => {
+    if (!selectedProject || episodes.length === 0) {
+      toast({
+        title: "No episodes to produce",
+        description: "Create some episodes first",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    setProducingEpisodes(true);
+
+    try {
+      toast({
+        title: "Starting bot production",
+        description: `Processing ${episodes.length} episode(s) with all AI bots...`
+      });
+
+      // Process each episode
+      for (const episode of episodes) {
+        const { data, error } = await supabase.functions.invoke('episode-producer', {
+          body: {
+            episodeId: episode.id,
+            projectId: selectedProject
+          }
+        });
+
+        if (error) {
+          console.error(`Episode ${episode.title} production error:`, error);
+          toast({
+            title: `Error producing ${episode.title}`,
+            description: error.message,
+            variant: "destructive"
+          });
+        } else if (data) {
+          toast({
+            title: `${episode.title} produced!`,
+            description: `Success rate: ${Math.round(data.successRate)}% - ${data.readyForVideo ? 'Ready for video rendering' : 'Needs review'}`
+          });
+        }
+      }
+
+      toast({
+        title: "Production complete!",
+        description: "All episodes have been processed by the AI bots"
+      });
+
+      await fetchProjectDetails(selectedProject);
+    } catch (error: any) {
+      toast({
+        title: "Production failed",
+        description: error.message,
+        variant: "destructive"
+      });
+    } finally {
+      setProducingEpisodes(false);
+    }
+  };
+
   const currentProject = projects.find(p => p.id === selectedProject);
 
   if (authLoading) {
@@ -738,6 +798,40 @@ const Workflow = () => {
                     photorealisticCount={episodes.filter((e: any) => e.rendering_style === 'photorealistic').length}
                     stylizedCount={episodes.filter((e: any) => e.rendering_style === 'stylized').length}
                   />
+
+                  {/* Auto-Produce Episodes Button */}
+                  {episodes.length > 0 && (
+                    <Card className="bg-gradient-to-r from-primary/10 via-accent/10 to-primary-glow/10 border-primary/20">
+                      <CardHeader>
+                        <CardTitle className="flex items-center gap-2">
+                          <Sparkles className="h-5 w-5 text-primary" />
+                          AI Bot Production System
+                        </CardTitle>
+                        <CardDescription>
+                          Activate all bots to produce episodes with scripts, cultural elements, expert direction, and optimized hooks
+                        </CardDescription>
+                      </CardHeader>
+                      <CardContent>
+                        <Button 
+                          onClick={handleAutoProduceAllEpisodes}
+                          disabled={producingEpisodes}
+                          className="w-full"
+                        >
+                          {producingEpisodes ? (
+                            <>
+                              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                              Producing Episodes...
+                            </>
+                          ) : (
+                            <>
+                              <Play className="mr-2 h-4 w-4" />
+                              Auto-Produce All Episodes
+                            </>
+                          )}
+                        </Button>
+                      </CardContent>
+                    </Card>
+                  )}
 
                   {/* Episode Renderers */}
                   <div className="grid grid-cols-1 gap-4">
