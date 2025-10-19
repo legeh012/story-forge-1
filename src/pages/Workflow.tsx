@@ -754,38 +754,47 @@ const Workflow = () => {
               </Card>
 
               {/* Existing Projects */}
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                {projects.map((project) => (
-                  <Card
-                    key={project.id}
-                    className={`cursor-pointer transition-all hover:shadow-lg ${
-                      selectedProject === project.id ? 'border-primary ring-2 ring-primary/20' : ''
-                    }`}
-                    onClick={() => setSelectedProject(project.id)}
-                  >
-                    <CardHeader>
-                      <div className="flex items-start justify-between">
-                        <div className="flex-1">
-                          <CardTitle className="text-lg">{project.title}</CardTitle>
-                          <CardDescription className="line-clamp-2 mt-1">
-                            {project.description}
-                          </CardDescription>
+              {projects.length > 0 ? (
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                  {projects.map((project) => (
+                    <Card
+                      key={project.id}
+                      className={`cursor-pointer transition-all hover:shadow-lg ${
+                        selectedProject === project.id ? 'border-primary ring-2 ring-primary/20' : ''
+                      }`}
+                      onClick={() => setSelectedProject(project.id)}
+                    >
+                      <CardHeader>
+                        <div className="flex items-start justify-between">
+                          <div className="flex-1">
+                            <CardTitle className="text-lg">{project.title}</CardTitle>
+                            <CardDescription className="line-clamp-2 mt-1">
+                              {project.description || 'No description'}
+                            </CardDescription>
+                          </div>
+                          <Badge variant={project.status === 'published' ? 'default' : 'secondary'}>
+                            {project.status}
+                          </Badge>
                         </div>
-                        <Badge variant={project.status === 'published' ? 'default' : 'secondary'}>
-                          {project.status}
-                        </Badge>
-                      </div>
-                    </CardHeader>
-                    <CardContent>
-                      <div className="flex flex-wrap gap-2">
-                        <Badge variant="outline">{project.genre}</Badge>
-                        <Badge variant="outline">{project.mood}</Badge>
-                        <Badge variant="outline">{project.theme}</Badge>
-                      </div>
-                    </CardContent>
-                  </Card>
-                ))}
-              </div>
+                      </CardHeader>
+                      <CardContent>
+                        <div className="flex flex-wrap gap-2">
+                          <Badge variant="outline">{project.genre}</Badge>
+                          <Badge variant="outline">{project.mood}</Badge>
+                          <Badge variant="outline">{project.theme}</Badge>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  ))}
+                </div>
+              ) : (
+                <Card>
+                  <CardContent className="py-12 text-center">
+                    <AlertCircle className="h-12 w-12 mx-auto mb-4 text-muted-foreground" />
+                    <p className="text-muted-foreground">No projects yet. Create your first project above!</p>
+                  </CardContent>
+                </Card>
+              )}
             </TabsContent>
 
             {/* Episodes Tab */}
