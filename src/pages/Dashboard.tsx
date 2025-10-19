@@ -364,8 +364,17 @@ const Dashboard = () => {
                           {project.status || 'draft'}
                         </Badge>
                         <div className="flex gap-2">
-                          <Link to="/create">
-                            <Button variant="ghost" size="sm">Manage</Button>
+                          <Link to={`/characters?projectId=${project.id}`}>
+                            <Button variant="outline" size="sm" className="border-primary/30">
+                              <Users className="h-3 w-3 mr-1" />
+                              Characters
+                            </Button>
+                          </Link>
+                          <Link to={`/episodes?projectId=${project.id}`}>
+                            <Button variant="ghost" size="sm">
+                              <BookOpen className="h-3 w-3 mr-1" />
+                              Episodes
+                            </Button>
                           </Link>
                           <Button 
                             variant="ghost" 
