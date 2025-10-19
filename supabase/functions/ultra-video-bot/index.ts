@@ -32,10 +32,10 @@ Deno.serve(async (req) => {
 
     const { episodeId, enhancementLevel = 'ultra' } = await req.json() as VideoRequest;
 
-    // Fetch episode with all details
+    // Optimized: Fetch episode with minimal data needed
     const { data: episode, error: episodeError } = await supabase
       .from('episodes')
-      .select('*, projects(*)')
+      .select('id, title, synopsis, script, user_id')
       .eq('id', episodeId)
       .single();
 
@@ -91,7 +91,7 @@ Return JSON with this EXACT structure:
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        model: 'google/gemini-2.5-pro',
+        model: 'google/gemini-2.5-flash', // OPTIMIZED: Use flash for faster scene analysis
         messages: [
           { role: 'system', content: 'You are a GOD-TIER AI cinematographer. You create viral-ready, ultra-realistic video specifications that rival Hollywood productions. You understand reality TV aesthetics, viral content psychology, and technical filmmaking at the highest level.' },
           { role: 'user', content: sceneAnalysisPrompt }
@@ -269,18 +269,24 @@ stock photo aesthetic, corporate headshot vibe`;
     - Avg Viral Score: ${avgViralScore.toFixed(1)}/100
     - Model: GEN-3 ALPHA TURBO`);
 
-    // Upload frames
-    for (let i = 0; i < generatedFrames.length; i++) {
-      const frame = generatedFrames[i];
-      const base64Data = frame.imageUrl.split(',')[1];
-      const imageBuffer = Uint8Array.from(atob(base64Data), c => c.charCodeAt(0));
+    // OPTIMIZED: Upload frames in parallel batches (10 at a time to avoid rate limits)
+    const batchSize = 10;
+    for (let i = 0; i < generatedFrames.length; i += batchSize) {
+      const batch = generatedFrames.slice(i, i + batchSize);
+      await Promise.all(
+        batch.map(async (frame, batchIndex) => {
+          const frameIndex = i + batchIndex;
+          const base64Data = frame.imageUrl.split(',')[1];
+          const imageBuffer = Uint8Array.from(atob(base64Data), c => c.charCodeAt(0));
 
-      await supabase.storage
-        .from('episode-videos')
-        .upload(`${videoPath}/frame_${i.toString().padStart(4, '0')}.png`, imageBuffer, {
-          contentType: 'image/png',
-          upsert: true
-        });
+          return supabase.storage
+            .from('episode-videos')
+            .upload(`${videoPath}/frame_${frameIndex.toString().padStart(4, '0')}.png`, imageBuffer, {
+              contentType: 'image/png',
+              upsert: true
+            });
+        })
+      );
     }
 
     // Upload metadata

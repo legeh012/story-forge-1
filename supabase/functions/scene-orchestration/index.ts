@@ -35,17 +35,29 @@ Deno.serve(async (req) => {
 
     console.log('Scene orchestration request:', shortPrompt);
 
-    // Load pre-generated scene templates
-    const { data: templates, error: templatesError } = await supabase
-      .from('bot_templates')
-      .select('*')
-      .eq('template_type', 'scene_setup');
+    // OPTIMIZED: Cache templates in memory with 5-minute TTL
+    const cacheKey = 'scene_templates_cache';
+    let sceneTemplates = (globalThis as any)[cacheKey];
+    const cacheTimestamp = (globalThis as any)[`${cacheKey}_time`];
+    const now = Date.now();
+    
+    if (!sceneTemplates || !cacheTimestamp || (now - cacheTimestamp > 300000)) {
+      const { data: templates, error: templatesError } = await supabase
+        .from('bot_templates')
+        .select('id, name, description, template_data, usage_count')
+        .eq('template_type', 'scene_setup');
 
-    if (templatesError) {
-      console.error('Template load error:', templatesError);
+      if (templatesError) {
+        console.error('Template load error:', templatesError);
+      }
+
+      sceneTemplates = templates || [];
+      (globalThis as any)[cacheKey] = sceneTemplates;
+      (globalThis as any)[`${cacheKey}_time`] = now;
+      console.log('✅ Templates cached');
+    } else {
+      console.log('⚡ Using cached templates');
     }
-
-    const sceneTemplates = templates || [];
 
     // Use Lovable AI to match prompt to template
     const LOVABLE_API_KEY = Deno.env.get('LOVABLE_API_KEY');
@@ -56,10 +68,10 @@ Deno.serve(async (req) => {
 SHORT PROMPT: "${shortPrompt}"
 
 AVAILABLE TEMPLATES:
-${sceneTemplates.map(t => `- ${t.name}: ${t.description}`).join('\n')}
+${sceneTemplates.map((t: any) => `- ${t.name}: ${t.description}`).join('\n')}
 
 TEMPLATE DETAILS:
-${JSON.stringify(sceneTemplates.map(t => ({ name: t.name, data: t.template_data })), null, 2)}
+${JSON.stringify(sceneTemplates.map((t: any) => ({ name: t.name, data: t.template_data })), null, 2)}
 
 Instructions:
 1. Match to BEST reality TV template (or "custom" if none fit)
@@ -147,14 +159,20 @@ Return JSON:
       };
     }
 
-    // Update template usage count if matched
+    // OPTIMIZED: Batch update template usage (fire and forget)
     if (orchestration.matchedTemplate !== 'custom') {
-      const matchedTemplate = sceneTemplates.find(t => t.name === orchestration.matchedTemplate);
+      const matchedTemplate = sceneTemplates.find((t: any) => t.name === orchestration.matchedTemplate);
       if (matchedTemplate) {
-        await supabase
+        // Non-blocking update
+        supabase
           .from('bot_templates')
           .update({ usage_count: (matchedTemplate.usage_count || 0) + 1 })
-          .eq('id', matchedTemplate.id);
+          .eq('id', matchedTemplate.id)
+          .then(() => {
+            // Invalidate cache on update
+            delete (globalThis as any)['scene_templates_cache'];
+            delete (globalThis as any)['scene_templates_cache_time'];
+          });
       }
     }
 
