@@ -42,6 +42,9 @@ verify_jwt = true
 [functions.ai-engineer]
 verify_jwt = true
 
+[functions.ai-character-designer]
+verify_jwt = true
+
 [functions.ai-copilot]
 verify_jwt = true
 
