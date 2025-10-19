@@ -162,7 +162,7 @@ const Auth = () => {
       <Card className="w-full max-w-md p-8 bg-card border-border relative z-10">
         <div className="flex items-center justify-center gap-2 mb-8">
           <div className="p-2 rounded-xl bg-gradient-to-br from-primary to-accent">
-            <Sparkles className="h-6 w-6 text-white" />
+            <Sparkles className="h-6 w-6 text-primary-foreground" />
           </div>
           <h1 className="text-3xl font-bold bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
             StoryForge

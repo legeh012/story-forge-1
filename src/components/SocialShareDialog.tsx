@@ -176,7 +176,7 @@ const SocialShareDialog = ({ open, onOpenChange, asset }: SocialShareDialogProps
               <Button
                 onClick={handleYouTubeUpload}
                 disabled={uploading || !isVideo}
-                className="bg-red-600 hover:bg-red-700 text-white"
+                className="bg-[hsl(0_100%_50%)] hover:bg-[hsl(0_100%_45%)] text-primary-foreground"
               >
                 <Youtube className="mr-2 h-4 w-4" />
                 Upload to YouTube
@@ -185,7 +185,7 @@ const SocialShareDialog = ({ open, onOpenChange, asset }: SocialShareDialogProps
               <Button
                 onClick={handleTikTokUpload}
                 disabled={uploading || !isVideo}
-                className="bg-black hover:bg-gray-800 text-white"
+                className="bg-[hsl(0_0%_0%)] hover:bg-[hsl(0_0%_20%)] text-primary-foreground"
               >
                 <Share2 className="mr-2 h-4 w-4" />
                 Upload to TikTok
@@ -194,7 +194,7 @@ const SocialShareDialog = ({ open, onOpenChange, asset }: SocialShareDialogProps
               <Button
                 onClick={handleInstagramShare}
                 disabled={uploading || (!isVideo && !isImage)}
-                className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white"
+                className="bg-gradient-to-r from-[hsl(280_90%_60%)] to-[hsl(340_85%_60%)] hover:from-[hsl(280_90%_55%)] hover:to-[hsl(340_85%_55%)] text-primary-foreground"
               >
                 <Instagram className="mr-2 h-4 w-4" />
                 Share to Instagram

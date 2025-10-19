@@ -152,7 +152,7 @@ export const AICopilot = () => {
             <div
               className={`max-w-[80%] rounded-lg p-3 ${
                 msg.role === 'user'
-                  ? 'bg-gradient-to-r from-accent to-primary text-white'
+                  ? 'bg-gradient-to-r from-accent to-primary text-primary-foreground'
                   : 'bg-secondary text-foreground'
               }`}
             >
