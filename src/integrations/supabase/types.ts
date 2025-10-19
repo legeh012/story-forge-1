@@ -126,6 +126,45 @@ export type Database = {
           },
         ]
       }
+      error_logs: {
+        Row: {
+          context: Json | null
+          created_at: string | null
+          error_message: string
+          error_type: string
+          id: string
+          recovery_action: string | null
+          recovery_status: string | null
+          resolved_at: string | null
+          stack_trace: string | null
+          user_id: string | null
+        }
+        Insert: {
+          context?: Json | null
+          created_at?: string | null
+          error_message: string
+          error_type: string
+          id?: string
+          recovery_action?: string | null
+          recovery_status?: string | null
+          resolved_at?: string | null
+          stack_trace?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          context?: Json | null
+          created_at?: string | null
+          error_message?: string
+          error_type?: string
+          id?: string
+          recovery_action?: string | null
+          recovery_status?: string | null
+          resolved_at?: string | null
+          stack_trace?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       media_assets: {
         Row: {
           asset_type: string
@@ -237,6 +276,30 @@ export type Database = {
           title?: string
           updated_at?: string | null
           user_id?: string
+        }
+        Relationships: []
+      }
+      system_health: {
+        Row: {
+          id: string
+          last_check: string | null
+          metadata: Json | null
+          service_name: string
+          status: string
+        }
+        Insert: {
+          id?: string
+          last_check?: string | null
+          metadata?: Json | null
+          service_name: string
+          status?: string
+        }
+        Update: {
+          id?: string
+          last_check?: string | null
+          metadata?: Json | null
+          service_name?: string
+          status?: string
         }
         Relationships: []
       }

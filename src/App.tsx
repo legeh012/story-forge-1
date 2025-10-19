@@ -12,6 +12,7 @@ import Auth from "./pages/Auth";
 import CreateProject from "./pages/CreateProject";
 import MediaLibrary from "./pages/MediaLibrary";
 import Analytics from "./pages/Analytics";
+import SystemMonitor from "./pages/SystemMonitor";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -32,6 +33,7 @@ const App = () => (
           <Route path="/create" element={<CreateProject />} />
           <Route path="/media" element={<MediaLibrary />} />
           <Route path="/analytics" element={<Analytics />} />
+          <Route path="/system-monitor" element={<SystemMonitor />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
         </Routes>

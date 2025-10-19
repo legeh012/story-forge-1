@@ -1,6 +1,6 @@
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { Sparkles, FolderOpen, TrendingUp } from "lucide-react";
+import { Sparkles, FolderOpen, TrendingUp, Activity } from "lucide-react";
 
 const Navigation = () => {
   return (
@@ -27,6 +27,10 @@ const Navigation = () => {
             <Link to="/analytics" className="text-foreground/80 hover:text-foreground transition-colors flex items-center gap-1">
               <TrendingUp className="h-4 w-4" />
               Analytics
+            </Link>
+            <Link to="/system-monitor" className="text-foreground/80 hover:text-foreground transition-colors flex items-center gap-1">
+              <Activity className="h-4 w-4" />
+              Monitor
             </Link>
             <Link to="/workflow" className="text-foreground/80 hover:text-foreground transition-colors">
               Workflow
