@@ -40,18 +40,29 @@ serve(async (req) => {
 
     console.log('Generating character from prompt:', prompt);
 
-    const systemPrompt = `You are an expert cinematic character designer. Generate a complete, production-ready character based on the user's prompt.
+    const systemPrompt = `You are an expert cinematic character designer and NLP parser. Extract and generate complete character profiles from natural language prompts.
 
-Return a structured character with:
-- name: A compelling, memorable character name
-- role: Their role in the story (protagonist, antagonist, mentor, etc.)
-- age: Appropriate age for their role
-- personality: 3-5 distinct personality traits that create depth
-- background: A rich backstory (2-3 paragraphs) that explains who they are
-- goals: Clear motivations and objectives that drive their actions
-- relationships: Array of potential relationships with other characters
+PARSING RULES:
+- Extract name, role, personality traits, drama hooks, and appearance details
+- Infer emotional depth and conflict potential
+- Generate visual styling (clothing, makeup, aesthetic)
+- Identify relationship dynamics and feuds
+- Fill missing details with genre-appropriate defaults
 
-Make characters feel REAL and CINEMATIC. Think Netflix-quality production. Be specific, visual, and emotionally resonant.`;
+CHARACTER ARCHETYPES:
+- Boutique Queen: Strategic, fashionable, drama catalyst
+- Confessional Narrator: Stylish observer, detached commentary
+- Protective Parent: Emotional, loyal, defensive
+- Shady Newcomer: Mysterious, provocative
+- Peacemaker: Diplomatic, stressed, caught in middle
+
+APPEARANCE GENERATION:
+Create detailed JSON with: clothing_style, makeup_style, hair_style, signature_accessories, color_palette, aesthetic_vibe
+
+DRAMA HOOKS:
+Identify conflict triggers: leaks secrets, feuds, gossip, emotional breakdowns, confrontations
+
+Make every character VISUALLY DISTINCT and emotionally COMPELLING. Think reality TV meets Netflix drama.`;
 
     const aiResponse = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
       method: 'POST',
@@ -74,24 +85,45 @@ Make characters feel REAL and CINEMATIC. Think Netflix-quality production. Be sp
               type: "object",
               properties: {
                 name: { type: "string", description: "Character's full name" },
-                role: { type: "string", description: "Character's role in the story" },
+                role: { type: "string", description: "Character archetype/role (Boutique Queen, Protective Mom, etc.)" },
                 age: { type: "number", description: "Character's age" },
-                personality: { type: "string", description: "Personality traits and characteristics" },
-                background: { type: "string", description: "Detailed background story" },
-                goals: { type: "string", description: "Motivations and objectives" },
+                personality: { type: "string", description: "Core personality traits (strategic, emotional, detached, etc.)" },
+                background: { type: "string", description: "Rich backstory explaining who they are and what shaped them" },
+                goals: { type: "string", description: "Motivations, desires, and what drives their actions" },
+                drama_hooks: { 
+                  type: "array",
+                  items: { type: "string" },
+                  description: "Conflict triggers: 'leaks screenshots', 'feuds with X', 'gossip catalyst', 'emotional breakdowns'"
+                },
+                appearance: {
+                  type: "object",
+                  properties: {
+                    clothing_style: { type: "string", description: "Signature outfit style (gold abayas, earth tones, designer modest wear)" },
+                    makeup_style: { type: "string", description: "Makeup aesthetic (matte glam, natural, bold)" },
+                    hair_style: { type: "string", description: "Hair/hijab style (side-parted hijab, sleek bun, loose waves)" },
+                    signature_accessories: { type: "string", description: "Key accessories (statement jewelry, designer bags)" },
+                    color_palette: { type: "string", description: "Dominant colors they wear" },
+                    aesthetic_vibe: { type: "string", description: "Overall visual vibe (luxe, understated, bold)" }
+                  }
+                },
+                emotional_tags: {
+                  type: "array",
+                  items: { type: "string" },
+                  description: "Emotional states for scene generation: 'composed', 'defensive', 'tearful', 'confrontational'"
+                },
                 relationships: {
                   type: "array",
                   items: {
                     type: "object",
                     properties: {
-                      character: { type: "string" },
-                      type: { type: "string" },
-                      description: { type: "string" }
+                      character: { type: "string", description: "Name of related character" },
+                      type: { type: "string", description: "Relationship type: ally, rival, feud, family" },
+                      description: { type: "string", description: "Dynamic description" }
                     }
                   }
                 }
               },
-              required: ["name", "role", "personality", "background", "goals"],
+              required: ["name", "role", "personality", "background", "goals", "appearance", "drama_hooks", "emotional_tags"],
               additionalProperties: false
             }
           }
@@ -116,6 +148,14 @@ Make characters feel REAL and CINEMATIC. Think Netflix-quality production. Be sp
     const characterData = JSON.parse(toolCall.function.arguments);
     console.log('Generated character:', characterData);
 
+    // Auto-fill missing fields with defaults
+    const metadata: any = { 
+      generated_from_prompt: prompt,
+      drama_hooks: characterData.drama_hooks || [],
+      emotional_tags: characterData.emotional_tags || ['neutral'],
+      appearance: characterData.appearance || {}
+    };
+
     const { data: character, error: insertError } = await supabase
       .from('characters')
       .insert({
@@ -128,7 +168,7 @@ Make characters feel REAL and CINEMATIC. Think Netflix-quality production. Be sp
         background: characterData.background,
         goals: characterData.goals,
         relationships: characterData.relationships || [],
-        metadata: { generated_from_prompt: prompt }
+        metadata
       })
       .select()
       .single();

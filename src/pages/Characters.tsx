@@ -134,8 +134,10 @@ const Characters = () => {
                   className="bg-background border-primary/30 text-lg py-6 focus:border-primary transition-all"
                   disabled={generating}
                 />
-                <p className="text-sm text-muted-foreground">
-                  Examples: "A witty tech genius who lost everything in a corporate war" • "A young healer from a forgotten kingdom seeking redemption"
+                <p className="text-sm text-muted-foreground space-y-1">
+                  <span className="block">💅 "Create a boutique queen named Zahra who leaks screenshots and wears gold abayas"</span>
+                  <span className="block">🎭 "Make a shady newcomer named Amal who narrates drama in glam confessionals"</span>
+                  <span className="block">👩‍👧 "Create a protective mom named Hani who breaks down over gang rumors"</span>
                 </p>
               </div>
 
@@ -162,31 +164,150 @@ const Characters = () => {
           {characters.length > 0 && (
             <div className="mt-12">
               <h2 className="text-3xl font-bold mb-6">Your Characters</h2>
-              <div className="grid gap-4">
-                {characters.map((char) => (
-                  <Card key={char.id} className="p-6 bg-card border-border hover:border-primary/30 transition-all">
-                    <div className="flex items-start justify-between mb-4">
-                      <div>
-                        <h3 className="text-2xl font-bold">{char.name}</h3>
-                        <p className="text-muted-foreground">{char.role} • Age {char.age || 'Unknown'}</p>
+              <div className="grid gap-6">
+                {characters.map((char) => {
+                  const appearance = char.metadata?.appearance || {};
+                  const dramaHooks = char.metadata?.drama_hooks || [];
+                  const emotionalTags = char.metadata?.emotional_tags || [];
+                  
+                  return (
+                    <Card key={char.id} className="overflow-hidden border-primary/20 hover:border-primary/40 transition-all shadow-lg">
+                      <div className="bg-gradient-to-r from-primary/10 via-accent/10 to-primary-glow/10 p-6 border-b border-border">
+                        <div className="flex items-start justify-between mb-2">
+                          <div>
+                            <h3 className="text-3xl font-bold">{char.name}</h3>
+                            <p className="text-lg text-muted-foreground mt-1">{char.role}</p>
+                          </div>
+                          {char.age && (
+                            <div className="text-sm bg-background/50 px-3 py-1 rounded-full">
+                              Age {char.age}
+                            </div>
+                          )}
+                        </div>
+                        
+                        {appearance.aesthetic_vibe && (
+                          <div className="mt-3 flex flex-wrap gap-2">
+                            <span className="text-xs bg-primary/20 text-primary px-2 py-1 rounded">
+                              {appearance.aesthetic_vibe}
+                            </span>
+                            {appearance.color_palette && (
+                              <span className="text-xs bg-accent/20 text-accent px-2 py-1 rounded">
+                                {appearance.color_palette}
+                              </span>
+                            )}
+                          </div>
+                        )}
                       </div>
-                    </div>
-                    <div className="space-y-3 text-sm">
-                      <div>
-                        <span className="font-semibold text-primary">Personality:</span>
-                        <p className="text-muted-foreground mt-1">{char.personality}</p>
+
+                      <div className="p-6 space-y-4">
+                        {/* Appearance Section */}
+                        {Object.keys(appearance).length > 0 && (
+                          <div className="bg-gradient-to-r from-primary/5 to-accent/5 p-4 rounded-lg">
+                            <h4 className="font-semibold text-primary mb-3 flex items-center gap-2">
+                              <Sparkles className="h-4 w-4" />
+                              Visual Identity
+                            </h4>
+                            <div className="grid grid-cols-2 gap-3 text-sm">
+                              {appearance.clothing_style && (
+                                <div>
+                                  <span className="text-muted-foreground">Style:</span>
+                                  <p className="font-medium">{appearance.clothing_style}</p>
+                                </div>
+                              )}
+                              {appearance.makeup_style && (
+                                <div>
+                                  <span className="text-muted-foreground">Makeup:</span>
+                                  <p className="font-medium">{appearance.makeup_style}</p>
+                                </div>
+                              )}
+                              {appearance.hair_style && (
+                                <div>
+                                  <span className="text-muted-foreground">Hair:</span>
+                                  <p className="font-medium">{appearance.hair_style}</p>
+                                </div>
+                              )}
+                              {appearance.signature_accessories && (
+                                <div>
+                                  <span className="text-muted-foreground">Accessories:</span>
+                                  <p className="font-medium">{appearance.signature_accessories}</p>
+                                </div>
+                              )}
+                            </div>
+                          </div>
+                        )}
+
+                        {/* Drama Hooks */}
+                        {dramaHooks.length > 0 && (
+                          <div>
+                            <h4 className="font-semibold text-destructive mb-2">⚡ Drama Hooks</h4>
+                            <div className="flex flex-wrap gap-2">
+                              {dramaHooks.map((hook: string, i: number) => (
+                                <span key={i} className="text-xs bg-destructive/10 text-destructive px-3 py-1 rounded-full border border-destructive/20">
+                                  {hook}
+                                </span>
+                              ))}
+                            </div>
+                          </div>
+                        )}
+
+                        {/* Emotional Tags */}
+                        {emotionalTags.length > 0 && (
+                          <div>
+                            <h4 className="font-semibold text-accent mb-2">🎭 Emotional Range</h4>
+                            <div className="flex flex-wrap gap-2">
+                              {emotionalTags.map((tag: string, i: number) => (
+                                <span key={i} className="text-xs bg-accent/10 text-accent px-3 py-1 rounded-full">
+                                  {tag}
+                                </span>
+                              ))}
+                            </div>
+                          </div>
+                        )}
+
+                        {/* Core Details */}
+                        <div className="space-y-3 pt-2 border-t border-border">
+                          <div>
+                            <span className="font-semibold text-primary">Personality:</span>
+                            <p className="text-muted-foreground mt-1">{char.personality}</p>
+                          </div>
+                          <div>
+                            <span className="font-semibold text-accent">Background:</span>
+                            <p className="text-muted-foreground mt-1">{char.background}</p>
+                          </div>
+                          <div>
+                            <span className="font-semibold text-primary-glow">Goals:</span>
+                            <p className="text-muted-foreground mt-1">{char.goals}</p>
+                          </div>
+                        </div>
+
+                        {/* Relationships */}
+                        {char.relationships && char.relationships.length > 0 && (
+                          <div className="pt-3 border-t border-border">
+                            <h4 className="font-semibold mb-2">🔗 Relationships</h4>
+                            <div className="space-y-2">
+                              {char.relationships.map((rel: any, i: number) => (
+                                <div key={i} className="text-sm bg-background/50 p-2 rounded">
+                                  <span className="font-medium">{rel.character}</span>
+                                  <span className="text-muted-foreground"> • {rel.type}</span>
+                                  {rel.description && (
+                                    <p className="text-xs text-muted-foreground mt-1">{rel.description}</p>
+                                  )}
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+                        )}
+
+                        <Button 
+                          className="w-full mt-4 bg-gradient-to-r from-primary to-accent"
+                          onClick={() => navigate(`/episodes?projectId=${char.project_id}&characterId=${char.id}`)}
+                        >
+                          Generate Episode with {char.name}
+                        </Button>
                       </div>
-                      <div>
-                        <span className="font-semibold text-accent">Background:</span>
-                        <p className="text-muted-foreground mt-1">{char.background}</p>
-                      </div>
-                      <div>
-                        <span className="font-semibold text-primary-glow">Goals:</span>
-                        <p className="text-muted-foreground mt-1">{char.goals}</p>
-                      </div>
-                    </div>
-                  </Card>
-                ))}
+                    </Card>
+                  );
+                })}
               </div>
             </div>
           )}
