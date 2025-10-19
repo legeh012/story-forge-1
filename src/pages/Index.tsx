@@ -124,65 +124,95 @@ const Index = () => {
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 max-w-6xl mx-auto">
-          <Card className="p-6 bg-card border-border hover:border-primary/50 transition-all group">
-            <div className="p-3 rounded-xl bg-primary/10 w-fit mb-4 group-hover:bg-primary/20 transition-colors">
-              <Users className="h-6 w-6 text-primary" />
-            </div>
-            <h3 className="text-xl font-semibold mb-2">Character Continuity</h3>
-            <p className="text-muted-foreground">
-              Characters remember their traits, histories, and relationships across all episodes and formats.
-            </p>
-          </Card>
+          <Link to="/characters">
+            <Card className="p-6 bg-card border-border hover:border-primary/50 transition-all group cursor-pointer h-full">
+              <div className="p-3 rounded-xl bg-primary/10 w-fit mb-4 group-hover:bg-primary/20 transition-colors">
+                <Users className="h-6 w-6 text-primary" />
+              </div>
+              <h3 className="text-xl font-semibold mb-2">Character Continuity</h3>
+              <p className="text-muted-foreground">
+                Characters remember their traits, histories, and relationships across all episodes and formats.
+              </p>
+              <div className="mt-4 flex items-center text-primary text-sm">
+                Manage Characters <ArrowRight className="ml-1 h-4 w-4" />
+              </div>
+            </Card>
+          </Link>
 
-          <Card className="p-6 bg-card border-border hover:border-accent/50 transition-all group">
-            <div className="p-3 rounded-xl bg-accent/10 w-fit mb-4 group-hover:bg-accent/20 transition-colors">
-              <BookOpen className="h-6 w-6 text-accent" />
-            </div>
-            <h3 className="text-xl font-semibold mb-2">Episodic Generation</h3>
-            <p className="text-muted-foreground">
-              AI creates subsequent episodes while maintaining perfect narrative consistency.
-            </p>
-          </Card>
+          <Link to="/workflow?tab=episodes">
+            <Card className="p-6 bg-card border-border hover:border-accent/50 transition-all group cursor-pointer h-full">
+              <div className="p-3 rounded-xl bg-accent/10 w-fit mb-4 group-hover:bg-accent/20 transition-colors">
+                <BookOpen className="h-6 w-6 text-accent" />
+              </div>
+              <h3 className="text-xl font-semibold mb-2">Episodic Generation</h3>
+              <p className="text-muted-foreground">
+                AI creates subsequent episodes while maintaining perfect narrative consistency.
+              </p>
+              <div className="mt-4 flex items-center text-accent text-sm">
+                Create Episodes <ArrowRight className="ml-1 h-4 w-4" />
+              </div>
+            </Card>
+          </Link>
 
-          <Card className="p-6 bg-card border-border hover:border-primary-glow/50 transition-all group">
-            <div className="p-3 rounded-xl bg-primary-glow/10 w-fit mb-4 group-hover:bg-primary-glow/20 transition-colors">
-              <Zap className="h-6 w-6 text-primary-glow" />
-            </div>
-            <h3 className="text-xl font-semibold mb-2">Multi-Modal Input</h3>
-            <p className="text-muted-foreground">
-              Create with text, voice, images, and sketches—AI understands it all.
-            </p>
-          </Card>
+          <Link to="/create">
+            <Card className="p-6 bg-card border-border hover:border-primary-glow/50 transition-all group cursor-pointer h-full">
+              <div className="p-3 rounded-xl bg-primary-glow/10 w-fit mb-4 group-hover:bg-primary-glow/20 transition-colors">
+                <Zap className="h-6 w-6 text-primary-glow" />
+              </div>
+              <h3 className="text-xl font-semibold mb-2">Multi-Modal Input</h3>
+              <p className="text-muted-foreground">
+                Create with text, voice, images, and sketches—AI understands it all.
+              </p>
+              <div className="mt-4 flex items-center text-primary-glow text-sm">
+                Start Creating <ArrowRight className="ml-1 h-4 w-4" />
+              </div>
+            </Card>
+          </Link>
 
-          <Card className="p-6 bg-card border-border hover:border-accent/50 transition-all group">
-            <div className="p-3 rounded-xl bg-accent/10 w-fit mb-4 group-hover:bg-accent/20 transition-colors">
-              <Globe className="h-6 w-6 text-accent" />
-            </div>
-            <h3 className="text-xl font-semibold mb-2">Cross-Platform Deploy</h3>
-            <p className="text-muted-foreground">
-              Publish to iOS, Android, web, and AR/VR with a single click.
-            </p>
-          </Card>
+          <Link to="/analytics">
+            <Card className="p-6 bg-card border-border hover:border-accent/50 transition-all group cursor-pointer h-full">
+              <div className="p-3 rounded-xl bg-accent/10 w-fit mb-4 group-hover:bg-accent/20 transition-colors">
+                <Globe className="h-6 w-6 text-accent" />
+              </div>
+              <h3 className="text-xl font-semibold mb-2">Cross-Platform Deploy</h3>
+              <p className="text-muted-foreground">
+                Publish to iOS, Android, web, and AR/VR with a single click.
+              </p>
+              <div className="mt-4 flex items-center text-accent text-sm">
+                View Analytics <ArrowRight className="ml-1 h-4 w-4" />
+              </div>
+            </Card>
+          </Link>
 
-          <Card className="p-6 bg-card border-border hover:border-primary/50 transition-all group">
-            <div className="p-3 rounded-xl bg-primary/10 w-fit mb-4 group-hover:bg-primary/20 transition-colors">
-              <Palette className="h-6 w-6 text-primary" />
-            </div>
-            <h3 className="text-xl font-semibold mb-2">AI-Driven Design</h3>
-            <p className="text-muted-foreground">
-              Get intelligent UX/UI suggestions that ensure accessibility and engagement.
-            </p>
-          </Card>
+          <Link to="/viral-bots">
+            <Card className="p-6 bg-card border-border hover:border-primary/50 transition-all group cursor-pointer h-full">
+              <div className="p-3 rounded-xl bg-primary/10 w-fit mb-4 group-hover:bg-primary/20 transition-colors">
+                <Palette className="h-6 w-6 text-primary" />
+              </div>
+              <h3 className="text-xl font-semibold mb-2">AI-Driven Optimization</h3>
+              <p className="text-muted-foreground">
+                Activate viral bots to optimize content for trending hashtags, hooks, and engagement.
+              </p>
+              <div className="mt-4 flex items-center text-primary text-sm">
+                Manage Bots <ArrowRight className="ml-1 h-4 w-4" />
+              </div>
+            </Card>
+          </Link>
 
-          <Card className="p-6 bg-card border-border hover:border-primary-glow/50 transition-all group">
-            <div className="p-3 rounded-xl bg-primary-glow/10 w-fit mb-4 group-hover:bg-primary-glow/20 transition-colors">
-              <Sparkles className="h-6 w-6 text-primary-glow" />
-            </div>
-            <h3 className="text-xl font-semibold mb-2">Media Generation</h3>
-            <p className="text-muted-foreground">
-              Automatically generate videos, animations, and visuals aligned with your narrative.
-            </p>
-          </Card>
+          <Link to="/media">
+            <Card className="p-6 bg-card border-border hover:border-primary-glow/50 transition-all group cursor-pointer h-full">
+              <div className="p-3 rounded-xl bg-primary-glow/10 w-fit mb-4 group-hover:bg-primary-glow/20 transition-colors">
+                <Sparkles className="h-6 w-6 text-primary-glow" />
+              </div>
+              <h3 className="text-xl font-semibold mb-2">Media Generation</h3>
+              <p className="text-muted-foreground">
+                Automatically generate videos, animations, and visuals aligned with your narrative.
+              </p>
+              <div className="mt-4 flex items-center text-primary-glow text-sm">
+                Media Library <ArrowRight className="ml-1 h-4 w-4" />
+              </div>
+            </Card>
+          </Link>
         </div>
       </section>
 
