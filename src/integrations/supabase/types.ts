@@ -1165,6 +1165,20 @@ export type Database = {
         | "scene_orchestration"
         | "ai_engineer"
         | "ultra_video"
+        | "infrastructure_monitor"
+        | "gpu_scaler"
+        | "module_deployer"
+        | "runtime_validator"
+        | "app_logic_manager"
+        | "auth_flow_handler"
+        | "database_sync"
+        | "api_orchestrator"
+        | "dashboard_manager"
+        | "confessional_editor"
+        | "cast_branding"
+        | "ai_model_connector"
+        | "payment_gateway"
+        | "cultural_library"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -1323,6 +1337,20 @@ export const Constants = {
         "scene_orchestration",
         "ai_engineer",
         "ultra_video",
+        "infrastructure_monitor",
+        "gpu_scaler",
+        "module_deployer",
+        "runtime_validator",
+        "app_logic_manager",
+        "auth_flow_handler",
+        "database_sync",
+        "api_orchestrator",
+        "dashboard_manager",
+        "confessional_editor",
+        "cast_branding",
+        "ai_model_connector",
+        "payment_gateway",
+        "cultural_library",
       ],
     },
   },

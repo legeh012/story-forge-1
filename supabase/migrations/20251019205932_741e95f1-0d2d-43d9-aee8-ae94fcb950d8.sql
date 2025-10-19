@@ -1,0 +1,15 @@
+-- Add StoryForge bot types to the bot_type enum
+ALTER TYPE bot_type ADD VALUE IF NOT EXISTS 'infrastructure_monitor';
+ALTER TYPE bot_type ADD VALUE IF NOT EXISTS 'gpu_scaler';
+ALTER TYPE bot_type ADD VALUE IF NOT EXISTS 'module_deployer';
+ALTER TYPE bot_type ADD VALUE IF NOT EXISTS 'runtime_validator';
+ALTER TYPE bot_type ADD VALUE IF NOT EXISTS 'app_logic_manager';
+ALTER TYPE bot_type ADD VALUE IF NOT EXISTS 'auth_flow_handler';
+ALTER TYPE bot_type ADD VALUE IF NOT EXISTS 'database_sync';
+ALTER TYPE bot_type ADD VALUE IF NOT EXISTS 'api_orchestrator';
+ALTER TYPE bot_type ADD VALUE IF NOT EXISTS 'dashboard_manager';
+ALTER TYPE bot_type ADD VALUE IF NOT EXISTS 'confessional_editor';
+ALTER TYPE bot_type ADD VALUE IF NOT EXISTS 'cast_branding';
+ALTER TYPE bot_type ADD VALUE IF NOT EXISTS 'ai_model_connector';
+ALTER TYPE bot_type ADD VALUE IF NOT EXISTS 'payment_gateway';
+ALTER TYPE bot_type ADD VALUE IF NOT EXISTS 'cultural_library';

@@ -77,6 +77,25 @@ const ViralBots = () => {
       { type: 'llm_reflection' as const, name: 'LLM Reflection Bot', category: 'ai_agents' },
       { type: 'bot_orchestrator' as const, name: 'Bot Army Orchestrator', category: 'ai_agents' },
       { type: 'persona_bot' as const, name: 'Persona Bot', category: 'ai_agents' },
+      // IaaS Bots
+      { type: 'infrastructure_monitor' as const, name: 'Infrastructure Monitor', category: 'iaas' },
+      { type: 'gpu_scaler' as const, name: 'GPU Scaler', category: 'iaas' },
+      // PaaS Bots
+      { type: 'module_deployer' as const, name: 'Module Deployer', category: 'paas' },
+      { type: 'runtime_validator' as const, name: 'Runtime Validator', category: 'paas' },
+      { type: 'app_logic_manager' as const, name: 'App Logic Manager', category: 'paas' },
+      // BaaS Bots
+      { type: 'auth_flow_handler' as const, name: 'Auth Flow Handler', category: 'baas' },
+      { type: 'database_sync' as const, name: 'Database Sync', category: 'baas' },
+      { type: 'api_orchestrator' as const, name: 'API Orchestrator', category: 'baas' },
+      // SaaS Bots
+      { type: 'dashboard_manager' as const, name: 'Dashboard Manager', category: 'saas' },
+      { type: 'confessional_editor' as const, name: 'Confessional Editor', category: 'saas' },
+      { type: 'cast_branding' as const, name: 'Cast Branding', category: 'saas' },
+      // XaaS Bots
+      { type: 'ai_model_connector' as const, name: 'AI Model Connector', category: 'xaas' },
+      { type: 'payment_gateway' as const, name: 'Payment Gateway', category: 'xaas' },
+      { type: 'cultural_library' as const, name: 'Cultural Library', category: 'xaas' },
     ];
 
     const defaultBots = allBotTypes.map(bot => ({
@@ -234,6 +253,25 @@ const ViralBots = () => {
       llm_reflection: 'Reviews bot output and suggests improvements',
       bot_orchestrator: 'Coordinates multiple bots for synchronized campaigns',
       persona_bot: 'Adopts specific tones and brand voices',
+      // IaaS
+      infrastructure_monitor: 'Monitors infrastructure health and resource utilization for video rendering pipelines',
+      gpu_scaler: 'Automatically scales GPU usage based on rendering workload demand',
+      // PaaS
+      module_deployer: 'Deploys new modules and updates to the platform infrastructure',
+      runtime_validator: 'Validates runtime configurations and ensures system stability',
+      app_logic_manager: 'Manages application logic and business rule execution',
+      // BaaS
+      auth_flow_handler: 'Handles authentication flows and user session management',
+      database_sync: 'Synchronizes database operations and maintains data consistency',
+      api_orchestrator: 'Orchestrates API calls and manages service integrations',
+      // SaaS
+      dashboard_manager: 'Powers user-facing dashboard with real-time analytics',
+      confessional_editor: 'Manages confessional scene creation and editing tools',
+      cast_branding: 'Handles character branding and visual identity tools',
+      // XaaS
+      ai_model_connector: 'Connects to external AI models on-demand for specialized tasks',
+      payment_gateway: 'Integrates with payment providers for monetization',
+      cultural_library: 'Accesses external cultural reference libraries for content enrichment',
     };
     return descriptions[type] || 'AI-powered automation bot';
   };
@@ -245,6 +283,11 @@ const ViralBots = () => {
   const creatorBots = bots.filter(b => ['script_generator', 'thumbnail_designer', 'video_assembly', 'voiceover'].includes(b.bot_type));
   const analyticsBots = bots.filter(b => ['performance_tracker', 'ab_testing', 'roi_analyzer', 'feedback_loop'].includes(b.bot_type));
   const aiAgentBots = bots.filter(b => ['llm_reflection', 'bot_orchestrator', 'persona_bot'].includes(b.bot_type));
+  const iaasBots = bots.filter(b => ['infrastructure_monitor', 'gpu_scaler'].includes(b.bot_type));
+  const paasBots = bots.filter(b => ['module_deployer', 'runtime_validator', 'app_logic_manager'].includes(b.bot_type));
+  const baasBots = bots.filter(b => ['auth_flow_handler', 'database_sync', 'api_orchestrator'].includes(b.bot_type));
+  const saasBots = bots.filter(b => ['dashboard_manager', 'confessional_editor', 'cast_branding'].includes(b.bot_type));
+  const xaasBots = bots.filter(b => ['ai_model_connector', 'payment_gateway', 'cultural_library'].includes(b.bot_type));
 
   return (
     <>
@@ -347,6 +390,67 @@ const ViralBots = () => {
                 description="Self-improving bots that coordinate and optimize the entire operation"
                 icon={<Zap className="h-8 w-8 text-orange-600" />}
                 bots={aiAgentBots}
+                runningBots={runningBots}
+                onToggle={toggleBot}
+                onRun={runBot}
+                getBotDescription={getBotDescription}
+              />
+
+              <div className="mt-8 pt-8 border-t border-border">
+                <h2 className="text-3xl font-bold mb-6 bg-gradient-to-r from-cyan-600 via-blue-600 to-indigo-600 bg-clip-text text-transparent">
+                  StoryForge Infrastructure Bots
+                </h2>
+              </div>
+
+              <BotCategory
+                title="IaaS - Infrastructure Layer"
+                description="Monitor infrastructure health and scale GPU usage for video rendering"
+                icon={<Bot className="h-8 w-8 text-cyan-600" />}
+                bots={iaasBots}
+                runningBots={runningBots}
+                onToggle={toggleBot}
+                onRun={runBot}
+                getBotDescription={getBotDescription}
+              />
+
+              <BotCategory
+                title="PaaS - Platform Layer"
+                description="Deploy modules, validate runtime configs, and manage application logic"
+                icon={<Rocket className="h-8 w-8 text-blue-600" />}
+                bots={paasBots}
+                runningBots={runningBots}
+                onToggle={toggleBot}
+                onRun={runBot}
+                getBotDescription={getBotDescription}
+              />
+
+              <BotCategory
+                title="BaaS - Backend Layer"
+                description="Handle auth flows, database syncs, and API orchestration"
+                icon={<Zap className="h-8 w-8 text-indigo-600" />}
+                bots={baasBots}
+                runningBots={runningBots}
+                onToggle={toggleBot}
+                onRun={runBot}
+                getBotDescription={getBotDescription}
+              />
+
+              <BotCategory
+                title="SaaS - Software Layer"
+                description="Power user-facing dashboard, confessional editors, and cast branding"
+                icon={<Wand2 className="h-8 w-8 text-purple-600" />}
+                bots={saasBots}
+                runningBots={runningBots}
+                onToggle={toggleBot}
+                onRun={runBot}
+                getBotDescription={getBotDescription}
+              />
+
+              <BotCategory
+                title="XaaS - External Services"
+                description="Connect to AI models, payment gateways, and cultural libraries on demand"
+                icon={<TrendingUp className="h-8 w-8 text-pink-600" />}
+                bots={xaasBots}
                 runningBots={runningBots}
                 onToggle={toggleBot}
                 onRun={runBot}
