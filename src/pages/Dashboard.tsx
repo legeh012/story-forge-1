@@ -55,7 +55,7 @@ const Dashboard = () => {
         supabase.from('episodes').select('*', { count: 'exact', head: true }).eq('user_id', userId),
         supabase.from('projects').select('*', { count: 'exact', head: true }).eq('user_id', userId),
         supabase.from('characters').select('name, role').eq('user_id', userId).order('created_at', { ascending: false }).limit(3),
-        supabase.from('episodes').select('title, status, episode_number').eq('user_id', userId).order('created_at', { ascending: false }).limit(3),
+        supabase.from('episodes').select('id, title, status, episode_number').eq('user_id', userId).order('created_at', { ascending: false }).limit(3),
         supabase.from('projects').select('id, title, description, status, genre').eq('user_id', userId).order('created_at', { ascending: false }).limit(3)
       ]);
 
@@ -388,13 +388,13 @@ const Dashboard = () => {
                 </div>
               ) : (
                 recentEpisodes.map((episode) => (
-                  <Card key={episode.title} className="p-4 bg-card border-border hover:border-accent/30 transition-all cursor-pointer">
+                  <Card key={episode.id} className="p-4 bg-card border-border hover:border-accent/30 transition-all cursor-pointer">
                     <div className="flex items-center justify-between">
                       <div>
                         <h3 className="font-semibold">{episode.title}</h3>
                         <p className="text-sm text-muted-foreground">{episode.status || 'Draft'} • Episode {episode.episode_number}</p>
                       </div>
-                      <Link to="/episodes">
+                      <Link to={`/episodes/${episode.id}`}>
                         <Button variant="ghost" size="sm">View</Button>
                       </Link>
                     </div>

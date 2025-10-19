@@ -9,6 +9,7 @@ import Index from "./pages/Index";
 import Dashboard from "./pages/Dashboard";
 import Characters from "./pages/Characters";
 import Episodes from "./pages/Episodes";
+import EpisodeDetail from "./pages/EpisodeDetail";
 import Workflow from "./pages/Workflow";
 import Auth from "./pages/Auth";
 import CreateProject from "./pages/CreateProject";
@@ -37,6 +38,7 @@ const App = () => (
           <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
           <Route path="/characters" element={<ProtectedRoute><Characters /></ProtectedRoute>} />
           <Route path="/episodes" element={<ProtectedRoute><Episodes /></ProtectedRoute>} />
+          <Route path="/episodes/:id" element={<ProtectedRoute><EpisodeDetail /></ProtectedRoute>} />
           <Route path="/workflow" element={<ProtectedRoute><Workflow /></ProtectedRoute>} />
           <Route path="/create" element={<ProtectedRoute><CreateProject /></ProtectedRoute>} />
           <Route path="/media" element={<ProtectedRoute><MediaLibrary /></ProtectedRoute>} />
