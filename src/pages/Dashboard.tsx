@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import Navigation from "@/components/Navigation";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
 import { Plus, Users, BookOpen, Sparkles } from "lucide-react";
 import { Link } from "react-router-dom";
 import { SystemHealthMonitor } from "@/components/SystemHealthMonitor";
@@ -18,6 +19,7 @@ const Dashboard = () => {
   });
   const [recentCharacters, setRecentCharacters] = useState<any[]>([]);
   const [recentEpisodes, setRecentEpisodes] = useState<any[]>([]);
+  const [recentProjects, setRecentProjects] = useState<any[]>([]);
 
   useEffect(() => {
     const checkAuth = async () => {
@@ -44,12 +46,13 @@ const Dashboard = () => {
 
   const fetchDashboardData = async (userId: string) => {
     try {
-      const [charCount, epCount, projCount, chars, eps] = await Promise.all([
+      const [charCount, epCount, projCount, chars, eps, projs] = await Promise.all([
         supabase.from('characters').select('*', { count: 'exact', head: true }).eq('user_id', userId),
         supabase.from('episodes').select('*', { count: 'exact', head: true }).eq('user_id', userId),
         supabase.from('projects').select('*', { count: 'exact', head: true }).eq('user_id', userId),
         supabase.from('characters').select('name, role').eq('user_id', userId).order('created_at', { ascending: false }).limit(3),
-        supabase.from('episodes').select('title, status, episode_number').eq('user_id', userId).order('created_at', { ascending: false }).limit(3)
+        supabase.from('episodes').select('title, status, episode_number').eq('user_id', userId).order('created_at', { ascending: false }).limit(3),
+        supabase.from('projects').select('id, title, description, status, genre').eq('user_id', userId).order('created_at', { ascending: false }).limit(3)
       ]);
 
       setStats({
@@ -60,6 +63,7 @@ const Dashboard = () => {
 
       setRecentCharacters(chars.data || []);
       setRecentEpisodes(eps.data || []);
+      setRecentProjects(projs.data || []);
     } catch (error) {
       console.error('Failed to fetch dashboard data:', error);
     }
@@ -128,7 +132,55 @@ const Dashboard = () => {
         </div>
 
         <div className="mb-8">
-          <SystemHealthMonitor />
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="text-2xl font-bold">Your Projects</h2>
+            <Link to="/create">
+              <Button size="sm" className="bg-gradient-to-r from-primary to-accent hover:opacity-90">
+                <Plus className="h-4 w-4 mr-2" />
+                New Project
+              </Button>
+            </Link>
+          </div>
+          
+          <div className="space-y-3">
+            {recentProjects.length === 0 ? (
+              <div className="text-center py-8 text-muted-foreground">
+                <p className="mb-4">No projects yet</p>
+                <Link to="/create">
+                  <Button size="sm">Create your first project</Button>
+                </Link>
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                {recentProjects.map((project) => (
+                  <Card key={project.id} className="p-6 bg-card border-border hover:border-primary/30 transition-all cursor-pointer group">
+                    <div className="space-y-3">
+                      <div className="flex items-start justify-between">
+                        <div className="flex-1">
+                          <h3 className="font-semibold text-lg mb-1">{project.title}</h3>
+                          {project.genre && (
+                            <Badge variant="outline" className="text-xs">{project.genre}</Badge>
+                          )}
+                        </div>
+                        <Sparkles className="h-5 w-5 text-primary-glow opacity-0 group-hover:opacity-100 transition-opacity" />
+                      </div>
+                      {project.description && (
+                        <p className="text-sm text-muted-foreground line-clamp-2">{project.description}</p>
+                      )}
+                      <div className="flex items-center justify-between pt-2">
+                        <Badge className={project.status === 'active' ? 'bg-success' : 'bg-muted'}>
+                          {project.status || 'draft'}
+                        </Badge>
+                        <Link to="/create">
+                          <Button variant="ghost" size="sm">Manage</Button>
+                        </Link>
+                      </div>
+                    </div>
+                  </Card>
+                ))}
+              </div>
+            )}
+          </div>
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
