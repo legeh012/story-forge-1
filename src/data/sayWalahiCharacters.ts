@@ -124,5 +124,41 @@ export const sayWalahiCharacters = [
       rivalries: []
     },
     status: "active"
+  },
+  {
+    name: "Samira",
+    role: "Cultural Connector & Tradition Keeper",
+    traits: ["wise", "grounded", "community-oriented", "storyteller"],
+    drama_hooks: "Says 'all you need is Farah and samasa', bridges generations, keeps cultural wisdom alive while navigating modern life",
+    appearance: {
+      skin_tone: "warm bronze",
+      face: "knowing smile, gentle wisdom",
+      hair: "natural curls under elegant headwrap",
+      style: "traditional meets modern, henna artistry, cultural pride",
+      aura: "the anchor everyone needs"
+    },
+    relationships: {
+      alliances: ["Luul", "Zahra"],
+      rivalries: []
+    },
+    status: "active"
+  },
+  {
+    name: "Nasra",
+    role: "Style Icon & Boundary Setter",
+    traits: ["confident", "unapologetic", "fashion-forward", "protective"],
+    drama_hooks: "Wears sunglasses indoors, sets boundaries without explanation, protects her energy like it's designer",
+    appearance: {
+      skin_tone: "deep mahogany",
+      face: "striking features, unbothered expression",
+      hair: "sleek styling under black hijab",
+      style: "all black everything, designer sunglasses, effortless elegance",
+      aura: "mystery meets mastery"
+    },
+    relationships: {
+      alliances: ["Ayaan"],
+      rivalries: []
+    },
+    status: "active"
   }
 ];

@@ -5,9 +5,10 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Sparkles, Loader2 } from "lucide-react";
+import { Sparkles, Loader2, Upload } from "lucide-react";
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from "@/hooks/use-toast";
+import { sayWalahiCharacters } from "@/data/sayWalahiCharacters";
 
 const Characters = () => {
   const navigate = useNavigate();
@@ -15,6 +16,7 @@ const Characters = () => {
   const [loading, setLoading] = useState(true);
   const [prompt, setPrompt] = useState('');
   const [generating, setGenerating] = useState(false);
+  const [importing, setImporting] = useState(false);
   const [characters, setCharacters] = useState<any[]>([]);
   const { toast } = useToast();
   const projectId = searchParams.get('projectId');
@@ -99,6 +101,55 @@ const Characters = () => {
     }
   };
 
+  const handleImportSayWalahi = async () => {
+    if (!projectId) {
+      toast({
+        title: "Project required",
+        description: "Please select a project first",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    setImporting(true);
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) throw new Error('Not authenticated');
+
+      const { data, error } = await supabase.functions.invoke('import-characters', {
+        body: { 
+          characters: sayWalahiCharacters,
+          projectId 
+        }
+      });
+
+      if (error) throw error;
+
+      toast({
+        title: "Success!",
+        description: `Imported ${data.imported} Say Walahi characters`,
+      });
+
+      // Refresh characters list
+      const { data: updatedChars } = await supabase
+        .from('characters')
+        .select('*')
+        .eq('project_id', projectId)
+        .order('created_at', { ascending: false });
+      
+      if (updatedChars) setCharacters(updatedChars);
+      
+    } catch (error) {
+      toast({
+        title: "Import failed",
+        description: error instanceof Error ? error.message : "Failed to import characters",
+        variant: "destructive"
+      });
+    } finally {
+      setImporting(false);
+    }
+  };
+
   if (loading) {
     return <div className="flex items-center justify-center min-h-screen">Loading...</div>;
   }
@@ -140,23 +191,45 @@ const Characters = () => {
                 </p>
               </div>
 
-              <Button 
-                type="submit"
-                disabled={generating || !prompt.trim()}
-                className="w-full bg-gradient-to-r from-primary via-accent to-primary-glow hover:opacity-90 text-lg py-6 transition-all shadow-lg hover:shadow-primary/50"
-              >
-                {generating ? (
-                  <>
-                    <Loader2 className="h-5 w-5 mr-2 animate-spin" />
-                    Designing Character...
-                  </>
-                ) : (
-                  <>
-                    <Sparkles className="h-5 w-5 mr-2" />
-                    Generate Character
-                  </>
-                )}
-              </Button>
+              <div className="flex gap-3">
+                <Button 
+                  type="submit"
+                  disabled={generating || !prompt.trim()}
+                  className="flex-1 bg-gradient-to-r from-primary via-accent to-primary-glow hover:opacity-90 text-lg py-6 transition-all shadow-lg hover:shadow-primary/50"
+                >
+                  {generating ? (
+                    <>
+                      <Loader2 className="h-5 w-5 mr-2 animate-spin" />
+                      Designing Character...
+                    </>
+                  ) : (
+                    <>
+                      <Sparkles className="h-5 w-5 mr-2" />
+                      Generate Character
+                    </>
+                  )}
+                </Button>
+                
+                <Button 
+                  type="button"
+                  onClick={handleImportSayWalahi}
+                  disabled={importing || !projectId}
+                  variant="outline"
+                  className="border-primary/30 hover:bg-primary/10 text-lg py-6 px-6"
+                >
+                  {importing ? (
+                    <>
+                      <Loader2 className="h-5 w-5 mr-2 animate-spin" />
+                      Importing...
+                    </>
+                  ) : (
+                    <>
+                      <Upload className="h-5 w-5 mr-2" />
+                      Import Say Walahis
+                    </>
+                  )}
+                </Button>
+              </div>
             </form>
           </Card>
 
