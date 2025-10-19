@@ -173,6 +173,24 @@ Generate 3 compelling clips that tell a complete story.`;
 
     console.log(`Episode created: ${episode.id}`);
 
+    // Orchestrate AI bots for full viral production
+    console.log('🤖 Orchestrating AI bot team...');
+    
+    const { data: botData, error: botError } = await supabase.functions.invoke('bot-orchestrator', {
+      body: {
+        campaign_type: 'full_viral_campaign',
+        topic: prompt,
+        episodeId: episode.id,
+        projectId: projectId
+      }
+    });
+
+    if (botError) {
+      console.warn('Bot orchestration warning:', botError);
+    } else {
+      console.log(`✅ Activated ${botData?.activatedBots || 0} AI bots for viral optimization`);
+    }
+
     // Now generate video clips
     console.log('Starting video generation for clips...');
 
