@@ -1,229 +1,532 @@
 import Navigation from "@/components/Navigation";
-import { Card } from "@/components/ui/card";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { ArrowRight, MessageSquare, FileText, Video, Palette, Share2, TrendingUp, Check } from "lucide-react";
-import { useState } from "react";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import { Badge } from "@/components/ui/badge";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { 
+  Plus, Play, Pause, Video, Users, FileText, TrendingUp, 
+  Clapperboard, Sparkles, Clock, CheckCircle2, AlertCircle,
+  Upload, Settings, BarChart3
+} from "lucide-react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
+import { supabase } from "@/integrations/supabase/client";
+import { useToast } from "@/hooks/use-toast";
 
-const workflowSteps = [
-  {
-    id: 1,
-    title: "Idea Input",
-    subtitle: "Genre, mood, theme, or product description",
-    icon: MessageSquare,
-    color: "from-primary to-primary-glow",
-    description: "Start with your creative vision"
-  },
-  {
-    id: 2,
-    title: "Script & Storyboard Generation",
-    subtitle: "AI-powered narrative structure",
-    icon: FileText,
-    color: "from-accent to-primary",
-    description: "Let AI craft your story framework"
-  },
-  {
-    id: 3,
-    title: "Scene Creation & Development",
-    subtitle: "Build immersive experiences",
-    icon: Video,
-    color: "from-primary-glow to-accent",
-    description: "Develop detailed scenes and interactions"
-  },
-  {
-    id: 4,
-    title: "Character Integration",
-    subtitle: "Persistent character system",
-    icon: Palette,
-    color: "from-accent to-primary-glow",
-    description: "Add characters with continuity"
-  },
-  {
-    id: 5,
-    title: "Social Media & Publishing",
-    subtitle: "Cross-platform deployment",
-    icon: Share2,
-    color: "from-primary to-accent",
-    description: "Deploy to all platforms"
-  },
-  {
-    id: 6,
-    title: "Growth & Analytics",
-    subtitle: "Track performance and engagement",
-    icon: TrendingUp,
-    color: "from-primary-glow to-primary",
-    description: "Monitor and optimize your content"
-  }
-];
+interface Project {
+  id: string;
+  title: string;
+  description: string;
+  status: string;
+  genre: string;
+  mood: string;
+  theme: string;
+  created_at: string;
+}
+
+interface Episode {
+  id: string;
+  project_id: string;
+  title: string;
+  episode_number: number;
+  season: number;
+  status: string;
+  synopsis: string;
+}
+
+interface Character {
+  id: string;
+  project_id: string;
+  name: string;
+  role: string;
+  personality: string;
+  background: string;
+}
 
 const Workflow = () => {
-  const [completedSteps, setCompletedSteps] = useState<number[]>([]);
   const navigate = useNavigate();
+  const { toast } = useToast();
+  
+  const [projects, setProjects] = useState<Project[]>([]);
+  const [episodes, setEpisodes] = useState<Episode[]>([]);
+  const [characters, setCharacters] = useState<Character[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [selectedProject, setSelectedProject] = useState<string | null>(null);
+  
+  // New project form state
+  const [newProject, setNewProject] = useState({
+    title: "",
+    description: "",
+    genre: "Reality TV",
+    mood: "Dramatic",
+    theme: "Diaspora Life"
+  });
 
-  const handleStepComplete = (stepId: number) => {
-    if (!completedSteps.includes(stepId)) {
-      setCompletedSteps([...completedSteps, stepId]);
+  useEffect(() => {
+    fetchProjects();
+  }, []);
+
+  useEffect(() => {
+    if (selectedProject) {
+      fetchProjectDetails(selectedProject);
+    }
+  }, [selectedProject]);
+
+  const fetchProjects = async () => {
+    try {
+      const { data, error } = await supabase
+        .from("projects")
+        .select("*")
+        .order("created_at", { ascending: false });
+
+      if (error) throw error;
+      setProjects(data || []);
+      if (data && data.length > 0) {
+        setSelectedProject(data[0].id);
+      }
+    } catch (error: any) {
+      toast({
+        title: "Error loading projects",
+        description: error.message,
+        variant: "destructive"
+      });
+    } finally {
+      setLoading(false);
     }
   };
+
+  const fetchProjectDetails = async (projectId: string) => {
+    try {
+      const [episodesRes, charactersRes] = await Promise.all([
+        supabase.from("episodes").select("*").eq("project_id", projectId).order("episode_number"),
+        supabase.from("characters").select("*").eq("project_id", projectId)
+      ]);
+
+      setEpisodes(episodesRes.data || []);
+      setCharacters(charactersRes.data || []);
+    } catch (error: any) {
+      toast({
+        title: "Error loading project details",
+        description: error.message,
+        variant: "destructive"
+      });
+    }
+  };
+
+  const createProject = async () => {
+    if (!newProject.title) {
+      toast({
+        title: "Title required",
+        description: "Please enter a project title",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error("Not authenticated");
+
+      const { data, error } = await supabase
+        .from("projects")
+        .insert([{
+          ...newProject,
+          user_id: user.id,
+          status: "draft"
+        }])
+        .select()
+        .single();
+
+      if (error) throw error;
+
+      toast({
+        title: "Project created!",
+        description: `${newProject.title} is ready to go`
+      });
+
+      setProjects([data, ...projects]);
+      setSelectedProject(data.id);
+      setNewProject({
+        title: "",
+        description: "",
+        genre: "Reality TV",
+        mood: "Dramatic",
+        theme: "Diaspora Life"
+      });
+    } catch (error: any) {
+      toast({
+        title: "Error creating project",
+        description: error.message,
+        variant: "destructive"
+      });
+    }
+  };
+
+  const triggerBotPipeline = async (botType: string) => {
+    if (!selectedProject) return;
+
+    toast({
+      title: `${botType} Bot Activated`,
+      description: "Processing your content...",
+    });
+
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error("Not authenticated");
+
+      await supabase.from("bot_activities").insert([{
+        user_id: user.id,
+        status: "running",
+        results: { project_id: selectedProject, bot_type: botType }
+      }]);
+
+      toast({
+        title: "Bot pipeline started",
+        description: "Check the Viral Bots page for progress"
+      });
+    } catch (error: any) {
+      toast({
+        title: "Error starting bot",
+        description: error.message,
+        variant: "destructive"
+      });
+    }
+  };
+
+  const currentProject = projects.find(p => p.id === selectedProject);
 
   return (
     <div className="min-h-screen bg-background">
       <Navigation />
       
       <main className="container mx-auto px-4 pt-24 pb-16">
-        <div className="max-w-6xl mx-auto">
-          <div className="text-center mb-12 animate-fade-in">
-            <h1 className="text-5xl font-bold mb-4 bg-gradient-to-r from-primary via-accent to-primary-glow bg-clip-text text-transparent">
-              Your Creative Workflow
-            </h1>
-            <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
-              From initial concept to published experience—guided by AI at every step
-            </p>
-          </div>
-
-          {/* Workflow Steps Grid */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-12">
-            {workflowSteps.map((step, index) => {
-              const Icon = step.icon;
-              const isCompleted = completedSteps.includes(step.id);
-              
-              return (
-                <Card
-                  key={step.id}
-                  className={`p-6 bg-card border-border hover:border-primary/50 transition-all cursor-pointer group relative overflow-hidden ${
-                    isCompleted ? 'border-primary/70' : ''
-                  }`}
-                  onClick={() => handleStepComplete(step.id)}
-                >
-                  {/* Step Number Badge */}
-                  <div className="absolute top-4 right-4">
-                    <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold ${
-                      isCompleted 
-                        ? 'bg-primary text-white' 
-                        : 'bg-primary/10 text-primary'
-                    }`}>
-                      {isCompleted ? <Check className="h-4 w-4" /> : step.id}
-                    </div>
-                  </div>
-
-                  {/* Icon */}
-                  <div className={`p-3 rounded-xl bg-gradient-to-br ${step.color} w-fit mb-4 group-hover:scale-110 transition-transform`}>
-                    <Icon className="h-6 w-6 text-white" />
-                  </div>
-
-                  {/* Content */}
-                  <h3 className="text-xl font-semibold mb-2">{step.title}</h3>
-                  <p className="text-sm text-muted-foreground mb-3">{step.subtitle}</p>
-                  <p className="text-xs text-foreground/60">{step.description}</p>
-
-                  {/* Connection Line */}
-                  {index < workflowSteps.length - 1 && (
-                    <div className="hidden lg:block absolute top-1/2 -right-3 transform translate-x-full">
-                      <ArrowRight className="h-6 w-6 text-primary/30" />
-                    </div>
-                  )}
-                </Card>
-              );
-            })}
-          </div>
-
-          {/* Interactive Flow Diagram */}
-          <Card className="p-8 bg-gradient-to-br from-card to-card/50 border-primary/20 mb-8">
-            <h2 className="text-3xl font-bold mb-6 text-center">How It Works</h2>
-            
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-              <div className="space-y-4">
-                <div className="flex items-start gap-4 p-4 bg-primary/5 rounded-xl border border-primary/20">
-                  <div className="p-2 rounded-lg bg-primary/10">
-                    <MessageSquare className="h-5 w-5 text-primary" />
-                  </div>
-                  <div>
-                    <h3 className="font-semibold mb-1">Multi-Modal Input</h3>
-                    <p className="text-sm text-muted-foreground">
-                      Express your ideas through text, voice, images, or sketches—AI understands it all
-                    </p>
-                  </div>
-                </div>
-
-                <div className="flex items-start gap-4 p-4 bg-accent/5 rounded-xl border border-accent/20">
-                  <div className="p-2 rounded-lg bg-accent/10">
-                    <Video className="h-5 w-5 text-accent" />
-                  </div>
-                  <div>
-                    <h3 className="font-semibold mb-1">AI Content Generation</h3>
-                    <p className="text-sm text-muted-foreground">
-                      Advanced AI creates scripts, storyboards, and media that align with your narrative
-                    </p>
-                  </div>
-                </div>
-
-                <div className="flex items-start gap-4 p-4 bg-primary-glow/5 rounded-xl border border-primary-glow/20">
-                  <div className="p-2 rounded-lg bg-primary-glow/10">
-                    <Palette className="h-5 w-5 text-primary-glow" />
-                  </div>
-                  <div>
-                    <h3 className="font-semibold mb-1">Character Continuity</h3>
-                    <p className="text-sm text-muted-foreground">
-                      Characters remember traits, relationships, and history across all episodes
-                    </p>
-                  </div>
-                </div>
-              </div>
-
-              <div className="space-y-4">
-                <div className="flex items-start gap-4 p-4 bg-accent/5 rounded-xl border border-accent/20">
-                  <div className="p-2 rounded-lg bg-accent/10">
-                    <FileText className="h-5 w-5 text-accent" />
-                  </div>
-                  <div>
-                    <h3 className="font-semibold mb-1">Episodic Storytelling</h3>
-                    <p className="text-sm text-muted-foreground">
-                      Generate subsequent episodes while maintaining perfect narrative consistency
-                    </p>
-                  </div>
-                </div>
-
-                <div className="flex items-start gap-4 p-4 bg-primary/5 rounded-xl border border-primary/20">
-                  <div className="p-2 rounded-lg bg-primary/10">
-                    <Share2 className="h-5 w-5 text-primary" />
-                  </div>
-                  <div>
-                    <h3 className="font-semibold mb-1">Cross-Platform Deploy</h3>
-                    <p className="text-sm text-muted-foreground">
-                      Publish to iOS, Android, web, and AR/VR with a single click
-                    </p>
-                  </div>
-                </div>
-
-                <div className="flex items-start gap-4 p-4 bg-primary-glow/5 rounded-xl border border-primary-glow/20">
-                  <div className="p-2 rounded-lg bg-primary-glow/10">
-                    <TrendingUp className="h-5 w-5 text-primary-glow" />
-                  </div>
-                  <div>
-                    <h3 className="font-semibold mb-1">Growth Analytics</h3>
-                    <p className="text-sm text-muted-foreground">
-                      Track engagement, optimize content, and grow your audience
-                    </p>
-                  </div>
-                </div>
-              </div>
+        <div className="max-w-7xl mx-auto space-y-8">
+          {/* Header */}
+          <div className="flex items-center justify-between">
+            <div>
+              <h1 className="text-4xl font-bold bg-gradient-to-r from-primary via-accent to-primary-glow bg-clip-text text-transparent">
+                Project Workflow
+              </h1>
+              <p className="text-muted-foreground mt-2">
+                Manage your reality show production from concept to distribution
+              </p>
             </div>
-          </Card>
-
-          {/* CTA Section */}
-          <div className="text-center">
-            <Button
-              size="lg"
-              className="bg-gradient-to-r from-primary to-accent hover:opacity-90 transition-opacity text-lg px-8"
-              onClick={() => navigate("/dashboard")}
-            >
-              Start Your First Project
-              <ArrowRight className="ml-2 h-5 w-5" />
+            <Button onClick={() => navigate("/viral-bots")} variant="outline">
+              <Sparkles className="mr-2 h-4 w-4" />
+              Manage Bots
             </Button>
-            <p className="text-sm text-muted-foreground mt-4">
-              Complete {completedSteps.length} of {workflowSteps.length} steps
-            </p>
           </div>
+
+          <Tabs defaultValue="projects" className="w-full">
+            <TabsList className="grid w-full grid-cols-4">
+              <TabsTrigger value="projects">Projects</TabsTrigger>
+              <TabsTrigger value="episodes">Episodes</TabsTrigger>
+              <TabsTrigger value="cast">Cast</TabsTrigger>
+              <TabsTrigger value="automation">Bot Automation</TabsTrigger>
+            </TabsList>
+
+            {/* Projects Tab */}
+            <TabsContent value="projects" className="space-y-6">
+              <Card>
+                <CardHeader>
+                  <CardTitle>Create New Project</CardTitle>
+                  <CardDescription>Start a new reality show production</CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="title">Show Title</Label>
+                      <Input
+                        id="title"
+                        placeholder="e.g., Real Sisters of the Diaspora"
+                        value={newProject.title}
+                        onChange={(e) => setNewProject({...newProject, title: e.target.value})}
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="genre">Genre</Label>
+                      <Input
+                        id="genre"
+                        value={newProject.genre}
+                        onChange={(e) => setNewProject({...newProject, genre: e.target.value})}
+                      />
+                    </div>
+                  </div>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="mood">Mood</Label>
+                      <Input
+                        id="mood"
+                        value={newProject.mood}
+                        onChange={(e) => setNewProject({...newProject, mood: e.target.value})}
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="theme">Theme</Label>
+                      <Input
+                        id="theme"
+                        value={newProject.theme}
+                        onChange={(e) => setNewProject({...newProject, theme: e.target.value})}
+                      />
+                    </div>
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="description">Description</Label>
+                    <Textarea
+                      id="description"
+                      placeholder="Describe your show concept..."
+                      value={newProject.description}
+                      onChange={(e) => setNewProject({...newProject, description: e.target.value})}
+                      rows={3}
+                    />
+                  </div>
+                  <Button onClick={createProject} className="w-full">
+                    <Plus className="mr-2 h-4 w-4" />
+                    Create Project
+                  </Button>
+                </CardContent>
+              </Card>
+
+              {/* Existing Projects */}
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                {projects.map((project) => (
+                  <Card
+                    key={project.id}
+                    className={`cursor-pointer transition-all hover:shadow-lg ${
+                      selectedProject === project.id ? 'border-primary ring-2 ring-primary/20' : ''
+                    }`}
+                    onClick={() => setSelectedProject(project.id)}
+                  >
+                    <CardHeader>
+                      <div className="flex items-start justify-between">
+                        <div className="flex-1">
+                          <CardTitle className="text-lg">{project.title}</CardTitle>
+                          <CardDescription className="line-clamp-2 mt-1">
+                            {project.description}
+                          </CardDescription>
+                        </div>
+                        <Badge variant={project.status === 'published' ? 'default' : 'secondary'}>
+                          {project.status}
+                        </Badge>
+                      </div>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="flex flex-wrap gap-2">
+                        <Badge variant="outline">{project.genre}</Badge>
+                        <Badge variant="outline">{project.mood}</Badge>
+                        <Badge variant="outline">{project.theme}</Badge>
+                      </div>
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+            </TabsContent>
+
+            {/* Episodes Tab */}
+            <TabsContent value="episodes" className="space-y-6">
+              {currentProject ? (
+                <>
+                  <Card>
+                    <CardHeader>
+                      <CardTitle>Episodes for {currentProject.title}</CardTitle>
+                      <CardDescription>
+                        {episodes.length} episode{episodes.length !== 1 ? 's' : ''} created
+                      </CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="space-y-3">
+                        {episodes.map((episode) => (
+                          <div
+                            key={episode.id}
+                            className="flex items-center justify-between p-4 border rounded-lg hover:bg-accent/5"
+                          >
+                            <div className="flex items-center gap-4">
+                              <div className="p-2 rounded-lg bg-primary/10">
+                                <Video className="h-5 w-5 text-primary" />
+                              </div>
+                              <div>
+                                <h4 className="font-semibold">
+                                  S{episode.season}E{episode.episode_number}: {episode.title}
+                                </h4>
+                                <p className="text-sm text-muted-foreground line-clamp-1">
+                                  {episode.synopsis}
+                                </p>
+                              </div>
+                            </div>
+                            <Badge variant={episode.status === 'published' ? 'default' : 'secondary'}>
+                              {episode.status}
+                            </Badge>
+                          </div>
+                        ))}
+                        {episodes.length === 0 && (
+                          <div className="text-center py-8 text-muted-foreground">
+                            <Clapperboard className="h-12 w-12 mx-auto mb-2 opacity-50" />
+                            <p>No episodes yet. Use the Script Generator bot to create content!</p>
+                          </div>
+                        )}
+                      </div>
+                    </CardContent>
+                  </Card>
+                </>
+              ) : (
+                <Card>
+                  <CardContent className="py-12 text-center">
+                    <AlertCircle className="h-12 w-12 mx-auto mb-4 text-muted-foreground" />
+                    <p className="text-muted-foreground">Select a project to view episodes</p>
+                  </CardContent>
+                </Card>
+              )}
+            </TabsContent>
+
+            {/* Cast Tab */}
+            <TabsContent value="cast" className="space-y-6">
+              {currentProject ? (
+                <Card>
+                  <CardHeader>
+                    <CardTitle>Cast for {currentProject.title}</CardTitle>
+                    <CardDescription>
+                      {characters.length} character{characters.length !== 1 ? 's' : ''} defined
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      {characters.map((character) => (
+                        <div
+                          key={character.id}
+                          className="p-4 border rounded-lg hover:shadow-md transition-shadow"
+                        >
+                          <div className="flex items-start gap-3">
+                            <div className="p-2 rounded-full bg-accent/10">
+                              <Users className="h-5 w-5 text-accent" />
+                            </div>
+                            <div className="flex-1">
+                              <h4 className="font-semibold">{character.name}</h4>
+                              <p className="text-sm text-muted-foreground mb-2">{character.role}</p>
+                              <p className="text-xs text-foreground/60 line-clamp-2">
+                                {character.personality}
+                              </p>
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                      {characters.length === 0 && (
+                        <div className="col-span-2 text-center py-8 text-muted-foreground">
+                          <Users className="h-12 w-12 mx-auto mb-2 opacity-50" />
+                          <p>No cast members yet. Add characters to your project!</p>
+                        </div>
+                      )}
+                    </div>
+                  </CardContent>
+                </Card>
+              ) : (
+                <Card>
+                  <CardContent className="py-12 text-center">
+                    <AlertCircle className="h-12 w-12 mx-auto mb-4 text-muted-foreground" />
+                    <p className="text-muted-foreground">Select a project to view cast</p>
+                  </CardContent>
+                </Card>
+              )}
+            </TabsContent>
+
+            {/* Bot Automation Tab */}
+            <TabsContent value="automation" className="space-y-6">
+              {currentProject ? (
+                <>
+                  <Card>
+                    <CardHeader>
+                      <CardTitle>Automated Content Pipeline</CardTitle>
+                      <CardDescription>
+                        Trigger AI bots to generate and distribute content for {currentProject.title}
+                      </CardDescription>
+                    </CardHeader>
+                    <CardContent className="space-y-4">
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <Button
+                          variant="outline"
+                          className="h-auto flex-col items-start p-4"
+                          onClick={() => triggerBotPipeline("Script Generator")}
+                        >
+                          <div className="flex items-center gap-2 mb-2">
+                            <FileText className="h-5 w-5 text-primary" />
+                            <span className="font-semibold">Generate Scripts</span>
+                          </div>
+                          <p className="text-xs text-muted-foreground text-left">
+                            Create viral scripts and episode outlines
+                          </p>
+                        </Button>
+
+                        <Button
+                          variant="outline"
+                          className="h-auto flex-col items-start p-4"
+                          onClick={() => triggerBotPipeline("Trend Detection")}
+                        >
+                          <div className="flex items-center gap-2 mb-2">
+                            <TrendingUp className="h-5 w-5 text-accent" />
+                            <span className="font-semibold">Detect Trends</span>
+                          </div>
+                          <p className="text-xs text-muted-foreground text-left">
+                            Find trending topics to inject into content
+                          </p>
+                        </Button>
+
+                        <Button
+                          variant="outline"
+                          className="h-auto flex-col items-start p-4"
+                          onClick={() => triggerBotPipeline("Cross-Platform Poster")}
+                        >
+                          <div className="flex items-center gap-2 mb-2">
+                            <Upload className="h-5 w-5 text-primary-glow" />
+                            <span className="font-semibold">Post Content</span>
+                          </div>
+                          <p className="text-xs text-muted-foreground text-left">
+                            Schedule and distribute across all platforms
+                          </p>
+                        </Button>
+
+                        <Button
+                          variant="outline"
+                          className="h-auto flex-col items-start p-4"
+                          onClick={() => triggerBotPipeline("Performance Tracker")}
+                        >
+                          <div className="flex items-center gap-2 mb-2">
+                            <BarChart3 className="h-5 w-5 text-accent" />
+                            <span className="font-semibold">Track Performance</span>
+                          </div>
+                          <p className="text-xs text-muted-foreground text-left">
+                            Monitor metrics and optimize strategy
+                          </p>
+                        </Button>
+                      </div>
+
+                      <div className="pt-4 border-t">
+                        <Button
+                          className="w-full bg-gradient-to-r from-primary to-accent"
+                          onClick={() => {
+                            triggerBotPipeline("Script Generator");
+                            setTimeout(() => triggerBotPipeline("Cross-Platform Poster"), 1000);
+                            setTimeout(() => triggerBotPipeline("Performance Tracker"), 2000);
+                          }}
+                        >
+                          <Play className="mr-2 h-4 w-4" />
+                          Run Full Pipeline
+                        </Button>
+                      </div>
+                    </CardContent>
+                  </Card>
+                </>
+              ) : (
+                <Card>
+                  <CardContent className="py-12 text-center">
+                    <AlertCircle className="h-12 w-12 mx-auto mb-4 text-muted-foreground" />
+                    <p className="text-muted-foreground">Select a project to activate bots</p>
+                  </CardContent>
+                </Card>
+              )}
+            </TabsContent>
+          </Tabs>
         </div>
       </main>
     </div>
