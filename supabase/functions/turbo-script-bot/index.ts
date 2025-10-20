@@ -12,9 +12,9 @@ serve(async (req) => {
   }
 
   try {
-    const { projectContext, episodeNumber } = await req.json();
+    const { projectContext, episodeNumber, duration, customPrompt, culturalContext } = await req.json();
     
-    console.log(`⚡ TURBO Script Bot activated for Episode ${episodeNumber}`);
+    console.log(`⚡ TURBO Script Bot with Cultural Intelligence activated for Episode ${episodeNumber}`);
 
     const LOVABLE_API_KEY = Deno.env.get('LOVABLE_API_KEY');
     if (!LOVABLE_API_KEY) {
@@ -23,10 +23,42 @@ serve(async (req) => {
 
     const characterNames = projectContext.characters?.map((c: any) => c.name).join(', ') || 'the characters';
     
-    const scriptPrompt = `Create a compelling script for Episode ${episodeNumber}.
+    // Build cultural awareness prompt
+    const culturalPrompt = culturalContext ? `
+CULTURAL INTELLIGENCE & AUTHENTICITY:
+Cultural Background: ${culturalContext.background || 'Contemporary multicultural setting'}
+Cultural Elements to Include:
+- Language patterns: ${culturalContext.languagePatterns || 'Natural dialogue with cultural authenticity'}
+- References: ${culturalContext.references || 'Contemporary cultural touchpoints'}
+- Humor style: ${culturalContext.humorStyle || 'Relatable, culturally grounded'}
+- Values/themes: ${culturalContext.values || 'Universal themes with cultural specificity'}
+- Trending topics: ${culturalContext.trendingTopics || 'Current viral moments and memes'}
+
+CRITICAL: Make cultural elements feel NATURAL and AUTHENTIC, not forced or stereotypical.
+Inject viral potential through culturally relevant humor, controversy, and trending references.
+` : `
+CULTURAL INTELLIGENCE:
+- Make content culturally relevant and shareable
+- Include trending memes and viral references naturally
+- Add humor that resonates across cultures
+- Reference current events and viral moments
+- Create moments designed for social media clips
+`;
+
+    const scriptPrompt = customPrompt ? `${customPrompt}
+
+${culturalPrompt}
+
+Using these characters ONLY: ${characterNames}
+${projectContext.characters?.map((c: any) => `- ${c.name}: ${c.role || 'role'}`).join('\n') || ''}
+
+Create a ${duration || 180}-second video script with cultural authenticity and viral potential.
+` : `Create a compelling script for Episode ${episodeNumber}.
 
 Project Context:
 ${JSON.stringify(projectContext, null, 2)}
+
+${culturalPrompt}
 
 CRITICAL REQUIREMENT - CHARACTER USAGE:
 You MUST use ONLY these exact character names in the script: ${characterNames}
@@ -34,14 +66,16 @@ DO NOT create new character names. DO NOT use any characters not in this list.
 ${projectContext.characters?.map((c: any) => `- ${c.name}: ${c.role || 'role'}`).join('\n') || ''}
 
 Generate:
-1. Episode title (catchy and engaging)
-2. Synopsis (2-3 sentences)
-3. Detailed 3-scene storyboard with:
+1. Episode title (catchy, viral-worthy, culturally resonant)
+2. Synopsis (2-3 sentences with cultural hooks)
+3. Detailed ${duration ? Math.ceil(duration / 60) : 3}-scene storyboard with:
    - Visual description for each scene (using ONLY the characters listed above)
-   - Character dialogue (using ONLY the characters listed above)
-   - Scene transitions
+   - Culturally authentic dialogue (using ONLY the characters listed above)
+   - Viral moments (designed for social media sharing)
+   - Scene transitions with cultural flair
 
-Make it dramatic, engaging, and optimized for viral potential. Keep scenes visually rich and emotionally compelling.
+Make it dramatic, engaging, culturally authentic, and optimized for viral potential.
+Inject trending cultural references, relatable humor, and shareable moments naturally.
 Use the actual characters from the project - their names, roles, and personalities MUST match the list above EXACTLY.`;
 
     const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
@@ -72,9 +106,11 @@ Use the actual characters from the project - their names, roles, and personaliti
                     type: "object",
                     properties: {
                       sceneNumber: { type: "number" },
-                      description: { type: "string" },
-                      dialogue: { type: "string" },
-                      duration: { type: "number" }
+                      description: { type: "string", description: "Photorealistic visual description" },
+                      dialogue: { type: "string", description: "Culturally authentic dialogue" },
+                      duration: { type: "number", description: "Scene duration in seconds" },
+                      culturalMoment: { type: "string", description: "Viral-worthy cultural reference or moment" },
+                      viralPotential: { type: "string", description: "Why this scene could go viral" }
                     },
                     required: ["sceneNumber", "description", "dialogue"]
                   }
@@ -102,7 +138,9 @@ Use the actual characters from the project - their names, roles, and personaliti
 
     const script = JSON.parse(toolCall.function.arguments);
     
-    console.log(`✅ TURBO Script generated: "${script.title}"`);
+    console.log(`✅ TURBO Script with Cultural Intelligence generated: "${script.title}"`);
+    console.log(`📊 Cultural moments: ${script.storyboard?.filter((s: any) => s.culturalMoment).length || 0}`);
+    console.log(`🔥 Viral potential scenes: ${script.storyboard?.filter((s: any) => s.viralPotential).length || 0}`);
 
     return new Response(
       JSON.stringify({
