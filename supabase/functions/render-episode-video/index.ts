@@ -82,21 +82,33 @@ CRITICAL QUALITY REQUIREMENTS (Netflix-grade):
     const LOVABLE_API_KEY = Deno.env.get('LOVABLE_API_KEY');
     if (!LOVABLE_API_KEY) throw new Error('LOVABLE_API_KEY not configured');
 
-    const scenePrompt = `Based on this episode content, generate 3-5 key visual scenes for a ${renderingStyle} video:
+    const scenePrompt = `Generate NETFLIX-GRADE PHOTOREALISTIC REALITY TV scenes with LOGICAL FLOW:
     
 Title: ${episode.title}
 Synopsis: ${episode.synopsis}
 Content: ${episode.content}
 
+CRITICAL: This is a REALITY TV SHOW. Generate 3-5 scenes that flow logically from one to the next.
+
 ${qualityPrompt}
 
-Return a JSON array of scenes with:
-- description: ultra-detailed PHOTOREALISTIC visual description (specify lighting, camera angle, Netflix-quality details)
-- duration: duration in seconds (3-5 seconds each)
-- voiceover: natural narration text for this scene
-- technical_specs: camera settings (focal length, aperture, ISO) for cinematic realism
+Reality TV Requirements:
+- Each scene must connect to the previous/next scene logically
+- Include reality TV elements: confessionals, group scenes, confrontations, one-on-ones
+- PHOTOREALISTIC humans only (real faces, perfect anatomy, 5 fingers)
+- Natural professional lighting (reality TV standard - bright, flattering)
+- Authentic emotions and genuine drama
+- High-end production values (Netflix/Hulu quality)
 
-Format: {"scenes": [{"description": "...", "duration": 3, "voiceover": "...", "technical_specs": "..."}]}`;
+Return a JSON array with:
+- realityTVType: "confessional" | "group-scene" | "confrontation" | "one-on-one" | "dramatic-reveal"
+- description: ULTRA-DETAILED photorealistic description (exact human features, emotions, environment, lighting)
+- duration: 5-12 seconds each (reality TV pacing)
+- voiceover: Natural realistic narration
+- continuityNote: How this scene connects to previous/next scene
+- technical_specs: Reality TV camera specs (handheld, multi-cam, confessional booth, etc.)
+
+Format: {"scenes": [{"realityTVType": "...", "description": "...", "duration": 8, "voiceover": "...", "continuityNote": "...", "technical_specs": "..."}]}`;
 
     const aiResponse = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
       method: 'POST',
@@ -109,7 +121,7 @@ Format: {"scenes": [{"description": "...", "duration": 3, "voiceover": "...", "t
         messages: [
           {
             role: 'system',
-            content: 'You are a video production assistant. Generate scene breakdowns for episodes.'
+            content: 'You are a Netflix reality TV showrunner. Generate PHOTOREALISTIC scene breakdowns with logical flow for reality TV episodes. Every scene must be photorealistic with perfect human anatomy and connect naturally to adjacent scenes.'
           },
           {
             role: 'user',
