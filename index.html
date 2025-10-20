@@ -1,27 +1,17 @@
-<!doctype html>
-<html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-    
-    <!-- PWA Meta Tags -->
-    <meta name="theme-color" content="#6366f1" />
-    <meta name="apple-mobile-web-app-capable" content="yes" />
-    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
-    <meta name="apple-mobile-web-app-title" content="StoryForge" />
-    <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
-    <link rel="manifest" href="/manifest.json" />
-    
-    <title>StoryForge - AI Reality TV Studio</title>
-    <meta name="description" content="Create viral AI-powered reality TV episodes with autonomous bot orchestration. StoryForge - Your AI Reality TV Studio." />
-    <meta name="keywords" content="AI video, reality TV, content creation, viral videos, episode generator, autonomous bots" />
-    <meta name="author" content="StoryForge" />
-    
-    <meta property="og:title" content="StoryForge - AI Reality TV Studio">
-</head>
+<video id="clipPlayer" width="640" controls>
+  <source src="./public/assets/somali-diaspora-beat-01.mp4" type="video/mp4">
+  Your browser does not support the video tag.
+</video>
 
-  <body>
-    <div id="root"></div>
-    <script type="module" src="/src/main.tsx"></script>
-  </body>
-</html>
+<script>
+  // Dynamically update video source if needed
+  function loadClip(clipPath) {
+    const player = document.getElementById('clipPlayer');
+    player.src = clipPath;
+    player.load();
+    player.play();
+  }
+
+  // Example usage:
+  loadClip('./public/assets/say-wallahi-ep3.mp4');
+</script>
