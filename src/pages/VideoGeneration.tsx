@@ -413,38 +413,104 @@ const VideoGeneration = () => {
           </TabsContent>
 
           <TabsContent value="export" className="space-y-6">
+            {/* Video Preview */}
+            {episode?.video_url && (
+              <Card className="p-6 bg-gradient-to-br from-primary/5 to-accent/5 border-primary/20">
+                <h3 className="text-2xl font-bold mb-4 flex items-center gap-2">
+                  <Film className="h-6 w-6 text-primary" />
+                  Video Preview
+                </h3>
+                <div className="aspect-video bg-black rounded-lg overflow-hidden">
+                  <video 
+                    src={episode.video_url} 
+                    controls 
+                    className="w-full h-full"
+                    controlsList="nodownload"
+                  >
+                    Your browser does not support the video tag.
+                  </video>
+                </div>
+                <div className="mt-4 flex items-center justify-between">
+                  <Badge className="bg-success">
+                    ✅ Video Ready
+                  </Badge>
+                  <p className="text-sm text-muted-foreground">
+                    Status: {episode.video_status || 'completed'}
+                  </p>
+                </div>
+              </Card>
+            )}
+
+            {/* Export Options */}
             <Card className="p-6">
               <h3 className="text-2xl font-bold mb-4 flex items-center gap-2">
                 <Download className="h-6 w-6 text-primary" />
-                Export Options
+                Export & Download
               </h3>
 
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                {[
-                  { format: '4K (3840x2160)', quality: 'Ultra', size: '~2GB', res: '4K' as const },
-                  { format: 'Full HD (1920x1080)', quality: 'High', size: '~500MB', res: 'FHD' as const },
-                  { format: 'HD (1280x720)', quality: 'Standard', size: '~200MB', res: 'HD' as const },
-                ].map((preset) => (
-                  <Card 
-                    key={preset.format} 
-                    className="p-4 border-primary/20 hover:border-primary/50 transition-all cursor-pointer"
-                    onClick={() => exportVideo(preset.res)}
+              {!episode?.video_url ? (
+                <div className="text-center py-8">
+                  <Loader2 className="h-12 w-12 animate-spin text-muted-foreground mx-auto mb-4" />
+                  <p className="text-muted-foreground">
+                    No video available yet. Please render the video first.
+                  </p>
+                  <Button 
+                    onClick={renderFinalVideo} 
+                    className="mt-4 bg-gradient-to-r from-primary to-accent"
+                    disabled={renderingVideo}
                   >
-                    <h4 className="font-bold mb-2">{preset.format}</h4>
-                    <p className="text-sm text-muted-foreground">Quality: {preset.quality}</p>
-                    <p className="text-xs text-muted-foreground">{preset.size}</p>
-                  </Card>
-                ))}
-              </div>
+                    {renderingVideo ? (
+                      <>
+                        <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                        Rendering...
+                      </>
+                    ) : (
+                      <>
+                        <Zap className="h-4 w-4 mr-2" />
+                        Render Video Now
+                      </>
+                    )}
+                  </Button>
+                </div>
+              ) : (
+                <>
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+                    {[
+                      { format: '4K (3840x2160)', quality: 'Ultra', size: '~2GB', res: '4K' as const },
+                      { format: 'Full HD (1920x1080)', quality: 'High', size: '~500MB', res: 'FHD' as const },
+                      { format: 'HD (1280x720)', quality: 'Standard', size: '~200MB', res: 'HD' as const },
+                    ].map((preset) => (
+                      <Card 
+                        key={preset.format} 
+                        className="p-4 border-primary/20 hover:border-primary/50 hover:bg-primary/5 transition-all cursor-pointer group"
+                        onClick={() => exportVideo(preset.res)}
+                      >
+                        <h4 className="font-bold mb-2 group-hover:text-primary transition-colors">
+                          {preset.format}
+                        </h4>
+                        <p className="text-sm text-muted-foreground">Quality: {preset.quality}</p>
+                        <p className="text-xs text-muted-foreground">{preset.size}</p>
+                        <Button 
+                          className="w-full mt-3" 
+                          size="sm"
+                          variant="outline"
+                        >
+                          <Download className="h-3 w-3 mr-2" />
+                          Download
+                        </Button>
+                      </Card>
+                    ))}
+                  </div>
 
-              <Button 
-                className="w-full mt-6 bg-gradient-to-r from-primary to-accent h-14 text-lg"
-                onClick={() => exportVideo('FHD')}
-                disabled={!episode?.video_url}
-              >
-                <Download className="h-5 w-5 mr-2" />
-                Export Final Video
-              </Button>
+                  <Button 
+                    className="w-full bg-gradient-to-r from-primary to-accent h-14 text-lg hover:opacity-90"
+                    onClick={() => exportVideo('FHD')}
+                  >
+                    <Download className="h-5 w-5 mr-2" />
+                    Quick Download (Full HD)
+                  </Button>
+                </>
+              )}
             </Card>
           </TabsContent>
         </Tabs>
