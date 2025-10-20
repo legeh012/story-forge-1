@@ -56,65 +56,81 @@ Deno.serve(async (req) => {
     if (charactersError) throw charactersError;
 
     const productionSteps = [];
+    const startTime = Date.now();
 
-    // Step 1: Script Generation
-    console.log('Step 1: Generating script...');
-    const scriptResult = await supabase.functions.invoke('script-generator-bot', {
-      body: {
-        episodeId,
-        projectTheme: project.theme,
-        episodeTitle: episode.title,
-        characters: characters.map(c => ({
-          name: c.name,
-          role: c.role,
-          personality: c.personality
-        }))
+    console.log('⚡ PARALLEL PRODUCTION: Launching all bots simultaneously for sub-minute production...');
+
+    // PHASE 1: Run independent tasks in parallel (MAXIMUM SPEED)
+    const [scriptResult, hookResult] = await Promise.all([
+      supabase.functions.invoke('script-generator-bot', {
+        body: {
+          episodeId,
+          projectTheme: project.theme,
+          episodeTitle: episode.title,
+          characters: characters.map(c => ({
+            name: c.name,
+            role: c.role,
+            personality: c.personality
+          }))
+        }
+      }),
+      supabase.functions.invoke('hook-optimization-bot', {
+        body: {
+          title: episode.title,
+          description: episode.synopsis,
+          genre: project.genre
+        }
+      })
+    ]);
+
+    console.log(`✅ Phase 1 complete (${Date.now() - startTime}ms) - Script & Hooks ready`);
+
+    productionSteps.push(
+      {
+        step: 'Script Generation',
+        status: scriptResult.error ? 'failed' : 'completed',
+        result: scriptResult.data
+      },
+      {
+        step: 'Hook Optimization',
+        status: hookResult.error ? 'failed' : 'completed',
+        result: hookResult.data
       }
-    });
+    );
 
-    productionSteps.push({
-      step: 'Script Generation',
-      status: scriptResult.error ? 'failed' : 'completed',
-      result: scriptResult.data
-    });
+    // PHASE 2: Run cultural injection and direction in parallel
+    const [culturalResult, directionResult] = await Promise.all([
+      supabase.functions.invoke('cultural-injection-bot', {
+        body: {
+          script: scriptResult.data?.script || episode.script,
+          genre: project.genre,
+          theme: project.theme
+        }
+      }),
+      supabase.functions.invoke('expert-director', {
+        body: {
+          prompt: `Direct a reality TV scene for "${episode.title}" with dramatic pacing and strong character moments`,
+          episodeId: episodeId
+        }
+      })
+    ]);
 
-    if (scriptResult.error) {
-      console.error('Script generation failed:', scriptResult.error);
-    }
+    console.log(`✅ Phase 2 complete (${Date.now() - startTime}ms) - Cultural & Direction ready`);
 
-    // Step 2: Cultural Injection
-    console.log('Step 2: Adding cultural elements...');
-    const culturalResult = await supabase.functions.invoke('cultural-injection-bot', {
-      body: {
-        script: scriptResult.data?.script || episode.script,
-        genre: project.genre,
-        theme: project.theme
+    productionSteps.push(
+      {
+        step: 'Cultural Injection',
+        status: culturalResult.error ? 'failed' : 'completed',
+        result: culturalResult.data
+      },
+      {
+        step: 'Expert Direction',
+        status: directionResult.error ? 'failed' : 'completed',
+        result: directionResult.data
       }
-    });
+    );
 
-    productionSteps.push({
-      step: 'Cultural Injection',
-      status: culturalResult.error ? 'failed' : 'completed',
-      result: culturalResult.data
-    });
-
-    // Step 3: Expert Direction
-    console.log('Step 3: Getting cinematic direction...');
-    const directionResult = await supabase.functions.invoke('expert-director', {
-      body: {
-        prompt: `Direct a reality TV scene for "${episode.title}" with dramatic pacing and strong character moments`,
-        episodeId: episodeId
-      }
-    });
-
-    productionSteps.push({
-      step: 'Expert Direction',
-      status: directionResult.error ? 'failed' : 'completed',
-      result: directionResult.data
-    });
-
-    // Step 4: Scene Orchestration
-    console.log('Step 4: Orchestrating scenes...');
+    // PHASE 3: Scene orchestration with enhanced script
     const sceneResult = await supabase.functions.invoke('scene-orchestration', {
       body: {
         episodeId,
@@ -124,26 +140,12 @@ Deno.serve(async (req) => {
       }
     });
 
+    console.log(`✅ Phase 3 complete (${Date.now() - startTime}ms) - Scenes orchestrated`);
+
     productionSteps.push({
       step: 'Scene Orchestration',
       status: sceneResult.error ? 'failed' : 'completed',
       result: sceneResult.data
-    });
-
-    // Step 5: Hook Optimization
-    console.log('Step 5: Optimizing hooks...');
-    const hookResult = await supabase.functions.invoke('hook-optimization-bot', {
-      body: {
-        title: episode.title,
-        description: episode.synopsis,
-        genre: project.genre
-      }
-    });
-
-    productionSteps.push({
-      step: 'Hook Optimization',
-      status: hookResult.error ? 'failed' : 'completed',
-      result: hookResult.data
     });
 
     // Step 6: Update episode with production results
@@ -176,33 +178,34 @@ Deno.serve(async (req) => {
       status: updateError ? 'failed' : 'completed'
     });
 
-    // Step 7: Trigger video generation with actual scenes
-    console.log('Step 7: Generating video...');
+    // PHASE 4: Launch ultra-fast video generation (fire-and-forget for max speed)
     const scenes = sceneResult.data?.scenes || [];
     
     if (scenes.length > 0) {
-      const videoResult = await supabase.functions.invoke('generate-video', {
+      console.log(`🎥 Launching ultra-video-bot for PARALLEL frame generation (${scenes.length} scenes)...`);
+      
+      // Fire-and-forget for instant response - let video generation happen in background
+      supabase.functions.invoke('ultra-video-bot', {
         body: {
           episodeId,
+          projectId,
+          userId: user.id,
           scenes: scenes.map((scene: any) => ({
             description: scene.description || scene.visual_description || 'Scene from the episode',
             duration: scene.duration || 5,
             dialogue: scene.dialogue || scene.voiceover
           }))
         }
-      });
+      }).catch(err => console.error('Video generation error:', err));
 
       productionSteps.push({
         step: 'Video Generation',
-        status: videoResult.error ? 'failed' : 'started',
-        result: videoResult.data
+        status: 'started',
+        result: { message: 'Ultra-fast parallel generation started' }
       });
 
-      if (videoResult.error) {
-        console.error('Video generation error:', videoResult.error);
-      }
+      console.log(`✅ Video generation started (${Date.now() - startTime}ms)`);
     } else {
-      console.log('No scenes available for video generation');
       productionSteps.push({
         step: 'Video Generation',
         status: 'skipped',
@@ -211,20 +214,24 @@ Deno.serve(async (req) => {
     }
 
     // Log execution stats
+    const totalTime = Date.now() - startTime;
     const completedSteps = productionSteps.filter(s => s.status === 'completed' || s.status === 'started').length;
     const successRate = (completedSteps / productionSteps.length) * 100;
 
     await supabase.from('bot_execution_stats').insert({
       bot_type: 'production_team',
       episode_id: episodeId,
+      execution_time_ms: totalTime,
       quality_score: successRate,
       metadata: {
         steps: productionSteps,
-        success_rate: successRate
+        success_rate: successRate,
+        parallel_execution: true,
+        total_time_ms: totalTime
       }
     });
 
-    console.log(`Episode production completed. Success rate: ${successRate}%`);
+    console.log(`⚡ PRODUCTION COMPLETE: ${totalTime}ms (${(totalTime/1000).toFixed(2)}s) - Success rate: ${successRate}%`);
 
     return new Response(
       JSON.stringify({
@@ -232,7 +239,10 @@ Deno.serve(async (req) => {
         episodeId,
         productionSteps,
         successRate,
-        message: 'Episode production completed. Video generation started in background.',
+        totalTimeMs: totalTime,
+        totalTimeSec: (totalTime/1000).toFixed(2),
+        parallelExecution: true,
+        message: `⚡ Episode produced in ${(totalTime/1000).toFixed(2)}s with parallel bot execution. Video rendering in progress.`,
         readyForVideo: successRate >= 80
       }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }

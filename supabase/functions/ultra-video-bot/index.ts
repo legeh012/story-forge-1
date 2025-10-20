@@ -110,7 +110,7 @@ Return JSON with this EXACT structure:
 
     console.log(`📊 Generated ${scenes.length} ultra-detailed scenes`);
 
-    // Step 2: PARALLEL image generation for maximum speed
+    // Step 2: GODMODE PARALLEL image generation (ALL AT ONCE)
     const generatedFrames: Array<{
       sceneNumber: number;
       imageUrl: string;
@@ -124,8 +124,10 @@ Return JSON with this EXACT structure:
       soundDesign: string;
     }> = [];
     
-    console.log(`🚀 Generating ${scenes.length} scenes in PARALLEL for ultra-fast rendering...`);
+    const frameGenStart = Date.now();
+    console.log(`🚀 GODMODE: Generating ALL ${scenes.length} scenes SIMULTANEOUSLY (no limits)...`);
     
+    // Process ALL scenes in parallel with NO concurrency limits for maximum speed
     const scenePromises = scenes.map(async (scene: any) => {
       console.log(`🔥 GEN-3 TURBO: Queuing scene ${scene.number}/${scenes.length} (Viral Score: ${scene.viralScore || 'N/A'})`);
       
@@ -233,8 +235,9 @@ ABSOLUTELY FORBIDDEN FOR REALITY TV PHOTOREALISM:
       };
     });
 
-    // Wait for all scenes to generate in parallel
+    // Wait for ALL scenes to generate in parallel (MAXIMUM SPEED)
     const results = await Promise.all(scenePromises);
+    const frameGenTime = Date.now() - frameGenStart;
     
     // Filter out failed generations and add to generatedFrames
     for (const result of results) {
@@ -243,7 +246,8 @@ ABSOLUTELY FORBIDDEN FOR REALITY TV PHOTOREALISM:
       }
     }
 
-    console.log(`\n📺 NETFLIX REALITY TV: Generated ${generatedFrames.length} PHOTOREALISTIC frames with logical flow`);
+    console.log(`\n⚡ ALL ${generatedFrames.length} frames generated in ${frameGenTime}ms (${(frameGenTime/1000).toFixed(2)}s)`);
+    console.log(`📺 NETFLIX REALITY TV: ${generatedFrames.length} PHOTOREALISTIC frames with logical flow`);
 
     // Step 3: Store frames in Supabase Storage
     const videoPath = `${user.id}/${episodeId}`;
