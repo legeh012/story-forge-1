@@ -150,12 +150,43 @@ serve(async (req) => {
     const totalTime = Date.now() - startTime;
     console.log(`🎬 COMPLETE: Total processing time ${totalTime}ms (${(totalTime/1000).toFixed(2)}s)`);
 
+    // Call compile-video to create MP4 video manifest
+    console.log('🎥 Compiling frames into video...');
+    try {
+      const frameUrls = uploadedFrames.map(f => f.url);
+      const frameDurations = scenes.map((scene: any) => parseFloat(scene.duration) || 5);
+
+      const compileResponse = await fetch(`${supabaseUrl}/functions/v1/compile-video`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${supabaseKey}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          episodeId,
+          userId,
+          frameUrls,
+          frameDurations,
+          metadata
+        }),
+      });
+
+      if (!compileResponse.ok) {
+        console.error('Video compilation failed:', await compileResponse.text());
+      } else {
+        console.log('✅ Video manifest created successfully');
+      }
+    } catch (compileError) {
+      console.error('Failed to compile video:', compileError);
+    }
+
     return new Response(
       JSON.stringify({
         success: true,
         frames: uploadedFrames,
         performance: {
           totalFrames: frames.length,
+          framesGenerated: frames.length,
           generationTimeMs: totalGenerationTime,
           uploadTimeMs: totalUploadTime,
           totalTimeMs: totalTime,

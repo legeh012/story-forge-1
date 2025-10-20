@@ -197,10 +197,11 @@ serve(async (req) => {
 
         console.log(`✅ PHASE 4: ${frameData.performance?.framesGenerated || 0} frames generated`);
 
-        // Get public URL for the metadata
+        // Video compilation is handled automatically by parallel-frame-generator
+        // Get public URL for the video manifest (not metadata.json)
         const { data: { publicUrl } } = supabase.storage
           .from('episode-videos')
-          .getPublicUrl(`${episode.user_id}/${episodeId}/metadata.json`);
+          .getPublicUrl(`${episode.user_id}/${episodeId}/video-manifest.json`);
 
         // PHASE 5: Post-Production Bots (Parallel - Non-blocking)
         console.log('🚀 PHASE 5: Post-production bot activation...');

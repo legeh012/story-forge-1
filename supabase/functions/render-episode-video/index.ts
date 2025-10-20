@@ -154,9 +154,13 @@ Format: {"scenes": [{"realityTVType": "...", "description": "...", "duration": 8
     }
 
     // Generate images for each scene using Lovable AI with photorealism enforcement
-    const sceneAssets = [];
+    const sceneFrames = [];
+    const frameUrls = [];
+    const frameDurations = [];
     
-    for (const scene of scenes) {
+    for (let i = 0; i < scenes.length; i++) {
+      const scene = scenes[i];
+      
       // Build photorealistic image prompt with strict requirements
       const imagePrompt = renderingStyle === 'photorealistic' 
         ? `PHOTOREALISTIC CINEMATIC SCENE (Netflix/HBO quality):
@@ -202,64 +206,77 @@ Style reference: The Crown, House of Cards, Ozark (Netflix cinematography)`
         const imageData = await imageResponse.json();
         const imageUrl = imageData.choices?.[0]?.message?.images?.[0]?.image_url?.url;
         
-        sceneAssets.push({
-          imageUrl,
-          voiceover: scene.voiceover,
-          duration: scene.duration
-        });
+        if (imageUrl) {
+          // Upload frame to storage
+          const base64Data = imageUrl.split(',')[1];
+          const imageBuffer = Uint8Array.from(atob(base64Data), c => c.charCodeAt(0));
+          
+          const framePath = `${user.id}/${episode.id}/frame_${i.toString().padStart(4, '0')}.png`;
+          await supabase.storage
+            .from('episode-videos')
+            .upload(framePath, imageBuffer, {
+              contentType: 'image/png',
+              upsert: true
+            });
+
+          const { data: { publicUrl } } = supabase.storage
+            .from('episode-videos')
+            .getPublicUrl(framePath);
+
+          frameUrls.push(publicUrl);
+          frameDurations.push(scene.duration || 5);
+          
+          sceneFrames.push({
+            url: publicUrl,
+            voiceover: scene.voiceover,
+            duration: scene.duration
+          });
+        }
       }
     }
 
-    // Create a simple video metadata (in production, you'd compile these into actual video)
+    // Compile frames into video manifest
     const videoMetadata = {
       episodeId: episode.id,
       title: episode.title,
-      scenes: sceneAssets,
-      totalDuration: scenes.reduce((sum: number, s: any) => sum + s.duration, 0),
+      scenes: sceneFrames,
+      totalDuration: frameDurations.reduce((sum: number, d: number) => sum + d, 0),
       createdAt: new Date().toISOString()
     };
 
-    // In a real implementation, you would:
-    // 1. Use a video rendering service (like Remotion, Shotstack, or FFmpeg)
-    // 2. Compile images with voiceover
-    // 3. Upload final video to storage bucket
-    
-    // For now, we'll store the metadata and mark as completed
-    const videoUrl = `episode-videos/${episode.id}/preview.json`;
-    
-    // Upload metadata to storage
-    const { error: uploadError } = await supabase.storage
-      .from('episode-videos')
-      .upload(
-        `${episode.id}/metadata.json`,
-        JSON.stringify(videoMetadata, null, 2),
-        {
-          contentType: 'application/json',
-          upsert: true
-        }
-      );
+    // Call compile-video function
+    console.log('🎥 Compiling frames into video manifest...');
+    const compileResponse = await fetch(`${Deno.env.get('SUPABASE_URL')}/functions/v1/compile-video`, {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        episodeId: episode.id,
+        userId: user.id,
+        frameUrls,
+        frameDurations,
+        metadata: videoMetadata
+      }),
+    });
 
-    if (uploadError) {
-      console.error('Upload error:', uploadError);
+    let videoUrl = '';
+    if (compileResponse.ok) {
+      const compileData = await compileResponse.json();
+      videoUrl = compileData.manifestUrl;
+      console.log('✅ Video manifest created');
+    } else {
+      console.error('Video compilation failed:', await compileResponse.text());
+      throw new Error('Failed to compile video');
     }
-
-    // Update episode with completed status
-    const { error: updateError } = await supabase
-      .from('episodes')
-      .update({
-        video_status: 'completed',
-        video_url: videoUrl,
-        video_render_completed_at: new Date().toISOString()
-      })
-      .eq('id', episodeId);
-
-    if (updateError) throw updateError;
 
     return new Response(
       JSON.stringify({
         success: true,
-        videoMetadata,
-        message: 'Video rendering completed! (Preview mode - metadata generated)'
+        videoUrl,
+        totalFrames: frameUrls.length,
+        message: 'Video rendering completed with MP4 manifest!'
       }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
