@@ -11,6 +11,7 @@ import { ArrowLeft, Play, Download, Edit2, Save } from "lucide-react";
 import { Link } from "react-router-dom";
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from "@/hooks/use-toast";
+import { VideoManifestPlayer } from "@/components/VideoManifestPlayer";
 
 interface Episode {
   id: string;
@@ -238,11 +239,24 @@ const EpisodeDetail = () => {
               <CardContent>
                 {episode.video_url && (
                   <div className="mb-4">
-                    <video
-                      src={episode.video_url}
-                      controls
-                      className="w-full rounded-lg"
-                    />
+                    {episode.video_url.endsWith('.json') ? (
+                      <VideoManifestPlayer
+                        manifestUrl={episode.video_url}
+                        className="w-full rounded-lg aspect-video"
+                      />
+                    ) : episode.video_url.endsWith('.mp4') ? (
+                      <video
+                        src={episode.video_url}
+                        controls
+                        className="w-full rounded-lg"
+                      />
+                    ) : (
+                      <img
+                        src={episode.video_url}
+                        alt="Episode preview"
+                        className="w-full rounded-lg"
+                      />
+                    )}
                   </div>
                 )}
                 <div className="flex gap-2">

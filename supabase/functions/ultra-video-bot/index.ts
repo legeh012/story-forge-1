@@ -116,11 +116,11 @@ Return JSON with this EXACT structure:
       imageUrl: string;
       description: string;
       duration: string;
-      technical: string;
+      realityTVType: string;
+      continuityNote: string;
       qualityScore: number;
-      viralScore: number;
-      hookMoment: string;
-      colorGrade: string;
+      emotion: string;
+      dialogue: string;
       soundDesign: string;
     }> = [];
     
@@ -307,18 +307,56 @@ ABSOLUTELY FORBIDDEN FOR REALITY TV PHOTOREALISM:
         upsert: true
       });
 
-    // Update episode status
+    // Trigger video compilation in the background
+    console.log('🎬 Starting video compilation from frames...');
+    
+    // Compile frames into MP4 video
+    const frameUrls = generatedFrames.map((_, index) => 
+      `${Deno.env.get('SUPABASE_URL')}/storage/v1/object/public/episode-videos/${videoPath}/frame_${index.toString().padStart(4, '0')}.png`
+    );
+
+    // For now, update with the first frame URL but mark as needs compilation
+    const firstFrameUrl = frameUrls[0];
+    
     await supabase
       .from('episodes')
       .update({
-        video_status: 'completed',
-        video_url: `${Deno.env.get('SUPABASE_URL')}/storage/v1/object/public/episode-videos/${videoPath}/frame_0000.png`,
+        video_status: 'rendering',
+        video_url: firstFrameUrl, // Temporary - will be replaced with MP4
         storyboard: metadata.scenes,
         updated_at: new Date().toISOString()
       })
       .eq('id', episodeId);
 
-    console.log('📺✅ NETFLIX REALITY TV: Photorealistic generation COMPLETE with logical flow');
+    // Call video compilation function in background
+    try {
+      const compileResponse = await fetch(`${Deno.env.get('SUPABASE_URL')}/functions/v1/compile-video`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          episodeId,
+          userId: user.id,
+          frameUrls,
+          frameDurations: generatedFrames.map(f => parseFloat(f.duration) || 5),
+          metadata
+        }),
+      });
+
+      if (!compileResponse.ok) {
+        console.error('Video compilation trigger failed:', await compileResponse.text());
+        // Still return success as frames are generated
+      } else {
+        console.log('✅ Video compilation started in background');
+      }
+    } catch (compileError) {
+      console.error('Failed to trigger video compilation:', compileError);
+      // Continue anyway - frames are generated
+    }
+
+    console.log('📺✅ NETFLIX REALITY TV: Photorealistic frames generated, video compilation in progress');
 
     return new Response(
       JSON.stringify({
