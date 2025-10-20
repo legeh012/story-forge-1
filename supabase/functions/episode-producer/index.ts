@@ -60,8 +60,8 @@ Deno.serve(async (req) => {
 
     console.log('⚡ PARALLEL PRODUCTION: Launching all bots simultaneously for sub-minute production...');
 
-    // PHASE 1: Run independent tasks in parallel (MAXIMUM SPEED)
-    const [scriptResult, hookResult] = await Promise.all([
+    // PHASE 1: Run independent tasks in parallel (MAXIMUM SPEED + VIRAL INTELLIGENCE)
+    const [scriptResult, hookResult, trendResult] = await Promise.all([
       supabase.functions.invoke('script-generator-bot', {
         body: {
           episodeId,
@@ -80,10 +80,18 @@ Deno.serve(async (req) => {
           description: episode.synopsis,
           genre: project.genre
         }
+      }),
+      // NEW: Trend detection for viral relevance
+      supabase.functions.invoke('trend-detection-bot', {
+        body: {
+          platform: 'tiktok', // Primary viral platform
+          genre: project.genre,
+          theme: project.theme
+        }
       })
     ]);
 
-    console.log(`✅ Phase 1 complete (${Date.now() - startTime}ms) - Script & Hooks ready`);
+    console.log(`✅ Phase 1 complete (${Date.now() - startTime}ms) - Script, Hooks & Trends ready`);
 
     productionSteps.push(
       {
@@ -95,16 +103,22 @@ Deno.serve(async (req) => {
         step: 'Hook Optimization',
         status: hookResult.error ? 'failed' : 'completed',
         result: hookResult.data
+      },
+      {
+        step: 'Trend Detection',
+        status: trendResult.error ? 'failed' : 'completed',
+        result: trendResult.data
       }
     );
 
-    // PHASE 2: Run cultural injection and direction in parallel
-    const [culturalResult, directionResult] = await Promise.all([
+    // PHASE 2: Run cultural injection, direction, and viral optimization in parallel
+    const [culturalResult, directionResult, viralOptResult] = await Promise.all([
       supabase.functions.invoke('cultural-injection-bot', {
         body: {
           script: scriptResult.data?.script || episode.script,
           genre: project.genre,
-          theme: project.theme
+          theme: project.theme,
+          trends: trendResult.data?.trends // Inject detected trends
         }
       }),
       supabase.functions.invoke('expert-director', {
@@ -112,10 +126,19 @@ Deno.serve(async (req) => {
           prompt: `Direct a reality TV scene for "${episode.title}" with dramatic pacing and strong character moments`,
           episodeId: episodeId
         }
+      }),
+      // NEW: Viral optimization for maximum engagement
+      supabase.functions.invoke('performance-optimizer-bot', {
+        body: {
+          episodeId,
+          content: scriptResult.data?.script || episode.script,
+          trends: trendResult.data?.trends,
+          hooks: hookResult.data
+        }
       })
     ]);
 
-    console.log(`✅ Phase 2 complete (${Date.now() - startTime}ms) - Cultural & Direction ready`);
+    console.log(`✅ Phase 2 complete (${Date.now() - startTime}ms) - Cultural, Direction & Viral Optimization ready`);
 
     productionSteps.push(
       {
@@ -127,20 +150,27 @@ Deno.serve(async (req) => {
         step: 'Expert Direction',
         status: directionResult.error ? 'failed' : 'completed',
         result: directionResult.data
+      },
+      {
+        step: 'Viral Optimization',
+        status: viralOptResult.error ? 'failed' : 'completed',
+        result: viralOptResult.data
       }
     );
 
-    // PHASE 3: Scene orchestration with enhanced script
+    // PHASE 3: Scene orchestration with enhanced, trend-aware, virally-optimized script
     const sceneResult = await supabase.functions.invoke('scene-orchestration', {
       body: {
         episodeId,
         script: culturalResult.data?.injected_content || scriptResult.data?.script,
         direction: directionResult.data?.direction,
-        characters
+        characters,
+        trends: trendResult.data?.trends, // Pass trends for viral scene construction
+        viralOptimizations: viralOptResult.data?.optimizations // Apply viral optimizations
       }
     });
 
-    console.log(`✅ Phase 3 complete (${Date.now() - startTime}ms) - Scenes orchestrated`);
+    console.log(`✅ Phase 3 complete (${Date.now() - startTime}ms) - Scenes orchestrated with viral intelligence`);
 
     productionSteps.push({
       step: 'Scene Orchestration',
@@ -148,12 +178,18 @@ Deno.serve(async (req) => {
       result: sceneResult.data
     });
 
-    // Step 6: Update episode with production results
-    console.log('Step 6: Updating episode...');
+    // Step 6: Update episode with production results (including viral metadata)
+    console.log('Step 6: Updating episode with viral-optimized content...');
     const updateData: any = {
       status: 'script_ready',
       script: culturalResult.data?.injected_content || scriptResult.data?.script,
-      storyboard: sceneResult.data?.scenes || []
+      storyboard: sceneResult.data?.scenes || [],
+      metadata: {
+        trends: trendResult.data?.trends || [],
+        viralScore: viralOptResult.data?.predicted_viral_score || 0,
+        optimizations: viralOptResult.data?.optimizations || {},
+        hooks: hookResult.data || {}
+      }
     };
 
     if (hookResult.data?.optimized_title) {
@@ -178,11 +214,11 @@ Deno.serve(async (req) => {
       status: updateError ? 'failed' : 'completed'
     });
 
-    // PHASE 4: Launch ultra-fast video generation (fire-and-forget for max speed)
+    // PHASE 4: Launch ultra-fast viral-optimized video generation
     const scenes = sceneResult.data?.scenes || [];
     
     if (scenes.length > 0) {
-      console.log(`🎥 Launching ultra-video-bot for PARALLEL frame generation (${scenes.length} scenes)...`);
+      console.log(`🎥 Launching ultra-video-bot with VIRAL OPTIMIZATION (${scenes.length} scenes)...`);
       
       // Fire-and-forget for instant response - let video generation happen in background
       supabase.functions.invoke('ultra-video-bot', {
@@ -193,18 +229,24 @@ Deno.serve(async (req) => {
           scenes: scenes.map((scene: any) => ({
             description: scene.description || scene.visual_description || 'Scene from the episode',
             duration: scene.duration || 5,
-            dialogue: scene.dialogue || scene.voiceover
-          }))
+            dialogue: scene.dialogue || scene.voiceover,
+            viralElements: scene.viralElements || [] // NEW: Viral elements from optimization
+          })),
+          viralMetadata: {
+            trends: trendResult.data?.trends || [],
+            optimizations: viralOptResult.data?.optimizations || {},
+            targetPlatform: 'tiktok'
+          }
         }
       }).catch(err => console.error('Video generation error:', err));
 
       productionSteps.push({
-        step: 'Video Generation',
+        step: 'Viral Video Generation',
         status: 'started',
-        result: { message: 'Ultra-fast parallel generation started' }
+        result: { message: 'Ultra-fast viral-optimized generation started' }
       });
 
-      console.log(`✅ Video generation started (${Date.now() - startTime}ms)`);
+      console.log(`✅ Viral video generation started (${Date.now() - startTime}ms)`);
     } else {
       productionSteps.push({
         step: 'Video Generation',
@@ -227,11 +269,15 @@ Deno.serve(async (req) => {
         steps: productionSteps,
         success_rate: successRate,
         parallel_execution: true,
-        total_time_ms: totalTime
+        total_time_ms: totalTime,
+        viral_intelligence: true,
+        trends_detected: trendResult.data?.trends?.length || 0,
+        viral_score: viralOptResult.data?.predicted_viral_score || 0
       }
     });
 
-    console.log(`⚡ PRODUCTION COMPLETE: ${totalTime}ms (${(totalTime/1000).toFixed(2)}s) - Success rate: ${successRate}%`);
+    console.log(`⚡ VIRAL PRODUCTION COMPLETE: ${totalTime}ms (${(totalTime/1000).toFixed(2)}s) - Success rate: ${successRate}%`);
+    console.log(`📊 Viral Intelligence: ${trendResult.data?.trends?.length || 0} trends detected, ${viralOptResult.data?.predicted_viral_score || 0}/100 viral score`);
 
     return new Response(
       JSON.stringify({
@@ -242,7 +288,12 @@ Deno.serve(async (req) => {
         totalTimeMs: totalTime,
         totalTimeSec: (totalTime/1000).toFixed(2),
         parallelExecution: true,
-        message: `⚡ Episode produced in ${(totalTime/1000).toFixed(2)}s with parallel bot execution. Video rendering in progress.`,
+        viralIntelligence: {
+          trendsDetected: trendResult.data?.trends?.length || 0,
+          viralScore: viralOptResult.data?.predicted_viral_score || 0,
+          optimizationsApplied: Object.keys(viralOptResult.data?.optimizations || {}).length
+        },
+        message: `⚡ Episode produced in ${(totalTime/1000).toFixed(2)}s with VIRAL INTELLIGENCE. Video rendering in progress.`,
         readyForVideo: successRate >= 80
       }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
