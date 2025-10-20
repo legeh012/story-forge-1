@@ -9,6 +9,7 @@ interface GenerateRequest {
   projectId: string;
   prompt: string;
   episodeNumber?: number;
+  duration?: number;
 }
 
 Deno.serve(async (req) => {
@@ -31,13 +32,13 @@ Deno.serve(async (req) => {
       throw new Error('Unauthorized');
     }
 
-    const { projectId, prompt, episodeNumber }: GenerateRequest = await req.json();
+    const { projectId, prompt, episodeNumber, duration = 180 }: GenerateRequest = await req.json();
 
     if (!projectId || !prompt) {
       throw new Error('Project ID and prompt are required');
     }
 
-    console.log(`Generating episode for project: ${projectId}`);
+    console.log(`Generating ${duration}s episode for project: ${projectId}`);
 
     // Get project details
     const { data: project, error: projectError } = await supabase
@@ -57,8 +58,8 @@ Deno.serve(async (req) => {
       .select('name, role, personality')
       .eq('project_id', projectId);
 
-    // Use Turbo Script Bot for ultra-fast script generation
-    console.log('🚀 Activating TURBO Script Bot...');
+    // Use Turbo Script Bot for ultra-fast script generation with duration
+    console.log(`🚀 Activating TURBO Script Bot for ${duration}s video...`);
     
     const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
     
@@ -82,7 +83,9 @@ Deno.serve(async (req) => {
               personality: c.personality
             })) || []
           },
-          episodeNumber: episodeNumber ?? 1
+          episodeNumber: episodeNumber ?? 1,
+          duration: duration,
+          customPrompt: prompt
         })
       }
     );
@@ -95,7 +98,7 @@ Deno.serve(async (req) => {
     const scriptData = await scriptBotResponse.json();
     const { script } = scriptData;
     
-    console.log('✅ TURBO Script generated');
+    console.log(`✅ TURBO Script generated for ${duration}s video`);
 
     // Determine episode number
     const { count } = await supabase
