@@ -7,9 +7,9 @@ import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { 
-  Plus, Play, Pause, Video, Users, FileText, TrendingUp, 
+  Plus, Play, Pause, Video, Users, FileText, TrendingUp, Film, Upload, Image as ImageIcon,
   Clapperboard, Sparkles, Clock, CheckCircle2, AlertCircle,
-  Upload, Settings, BarChart3, Loader2, Download, Paperclip, X, Trash2, UserPlus, Save, FolderOpen
+  Settings, BarChart3, Loader2, Download, Paperclip, X, Trash2, UserPlus, Save, FolderOpen
 } from "lucide-react";
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
@@ -68,6 +68,7 @@ interface GenerationAttachment {
 const Workflow = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
+  const [importingFromPhotos, setImportingFromPhotos] = useState(false);
   
   const [projects, setProjects] = useState<Project[]>([]);
   const [episodes, setEpisodes] = useState<Episode[]>([]);
@@ -266,6 +267,43 @@ const Workflow = () => {
       });
     } finally {
       setImporting(false);
+    }
+  };
+
+  const handleImportFromPhotos = async () => {
+    if (!selectedProject) {
+      toast({
+        title: "No Project Selected",
+        description: "Please select a project first",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    setImportingFromPhotos(true);
+    try {
+      const { data, error } = await supabase.functions.invoke('import-from-photos', {
+        body: { projectId: selectedProject }
+      });
+
+      if (error) throw error;
+
+      toast({
+        title: "🎭 Characters Imported!",
+        description: `Created ${data.imported} characters from ${data.total_images} photos`,
+      });
+
+      // Refresh characters
+      await fetchProjectDetails(selectedProject);
+
+    } catch (error) {
+      toast({
+        title: "Import Failed",
+        description: error instanceof Error ? error.message : "Failed to import from photos",
+        variant: "destructive"
+      });
+    } finally {
+      setImportingFromPhotos(false);
     }
   };
 
@@ -948,6 +986,25 @@ const Workflow = () => {
                             onChange={handleLoadCharacters}
                             className="hidden"
                           />
+                          <Button
+                            onClick={handleImportFromPhotos}
+                            disabled={importingFromPhotos || attachments.length === 0}
+                            variant="default"
+                            size="sm"
+                            className="bg-gradient-to-r from-primary to-accent mr-2"
+                          >
+                            {importingFromPhotos ? (
+                              <>
+                                <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                                Analyzing...
+                              </>
+                            ) : (
+                              <>
+                                <Sparkles className="h-4 w-4 mr-2" />
+                                Import from Photos ({attachments.length})
+                              </>
+                            )}
+                          </Button>
                           <Button
                             onClick={handleImportTemplate}
                             disabled={importing}

@@ -1,5 +1,8 @@
 project_id = "akmeovotnnqbxotlerie"
 
+[functions.import-from-photos]
+verify_jwt = true
+
 [functions.godlike-voice-bot]
 verify_jwt = true
 
