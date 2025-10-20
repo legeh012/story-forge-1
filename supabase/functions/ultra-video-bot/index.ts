@@ -110,7 +110,7 @@ Return JSON with this EXACT structure:
 
     console.log(`📊 Generated ${scenes.length} ultra-detailed scenes`);
 
-    // Step 2: GODMODE PARALLEL image generation (ALL AT ONCE)
+    // Step 2: SMART BATCHED image generation (prevents worker limit errors)
     const generatedFrames: Array<{
       sceneNumber: number;
       imageUrl: string;
@@ -125,14 +125,24 @@ Return JSON with this EXACT structure:
     }> = [];
     
     const frameGenStart = Date.now();
-    console.log(`🚀 GODMODE: Generating ALL ${scenes.length} scenes SIMULTANEOUSLY (no limits)...`);
+    const BATCH_SIZE = 5; // Process 5 frames at a time to avoid worker limits
+    console.log(`🚀 SMART BATCHING: Generating ${scenes.length} scenes in batches of ${BATCH_SIZE}...`);
     
-    // Process ALL scenes in parallel with NO concurrency limits for maximum speed
-    const scenePromises = scenes.map(async (scene: any) => {
-      console.log(`🔥 GEN-3 TURBO: Queuing scene ${scene.number}/${scenes.length} (Viral Score: ${scene.viralScore || 'N/A'})`);
+    // Process scenes in batches to avoid overwhelming the worker
+    for (let i = 0; i < scenes.length; i += BATCH_SIZE) {
+      const batch = scenes.slice(i, i + BATCH_SIZE);
+      const batchNumber = Math.floor(i / BATCH_SIZE) + 1;
+      const totalBatches = Math.ceil(scenes.length / BATCH_SIZE);
       
-      // NETFLIX-GRADE REALITY TV prompt for photorealistic generation
-      const netflixRealityPrompt = `${scene.prompt}
+      console.log(`📦 Processing batch ${batchNumber}/${totalBatches} (${batch.length} scenes)...`);
+      
+      const batchPromises = batch.map(async (scene: any) => {
+        const sceneIndex = i + batch.indexOf(scene);
+        
+        console.log(`🔥 GEN-3 TURBO: Queuing scene ${scene.number}/${scenes.length} (Viral Score: ${scene.viralScore || 'N/A'})`);
+        
+        // NETFLIX-GRADE REALITY TV prompt for photorealistic generation
+        const netflixRealityPrompt = `${scene.prompt}
 
 🎬 NETFLIX-GRADE REALITY TV - PHOTOREALISTIC SPECIFICATIONS:
 
@@ -160,7 +170,7 @@ REALITY TV AESTHETIC:
 - Professional audio design: ${scene.soundDesign || 'realistic ambient + reality TV cues'}
 - Authentic human interactions and drama`;
 
-      const realityTVNegativePrompt = `${scene.negativePrompt || ''}, 
+        const realityTVNegativePrompt = `${scene.negativePrompt || ''}, 
 ABSOLUTELY FORBIDDEN FOR REALITY TV PHOTOREALISM:
 ❌ cartoon, anime, illustration, painting, digital art, CGI, 3D render, stylized, artistic interpretation
 ❌ video game graphics, Sims-like, Second Life, virtual avatar, AI-generated artifacts, synthetic humans
@@ -180,72 +190,75 @@ ABSOLUTELY FORBIDDEN FOR REALITY TV PHOTOREALISM:
 ❌ excessive lens flares, heavy vignette, fake bokeh, excessive film grain
 ❌ stock photo aesthetic, corporate headshot, catalog photography, fashion editorial (unless appropriate)`;
 
-      console.log(`  📺 Reality TV Type: ${scene.realityTVType || 'authentic drama'}`);
-      console.log(`  🔗 Continuity: ${scene.continuityNote || 'scene flow'}`);
+        console.log(`  📺 Reality TV Type: ${scene.realityTVType || 'authentic drama'}`);
+        console.log(`  🔗 Continuity: ${scene.continuityNote || 'scene flow'}`);
 
-      // Generate Netflix-grade photorealistic scene
-      console.log(`  ⚡ Generating NETFLIX PHOTOREALISTIC scene ${scene.number}...`);
-      
-      const imageGeneration = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${LOVABLE_API_KEY}`,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          model: 'google/gemini-2.5-flash-image-preview',
-          messages: [
-          {
-              role: 'user',
-              content: netflixRealityPrompt
-            }
-          ],
-          modalities: ['image', 'text']
-        }),
+        // Generate Netflix-grade photorealistic scene
+        console.log(`  ⚡ Generating NETFLIX PHOTOREALISTIC scene ${scene.number}...`);
+        
+        const imageGeneration = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${LOVABLE_API_KEY}`,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            model: 'google/gemini-2.5-flash-image-preview',
+            messages: [
+            {
+                role: 'user',
+                content: netflixRealityPrompt
+              }
+            ],
+            modalities: ['image', 'text']
+          }),
+        });
+
+        if (!imageGeneration.ok) {
+          console.error(`Image generation failed for scene ${scene.number}`);
+          return null;
+        }
+
+        const imageData = await imageGeneration.json();
+        const imageUrl = imageData.choices?.[0]?.message?.images?.[0]?.image_url?.url;
+
+        if (!imageUrl) {
+          console.warn(`  ⚠️ Failed to generate scene ${scene.number}`);
+          return null;
+        }
+
+        const qualityScore = 92 + (Math.random() * 8); // Netflix-grade = 92-100
+        
+        console.log(`  ✅ Scene ${scene.number} PHOTOREALISTIC - Quality: ${qualityScore.toFixed(1)}/100`);
+        
+        return {
+          sceneNumber: scene.number,
+          imageUrl: imageUrl,
+          description: scene.description,
+          duration: scene.duration,
+          realityTVType: scene.realityTVType || 'authentic-drama',
+          continuityNote: scene.continuityNote || '',
+          qualityScore: qualityScore,
+          emotion: scene.emotion,
+          dialogue: scene.dialogue || '',
+          soundDesign: scene.soundDesign || ''
+        };
       });
 
-      if (!imageGeneration.ok) {
-        console.error(`Image generation failed for scene ${scene.number}`);
-        return null;
-      }
-
-      const imageData = await imageGeneration.json();
-      const imageUrl = imageData.choices?.[0]?.message?.images?.[0]?.image_url?.url;
-
-      if (!imageUrl) {
-        console.warn(`  ⚠️ Failed to generate scene ${scene.number}`);
-        return null;
-      }
-
-      const qualityScore = 92 + (Math.random() * 8); // Netflix-grade = 92-100
+      // Wait for current batch to complete
+      const batchResults = await Promise.all(batchPromises);
       
-      console.log(`  ✅ Scene ${scene.number} PHOTOREALISTIC - Quality: ${qualityScore.toFixed(1)}/100`);
-      
-      return {
-        sceneNumber: scene.number,
-        imageUrl: imageUrl,
-        description: scene.description,
-        duration: scene.duration,
-        realityTVType: scene.realityTVType || 'authentic-drama',
-        continuityNote: scene.continuityNote || '',
-        qualityScore: qualityScore,
-        emotion: scene.emotion,
-        dialogue: scene.dialogue || '',
-        soundDesign: scene.soundDesign || ''
-      };
-    });
-
-    // Wait for ALL scenes to generate in parallel (MAXIMUM SPEED)
-    const results = await Promise.all(scenePromises);
-    const frameGenTime = Date.now() - frameGenStart;
-    
-    // Filter out failed generations and add to generatedFrames
-    for (const result of results) {
-      if (result) {
-        generatedFrames.push(result);
+      // Add successful results to generatedFrames
+      for (const result of batchResults) {
+        if (result) {
+          generatedFrames.push(result);
+        }
       }
+      
+      console.log(`✅ Batch ${batchNumber}/${totalBatches} complete (${batchResults.filter(r => r).length}/${batch.length} successful)`);
     }
-
+    
+    const frameGenTime = Date.now() - frameGenStart;
     console.log(`\n⚡ ALL ${generatedFrames.length} frames generated in ${frameGenTime}ms (${(frameGenTime/1000).toFixed(2)}s)`);
     console.log(`📺 NETFLIX REALITY TV: ${generatedFrames.length} PHOTOREALISTIC frames with logical flow`);
 
