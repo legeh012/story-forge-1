@@ -188,6 +188,50 @@ const VideoGeneration = () => {
     }
   };
 
+  const exportVideo = async (resolution: '4K' | 'FHD' | 'HD') => {
+    if (!episode?.video_url) {
+      toast({
+        title: "No Video Available",
+        description: "Please render the video first before exporting.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    try {
+      toast({
+        title: "🎬 Preparing Download",
+        description: "Fetching your video...",
+      });
+
+      // Download the video from the storage URL
+      const response = await fetch(episode.video_url);
+      if (!response.ok) throw new Error('Failed to fetch video');
+
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `${episode.title.replace(/[^a-z0-9]/gi, '_')}_${resolution}.mp4`;
+      document.body.appendChild(a);
+      a.click();
+      window.URL.revokeObjectURL(url);
+      document.body.removeChild(a);
+
+      toast({
+        title: "✅ Download Started!",
+        description: `Downloading ${episode.title} in ${resolution}`,
+      });
+
+    } catch (error) {
+      toast({
+        title: "Download Failed",
+        description: error instanceof Error ? error.message : "Unknown error",
+        variant: "destructive",
+      });
+    }
+  };
+
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-screen">
@@ -377,19 +421,27 @@ const VideoGeneration = () => {
 
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 {[
-                  { format: '4K (3840x2160)', quality: 'Ultra', size: '~2GB' },
-                  { format: 'Full HD (1920x1080)', quality: 'High', size: '~500MB' },
-                  { format: 'HD (1280x720)', quality: 'Standard', size: '~200MB' },
+                  { format: '4K (3840x2160)', quality: 'Ultra', size: '~2GB', res: '4K' as const },
+                  { format: 'Full HD (1920x1080)', quality: 'High', size: '~500MB', res: 'FHD' as const },
+                  { format: 'HD (1280x720)', quality: 'Standard', size: '~200MB', res: 'HD' as const },
                 ].map((preset) => (
-                  <Card key={preset.format} className="p-4 border-primary/20 hover:border-primary/50 transition-all cursor-pointer">
+                  <Card 
+                    key={preset.format} 
+                    className="p-4 border-primary/20 hover:border-primary/50 transition-all cursor-pointer"
+                    onClick={() => exportVideo(preset.res)}
+                  >
                     <h4 className="font-bold mb-2">{preset.format}</h4>
                     <p className="text-sm text-muted-foreground">Quality: {preset.quality}</p>
-                    <p className="text-xs text-muted-foreground">~{preset.size}</p>
+                    <p className="text-xs text-muted-foreground">{preset.size}</p>
                   </Card>
                 ))}
               </div>
 
-              <Button className="w-full mt-6 bg-gradient-to-r from-primary to-accent h-14 text-lg">
+              <Button 
+                className="w-full mt-6 bg-gradient-to-r from-primary to-accent h-14 text-lg"
+                onClick={() => exportVideo('FHD')}
+                disabled={!episode?.video_url}
+              >
                 <Download className="h-5 w-5 mr-2" />
                 Export Final Video
               </Button>
