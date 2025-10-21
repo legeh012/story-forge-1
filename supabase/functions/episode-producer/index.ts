@@ -270,6 +270,8 @@ Deno.serve(async (req) => {
             emotion: scene.emotion || 'neutral'
           })),
           characters, // Pass full character schemas for Suno sync
+          audioSyncs: audioSyncResult.data?.audioSyncs || [],
+          confessionals: confessionalResult.data?.confessional || {},
           viralMetadata: {
             trends: trendResult.data?.trends || [],
             optimizations: viralOptResult.data?.optimizations || {},
@@ -278,6 +280,35 @@ Deno.serve(async (req) => {
           }
         }
       }).catch(err => console.error('Video generation error:', err));
+
+      // NEW: Trigger FFmpeg video engine for parallel rendering with overlays
+      console.log(`🎬 Launching FFmpeg Video Engine for ${scenes.length} scenes...`);
+      supabase.functions.invoke('ffmpeg-video-engine', {
+        body: {
+          episodeId,
+          scenes: scenes.map((scene: any) => ({
+            frameUrl: scene.imageUrl || scene.url,
+            duration: scene.duration || 5,
+            overlays: {
+              confessional: scene.character === confessionalResult.data?.confessional?.character 
+                ? confessionalResult.data.confessional 
+                : null,
+              sunoTrack: audioSyncResult.data?.audioSyncs?.find((sync: any) => 
+                sync.sceneId === scene.id
+              )
+            },
+            character: scene.character,
+            emotion: scene.emotion || 'neutral'
+          })),
+          audioSyncs: audioSyncResult.data?.audioSyncs || [],
+          confessionals: confessionalResult.data?.confessional,
+          metadata: {
+            trends: trendResult.data?.trends || [],
+            viralScore: viralOptResult.data?.predicted_viral_score || 0,
+            optimizations: viralOptResult.data?.optimizations || {}
+          }
+        }
+      }).catch(err => console.error('FFmpeg engine error:', err));
 
       productionSteps.push({
         step: 'Viral Video Generation',
