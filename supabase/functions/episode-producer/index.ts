@@ -60,8 +60,8 @@ Deno.serve(async (req) => {
 
     console.log('⚡ PARALLEL PRODUCTION: Launching all bots simultaneously for sub-minute production...');
 
-    // PHASE 1: Run independent tasks in parallel (MAXIMUM SPEED + VIRAL INTELLIGENCE)
-    const [scriptResult, hookResult, trendResult] = await Promise.all([
+    // PHASE 1: Run independent tasks in parallel (MAXIMUM SPEED + VIRAL INTELLIGENCE + CHARACTER LOGIC)
+    const [scriptResult, hookResult, trendResult, confessionalResult] = await Promise.all([
       supabase.functions.invoke('script-generator-bot', {
         body: {
           episodeId,
@@ -70,7 +70,8 @@ Deno.serve(async (req) => {
           characters: characters.map(c => ({
             name: c.name,
             role: c.role,
-            personality: c.personality
+            personality: c.personality,
+            metadata: c.metadata // Include full character schema
           }))
         }
       }),
@@ -87,6 +88,14 @@ Deno.serve(async (req) => {
           platform: 'tiktok', // Primary viral platform
           genre: project.genre,
           theme: project.theme
+        }
+      }),
+      // NEW: Confessional logic for character-driven moments
+      supabase.functions.invoke('confessional-logic-bot', {
+        body: {
+          character: characters.find(c => c.metadata?.modules?.castBranding) || characters[0],
+          sceneContext: episode.synopsis || episode.title,
+          emotionalState: 'confident'
         }
       })
     ]);
@@ -108,6 +117,11 @@ Deno.serve(async (req) => {
         step: 'Trend Detection',
         status: trendResult.error ? 'failed' : 'completed',
         result: trendResult.data
+      },
+      {
+        step: 'Confessional Logic',
+        status: confessionalResult.error ? 'failed' : 'completed',
+        result: confessionalResult.data
       }
     );
 
@@ -158,25 +172,43 @@ Deno.serve(async (req) => {
       }
     );
 
-    // PHASE 3: Scene orchestration with enhanced, trend-aware, virally-optimized script
-    const sceneResult = await supabase.functions.invoke('scene-orchestration', {
-      body: {
-        episodeId,
-        script: culturalResult.data?.injected_content || scriptResult.data?.script,
-        direction: directionResult.data?.direction,
-        characters,
-        trends: trendResult.data?.trends, // Pass trends for viral scene construction
-        viralOptimizations: viralOptResult.data?.optimizations // Apply viral optimizations
+    // PHASE 3: Scene orchestration with enhanced, trend-aware, virally-optimized script + AUDIO SYNC
+    const [sceneResult, audioSyncResult] = await Promise.all([
+      supabase.functions.invoke('scene-orchestration', {
+        body: {
+          episodeId,
+          script: culturalResult.data?.injected_content || scriptResult.data?.script,
+          direction: directionResult.data?.direction,
+          characters,
+          trends: trendResult.data?.trends, // Pass trends for viral scene construction
+          viralOptimizations: viralOptResult.data?.optimizations, // Apply viral optimizations
+          confessionals: confessionalResult.data?.confessional // Add confessional moments
+        }
+      }),
+      // NEW: Suno audio sync for character-driven audio overlays
+      supabase.functions.invoke('suno-audio-sync-bot', {
+        body: {
+          scenes: [], // Will be populated after scene orchestration
+          characters,
+          episodeId
+        }
+      })
+    ]);
+
+    console.log(`✅ Phase 3 complete (${Date.now() - startTime}ms) - Scenes orchestrated with viral intelligence + Suno audio sync`);
+
+    productionSteps.push(
+      {
+        step: 'Scene Orchestration',
+        status: sceneResult.error ? 'failed' : 'completed',
+        result: sceneResult.data
+      },
+      {
+        step: 'Suno Audio Sync',
+        status: audioSyncResult.error ? 'failed' : 'completed',
+        result: audioSyncResult.data
       }
-    });
-
-    console.log(`✅ Phase 3 complete (${Date.now() - startTime}ms) - Scenes orchestrated with viral intelligence`);
-
-    productionSteps.push({
-      step: 'Scene Orchestration',
-      status: sceneResult.error ? 'failed' : 'completed',
-      result: sceneResult.data
-    });
+    );
 
     // Step 6: Update episode with production results (including viral metadata)
     console.log('Step 6: Updating episode with viral-optimized content...');
@@ -188,7 +220,9 @@ Deno.serve(async (req) => {
         trends: trendResult.data?.trends || [],
         viralScore: viralOptResult.data?.predicted_viral_score || 0,
         optimizations: viralOptResult.data?.optimizations || {},
-        hooks: hookResult.data || {}
+        hooks: hookResult.data || {},
+        confessionals: confessionalResult.data?.confessional || {},
+        audioSyncs: audioSyncResult.data?.audioSyncs || []
       }
     };
 
@@ -221,6 +255,7 @@ Deno.serve(async (req) => {
       console.log(`🎥 Launching ultra-video-bot with VIRAL OPTIMIZATION (${scenes.length} scenes)...`);
       
       // Fire-and-forget for instant response - let video generation happen in background
+      // Pass Suno audio sync and confessional data
       supabase.functions.invoke('ultra-video-bot', {
         body: {
           episodeId,
@@ -230,11 +265,15 @@ Deno.serve(async (req) => {
             description: scene.description || scene.visual_description || 'Scene from the episode',
             duration: scene.duration || 5,
             dialogue: scene.dialogue || scene.voiceover,
-            viralElements: scene.viralElements || [] // NEW: Viral elements from optimization
+            viralElements: scene.viralElements || [], // NEW: Viral elements from optimization
+            character: scene.character,
+            emotion: scene.emotion || 'neutral'
           })),
+          characters, // Pass full character schemas for Suno sync
           viralMetadata: {
             trends: trendResult.data?.trends || [],
             optimizations: viralOptResult.data?.optimizations || {},
+            confessionals: confessionalResult.data?.confessional || {},
             targetPlatform: 'tiktok'
           }
         }

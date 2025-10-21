@@ -1,7 +1,10 @@
+import { luckyCharacterSchema } from './luckyCharacterSchema';
+
 export const sayWalahiCharacters = [
   {
     name: "Lucky",
     role: "The Founder - Visionary Architect",
+    handle: "@djluckluck",
     traits: ["chaos-native", "schema-driven", "visionary", "ten steps ahead"],
     drama_hooks: "Builds cinematic OSs while flipping tropes into monetization, always architecting the next cultural disruption",
     appearance: {
@@ -15,7 +18,9 @@ export const sayWalahiCharacters = [
       alliances: ["Luul", "Samara"],
       rivalries: []
     },
-    status: "active"
+    status: "active",
+    // Full StoryForge schema with Suno audio and confessional logic
+    metadata: luckyCharacterSchema.modules
   },
   {
     name: "Luul",
