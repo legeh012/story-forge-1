@@ -1,5 +1,0 @@
-git init
-git remote add origin https://github.com/your-username/storyforge-cinematic-os.git
-git add .
-git commit -m "Initial cinematic OS scaffold"
-git push -u origin main
