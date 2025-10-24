@@ -1,7 +1,7 @@
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTrigger, SheetHeader, SheetTitle } from "@/components/ui/sheet";
-import { Sparkles, FolderOpen, TrendingUp, Activity, Bot, Menu, X, Video } from "lucide-react";
+import { Sparkles, FolderOpen, TrendingUp, Activity, Bot, Menu, X, Video, Cloud } from "lucide-react";
 import { useState } from "react";
 
 const Navigation = () => {
@@ -12,6 +12,7 @@ const Navigation = () => {
     { to: "/media", label: "Media", icon: FolderOpen },
     { to: "/video-generation", label: "Video Studio", icon: Video },
     { to: "/remix-studio", label: "Remix Studio", icon: Sparkles },
+    { to: "/cloud-services", label: "Cloud AI", icon: Cloud },
     { to: "/analytics", label: "Analytics", icon: TrendingUp },
     { to: "/system-monitor", label: "Monitor", icon: Activity },
     { to: "/viral-bots", label: "Viral Bots", icon: Bot },
