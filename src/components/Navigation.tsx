@@ -1,25 +1,11 @@
-import { Link, useNavigate } from "react-router-dom";
+import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTrigger, SheetHeader, SheetTitle } from "@/components/ui/sheet";
-import { Sparkles, FolderOpen, TrendingUp, Activity, Bot, Menu, X, Video, Cloud, LogOut, User } from "lucide-react";
+import { Sparkles, FolderOpen, TrendingUp, Activity, Bot, Menu, X, Video, Cloud } from "lucide-react";
 import { useState } from "react";
-import { useAuth } from "@/hooks/useAuth";
-import { useToast } from "@/hooks/use-toast";
 
 const Navigation = () => {
   const [isOpen, setIsOpen] = useState(false);
-  const { user, signOut } = useAuth();
-  const navigate = useNavigate();
-  const { toast } = useToast();
-
-  const handleSignOut = async () => {
-    await signOut();
-    toast({
-      title: '👋 Logged Out',
-      description: 'Come back soon!',
-    });
-    navigate('/auth');
-  };
 
   const navLinks = [
     { to: "/create", label: "Create", icon: null },
@@ -63,34 +49,14 @@ const Navigation = () => {
 
           {/* Desktop Auth Buttons */}
           <div className="hidden md:flex items-center gap-3">
-            {user ? (
-              <>
-                <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                  <User className="h-4 w-4" />
-                  {user.email}
-                </div>
-                <Button 
-                  onClick={handleSignOut} 
-                  variant="ghost" 
-                  size="sm"
-                  className="gap-2"
-                >
-                  <LogOut className="h-4 w-4" />
-                  Logout
-                </Button>
-              </>
-            ) : (
-              <>
-                <Link to="/auth">
-                  <Button variant="ghost" size="sm">Sign In</Button>
-                </Link>
-                <Link to="/auth">
-                  <Button size="sm" className="bg-gradient-to-r from-primary to-accent hover:opacity-90 transition-opacity">
-                    Get Started
-                  </Button>
-                </Link>
-              </>
-            )}
+            <Link to="/auth">
+              <Button variant="ghost" size="sm">Sign In</Button>
+            </Link>
+            <Link to="/auth">
+              <Button size="sm" className="bg-gradient-to-r from-primary to-accent hover:opacity-90 transition-opacity">
+                Get Started
+              </Button>
+            </Link>
           </div>
 
           {/* Mobile Menu */}
@@ -124,36 +90,14 @@ const Navigation = () => {
                 ))}
                 
                 <div className="border-t border-border pt-4 mt-4 space-y-3">
-                  {user ? (
-                    <>
-                      <div className="flex items-center gap-2 text-sm text-muted-foreground px-3 py-2">
-                        <User className="h-4 w-4" />
-                        {user.email}
-                      </div>
-                      <Button 
-                        onClick={() => {
-                          handleSignOut();
-                          setIsOpen(false);
-                        }} 
-                        variant="outline" 
-                        className="w-full gap-2"
-                      >
-                        <LogOut className="h-4 w-4" />
-                        Logout
-                      </Button>
-                    </>
-                  ) : (
-                    <>
-                      <Link to="/auth" onClick={() => setIsOpen(false)} className="block">
-                        <Button variant="outline" className="w-full">Sign In</Button>
-                      </Link>
-                      <Link to="/auth" onClick={() => setIsOpen(false)} className="block">
-                        <Button className="w-full bg-gradient-to-r from-primary to-accent hover:opacity-90">
-                          Get Started
-                        </Button>
-                      </Link>
-                    </>
-                  )}
+                  <Link to="/auth" onClick={() => setIsOpen(false)} className="block">
+                    <Button variant="outline" className="w-full">Sign In</Button>
+                  </Link>
+                  <Link to="/auth" onClick={() => setIsOpen(false)} className="block">
+                    <Button className="w-full bg-gradient-to-r from-primary to-accent hover:opacity-90">
+                      Get Started
+                    </Button>
+                  </Link>
                 </div>
               </div>
             </SheetContent>
