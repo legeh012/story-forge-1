@@ -46,24 +46,25 @@ Deno.serve(async (req) => {
 
     console.log('🔥 GEN-3 ALPHA TURBO: God-level generation initiated for episode', episodeId);
 
-    // Step 1: NETFLIX-GRADE REALITY TV Scene Analysis with Logical Flow
-    const sceneAnalysisPrompt = `You are a Netflix reality TV showrunner specializing in photorealistic, high-end production. This is REALITY TV (Real Housewives, Selling Sunset, Love & Hip Hop quality). Create logically flowing scenes.
+    // Step 1: LAKI PRODUCTION-GRADE REALITY TV Scene Analysis with Logical Flow & Natural Movement
+    const sceneAnalysisPrompt = `You are a LAKI Production reality TV showrunner specializing in photorealistic, high-end production with NATURAL HUMAN MOVEMENT. This is REALITY TV (Real Housewives, Selling Sunset, Love & Hip Hop quality) where characters MOVE, GESTURE, and ACT NATURALLY.
 
 Episode: "${episode.title}"
 Synopsis: ${episode.synopsis}
 Script: ${episode.script}
 
-NETFLIX-GRADE REALITY TV REQUIREMENTS:
-- 10-20 second scenes that FLOW LOGICALLY from one to the next
-- PHOTOREALISTIC humans only - real skin, genuine emotions, perfect anatomy (5 fingers)
+LAKI PRODUCTION-GRADE REALITY TV REQUIREMENTS:
+- 10-20 second scenes with NATURAL CHARACTER MOVEMENT - walking, talking, gesturing, reacting
+- Characters should be ANIMATED and LIFELIKE - not frozen or static
+- PHOTOREALISTIC humans with NATURAL BODY LANGUAGE and realistic motion
 - Reality TV structure: confessionals, group drama, one-on-ones, confrontations
 - Natural professional lighting (bright, flattering, not harsh)
-- Authentic reactions and expressions (no exaggeration)
+- Authentic reactions and expressions with DYNAMIC MOVEMENT
 - Documentary-style camera work (handheld, multi-cam, confessional booth)
 - Real environments (luxury homes, restaurants, offices)
 - Continuity between scenes - each connects to previous/next
 - Natural dialogue with dramatic tension
-- High-end production values (Netflix/Hulu standard)
+- High-end production values (LAKI Production standard)
 
 Return JSON with this EXACT structure:
 {
@@ -79,7 +80,7 @@ Return JSON with this EXACT structure:
       "continuityNote": "How this scene connects to previous scene",
       "dialogue": "Natural realistic dialogue",
       "soundDesign": "Realistic ambient + reality TV music cues",
-      "prompt": "NETFLIX-GRADE photorealistic generation prompt",
+      "prompt": "LAKI PRODUCTION-GRADE photorealistic generation prompt with NATURAL MOVEMENT",
       "negativePrompt": "Everything to avoid (cartoon, filters, unrealistic elements)"
     }
   ]
@@ -94,7 +95,7 @@ Return JSON with this EXACT structure:
       body: JSON.stringify({
         model: 'google/gemini-2.5-flash',
         messages: [
-          { role: 'system', content: 'You are a Netflix reality TV showrunner creating PHOTOREALISTIC, logically flowing episodes. You understand high-end reality TV production (Real Housewives, Selling Sunset), authentic human drama, and Netflix-grade quality standards. Every scene must be photorealistic with perfect human anatomy and flow logically to the next.' },
+          { role: 'system', content: 'You are a LAKI Production reality TV showrunner creating PHOTOREALISTIC, logically flowing episodes with NATURAL HUMAN MOVEMENT. Characters should MOVE, GESTURE, and ACT naturally like real people. You understand high-end reality TV production (Real Housewives, Selling Sunset), authentic human drama, and LAKI Production-grade quality standards. Every scene must be photorealistic with perfect human anatomy, natural movement, and flow logically to the next.' },
           { role: 'user', content: sceneAnalysisPrompt }
         ],
         response_format: { type: 'json_object' }

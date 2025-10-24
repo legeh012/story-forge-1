@@ -33,7 +33,7 @@ serve(async (req) => {
       const frameStartTime = Date.now();
       console.log(`🎨 Frame ${index + 1}/${scenes.length} generation started`);
       
-      const prompt = `${scene.description}. Ultra high resolution, photorealistic, Netflix-quality cinematography, perfect lighting, professional color grading, anatomically correct, natural expressions.`;
+      const prompt = `${scene.description}. ANIMATED NATURAL HUMAN MOVEMENT - characters walking, talking, gesturing naturally. Ultra high resolution, photorealistic, LAKI Production-quality cinematography, perfect lighting, professional color grading, anatomically correct, natural expressions, realistic body language and motion.`;
 
       const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
         method: "POST",

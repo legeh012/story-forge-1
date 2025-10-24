@@ -43,7 +43,7 @@ export const RealismAudit = ({
       icon: CheckCircle2,
     },
     {
-      name: 'Netflix-Grade Quality',
+      name: 'LAKI Production-Grade Quality',
       description: '8K resolution, cinematic color grading, film grain',
       status: 'active',
       icon: Camera,
@@ -136,7 +136,7 @@ export const RealismAudit = ({
             <AlertTriangle className="h-4 w-4 text-yellow-600 mt-0.5 flex-shrink-0" />
             <div className="text-xs text-yellow-600">
               <strong>Recommendation:</strong> {stylizedCount} episode{stylizedCount !== 1 ? 's' : ''} using 
-              stylized rendering. Switch to photorealistic mode for Netflix-grade quality.
+              stylized rendering. Switch to photorealistic mode for LAKI Production-grade quality.
             </div>
           </div>
         )}
@@ -147,7 +147,7 @@ export const RealismAudit = ({
             <Zap className="h-4 w-4 text-primary mt-0.5" />
             <div className="text-xs text-muted-foreground">
               <strong className="text-foreground">Pipeline Specs:</strong> Google Gemini 2.5 Flash 
-              Image Preview model • 8K quality enforced • Cinematic color grading (Netflix reference) 
+              Image Preview model • 8K quality enforced • Cinematic color grading (LAKI Production reference) 
               • ARRI ALEXA camera emulation • Real-world physics validation
             </div>
           </div>

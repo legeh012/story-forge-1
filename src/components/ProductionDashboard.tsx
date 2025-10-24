@@ -33,7 +33,7 @@ export const ProductionDashboard = ({ stats, recentActivity = [] }: ProductionDa
             <Film className="h-5 w-5 text-primary" />
             <div>
               <CardTitle>Production Pipeline</CardTitle>
-              <CardDescription>Netflix-grade cinematic asset generation</CardDescription>
+              <CardDescription>LAKI Production-grade cinematic asset generation</CardDescription>
             </div>
           </div>
         </CardHeader>

@@ -23,7 +23,7 @@ interface Episode {
     no_cartoon_filters: boolean;
     natural_expressions: boolean;
     finger_count_validation: boolean;
-    netflix_grade: boolean;
+    laki_production_grade: boolean;
   };
 }
 
@@ -53,7 +53,7 @@ export const VideoRenderer = ({ episode, onStatusChange }: VideoRendererProps) =
       setIsPhotorealistic(photorealistic);
       toast({
         title: 'Rendering style updated',
-        description: `Set to ${photorealistic ? 'Netflix-grade Photorealistic' : 'Stylized'} mode`,
+        description: `Set to ${photorealistic ? 'LAKI Production-grade Photorealistic' : 'Stylized'} mode`,
       });
 
       onStatusChange?.();
@@ -241,7 +241,7 @@ export const VideoRenderer = ({ episode, onStatusChange }: VideoRendererProps) =
             )}
             <div>
               <Label htmlFor="realism-toggle" className="text-sm font-medium cursor-pointer">
-                {isPhotorealistic ? 'Netflix-Grade Photorealistic' : 'Stylized'}
+                {isPhotorealistic ? 'LAKI Production-Grade Photorealistic' : 'Stylized'}
               </Label>
               <p className="text-xs text-muted-foreground">
                 {isPhotorealistic 

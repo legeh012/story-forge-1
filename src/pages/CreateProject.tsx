@@ -306,7 +306,7 @@ const CreateProject = () => {
                         <SelectItem value="youtube-shorts">YouTube Shorts</SelectItem>
                         <SelectItem value="youtube">YouTube</SelectItem>
                         <SelectItem value="facebook">Facebook</SelectItem>
-                        <SelectItem value="streaming">Streaming (Netflix/Prime)</SelectItem>
+                        <SelectItem value="streaming">Streaming (LAKI/Prime)</SelectItem>
                       </SelectContent>
                     </Select>
                   </div>

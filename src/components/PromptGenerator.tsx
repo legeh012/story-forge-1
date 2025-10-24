@@ -34,7 +34,7 @@ export const PromptGenerator = ({ projectId, onEpisodeGenerated }: PromptGenerat
       
       toast({
         title: 'AI Episode Generator',
-        description: 'Creating 3 clips with Netflix-grade photorealistic quality...',
+        description: 'Creating 3 clips with LAKI Production-grade photorealistic quality...',
       });
 
       const { data, error } = await supabase.functions.invoke('generate-episode-from-prompt', {

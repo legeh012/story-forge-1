@@ -35,7 +35,7 @@ Deno.serve(async (req) => {
     const LOVABLE_API_KEY = Deno.env.get('LOVABLE_API_KEY');
     if (!LOVABLE_API_KEY) throw new Error('LOVABLE_API_KEY not configured');
 
-    const directorPrompt = `You are ExpertDirector, an elite 22nd century AI showrunner specializing in REALITY TV production. This is high-drama, unscripted-style content with Netflix-caliber production values.
+    const directorPrompt = `You are ExpertDirector, an elite 22nd century AI showrunner specializing in REALITY TV production. This is high-drama, unscripted-style content with LAKI Production-caliber production values featuring NATURAL HUMAN MOVEMENT and realistic character actions.
 
 PROMPT: ${prompt}
 
@@ -103,7 +103,7 @@ Return as JSON:
         messages: [
           {
             role: 'system',
-            content: 'You are ExpertDirector, a 22nd century AI showrunner specializing in REALITY TV production. Generate dramatic, authentic reality show content with Netflix-grade production values. Think Real Housewives, Selling Sunset, Love & Hip Hop - maximum drama, genuine conflict, strategic confessionals. Always respond with valid JSON.'
+            content: 'You are ExpertDirector, a 22nd century AI showrunner specializing in REALITY TV production. Generate dramatic, authentic reality show content with LAKI Production-grade production values featuring NATURAL HUMAN MOVEMENT and REALISTIC CHARACTER ACTIONS. Think Real Housewives, Selling Sunset, Love & Hip Hop - maximum drama, genuine conflict, strategic confessionals. Always respond with valid JSON.'
           },
           {
             role: 'user',
