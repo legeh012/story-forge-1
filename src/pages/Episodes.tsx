@@ -101,8 +101,12 @@ const Episodes = () => {
       });
 
       // Trigger complete video generation pipeline (all automated)
+      const { data: { session } } = await supabase.auth.getSession();
       const { error: videoError } = await supabase.functions.invoke('generate-video', {
-        body: { episodeId }
+        body: { episodeId },
+        headers: {
+          Authorization: `Bearer ${session?.access_token}`,
+        },
       });
 
       if (videoError) {
