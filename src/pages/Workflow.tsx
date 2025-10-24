@@ -715,6 +715,54 @@ const Workflow = () => {
     }
   };
 
+  const handleGenerateCustomEpisode = async (customDetails: any) => {
+    if (!selectedProject) {
+      toast({
+        title: "No project selected",
+        description: "Please select a project first",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    try {
+      toast({
+        title: "🎬 Generating Custom Episode",
+        description: "Creating episode with your cast and details...",
+      });
+
+      const { data, error } = await supabase.functions.invoke('generate-episode-from-prompt', {
+        body: {
+          projectId: selectedProject,
+          prompt: customDetails.prompt,
+          duration: customDetails.duration || 180,
+          customCast: customDetails.cast,
+          episodeMetadata: customDetails.metadata
+        }
+      });
+
+      if (error) throw error;
+
+      toast({
+        title: "✅ Episode Generated!",
+        description: `"${customDetails.title}" is ready for production`,
+      });
+
+      await fetchProjectDetails(selectedProject);
+      
+      // Navigate to the episode detail page
+      if (data?.episode?.id) {
+        navigate(`/episodes/${data.episode.id}`);
+      }
+    } catch (error: any) {
+      toast({
+        title: "Generation failed",
+        description: error.message,
+        variant: "destructive"
+      });
+    }
+  };
+
   const currentProject = projects.find(p => p.id === selectedProject);
 
   if (authLoading) {
@@ -877,6 +925,62 @@ const Workflow = () => {
                     projectId={selectedProject!}
                     onEpisodeGenerated={() => fetchProjectDetails(selectedProject!)}
                   />
+
+                  {/* Quick Custom Episode Generator */}
+                  <Card className="bg-gradient-to-r from-accent/10 to-primary/10 border-accent/30">
+                    <CardHeader>
+                      <CardTitle className="flex items-center gap-2">
+                        <Clapperboard className="h-5 w-5 text-accent" />
+                        Quick Episode Generator
+                      </CardTitle>
+                      <CardDescription>
+                        Generate "Khat & Karma: The Baby Daddy Blowout" with custom cast
+                      </CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                      <Button
+                        onClick={() => handleGenerateCustomEpisode({
+                          title: "Khat & Karma: The Baby Daddy Blowout",
+                          prompt: `Create an explosive reality TV episode titled "Khat & Karma: The Baby Daddy Blowout" with the following cast:
+
+Luul – The Quiet Storm: Soft-spoken but savage. Doesn't talk much… until she drops a voice note that exposes Zahra's cheating husband. Wears niqab and AirPods. Her silence is louder than the slap.
+
+Luckiee / DJLuckLuck – Narrator, Remix Trigger, Chaos Conductor: Drops "I'm Better Than You" mid-fight. Controls overlays, Somali word triggers, and emotional arcs. Her beats slap harder than Zahra's denial.
+
+Ayaan – The Enforcer: Eldest sister. Khat dealer. Has three baby daddies and a burner phone for each. Slaps Jamaal with a hookah hose and says "Warya, I built this house!"
+
+Zahra – The Denier: Married to Abdi the cheater. Caught him texting "Habibti" to three girls and a cousin. Still says "They're just friends" while crying in full glam.
+
+Amal – The Academic: Law student. Tries to mediate but ends up leaking burner texts. Says "I'm just being honest" before flipping the table and quoting Somali proverbs.
+
+Ifrah – The Cryer: Pregnant. Doesn't know who the baby daddy is. Drops a fake paternity test during dinner. Cries every 12 minutes. Her tears trigger overlays.
+
+Hani – The Shade Queen: Cousin. Doesn't live in the house but shows up to stir drama. Says "I heard what you said about me" and throws tea. Her entrance cue is "Fadhiiso!" in neon.
+
+The episode should feature maximum drama, cultural authenticity, viral moments, and reality TV chaos. Budget: $9,000. Legacy Impact: Viral in 3 diasporas, 2 remix tracks, 1 auntie boycott, 1 baby daddy redemption arc.`,
+                          duration: 180,
+                          cast: [
+                            { name: "Luul", role: "The Quiet Storm", description: "Soft-spoken but savage" },
+                            { name: "Luckiee", role: "Narrator & DJ", description: "Chaos conductor" },
+                            { name: "Ayaan", role: "The Enforcer", description: "Eldest sister, khat dealer" },
+                            { name: "Zahra", role: "The Denier", description: "Married to a cheater" },
+                            { name: "Amal", role: "The Academic", description: "Law student mediator" },
+                            { name: "Ifrah", role: "The Cryer", description: "Pregnant with mystery daddy" },
+                            { name: "Hani", role: "The Shade Queen", description: "Drama catalyst cousin" }
+                          ],
+                          metadata: {
+                            budget: 9000,
+                            legacyImpact: "Viral in 3 diasporas, 2 remix tracks, 1 auntie boycott, 1 baby daddy redemption arc"
+                          }
+                        })}
+                        className="w-full bg-gradient-to-r from-accent to-primary"
+                        size="lg"
+                      >
+                        <Play className="mr-2 h-5 w-5" />
+                        Generate "Khat & Karma" Episode
+                      </Button>
+                    </CardContent>
+                  </Card>
 
                   {/* Realism Audit */}
                   <RealismAudit

@@ -10,6 +10,8 @@ interface GenerateRequest {
   prompt: string;
   episodeNumber?: number;
   duration?: number;
+  customCast?: any[];
+  episodeMetadata?: any;
 }
 
 Deno.serve(async (req) => {
@@ -32,13 +34,16 @@ Deno.serve(async (req) => {
       throw new Error('Unauthorized');
     }
 
-    const { projectId, prompt, episodeNumber, duration = 180 }: GenerateRequest = await req.json();
+    const { projectId, prompt, episodeNumber, duration = 180, customCast, episodeMetadata }: GenerateRequest = await req.json();
 
     if (!projectId || !prompt) {
       throw new Error('Project ID and prompt are required');
     }
 
     console.log(`Generating ${duration}s episode for project: ${projectId}`);
+    if (episodeMetadata) {
+      console.log(`📊 Custom metadata:`, episodeMetadata);
+    }
 
     // Get project details
     const { data: project, error: projectError } = await supabase
@@ -52,11 +57,17 @@ Deno.serve(async (req) => {
       throw new Error('Project not found');
     }
 
-    // Get characters for context
-    const { data: characters } = await supabase
-      .from('characters')
-      .select('name, role, personality')
-      .eq('project_id', projectId);
+    // Use custom cast if provided, otherwise fetch from database
+    let characters = customCast;
+    if (!customCast || customCast.length === 0) {
+      const { data: dbCharacters } = await supabase
+        .from('characters')
+        .select('name, role, personality')
+        .eq('project_id', projectId);
+      characters = dbCharacters || [];
+    }
+    
+    console.log(`🎭 Using ${characters?.length || 0} characters (${customCast ? 'custom' : 'from database'})`);
 
     // Use Turbo Script Bot for ultra-fast script generation with duration
     console.log(`🚀 Activating TURBO Script Bot for ${duration}s video...`);
@@ -118,6 +129,11 @@ Deno.serve(async (req) => {
         season: 1,
         title: script.title,
         synopsis: script.synopsis,
+        content: JSON.stringify({
+          ...script,
+          customCast: customCast || [],
+          metadata: episodeMetadata || {}
+        }),
         storyboard: script.storyboard,
         status: 'draft',
         video_status: 'not_started'
