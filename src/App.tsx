@@ -20,7 +20,6 @@ import SystemMonitor from "./pages/SystemMonitor";
 import ViralBots from "./pages/ViralBots";
 import Install from "./pages/Install";
 import VideoGeneration from "./pages/VideoGeneration";
-import VideoPlayer from "./pages/VideoPlayer";
 import RemixStudio from "./pages/RemixStudio";
 import CloudServices from "./pages/CloudServices";
 import NotFound from "./pages/NotFound";
@@ -60,7 +59,6 @@ const App = () => (
           <Route path="/system-monitor" element={<ProtectedRoute><SystemMonitor /></ProtectedRoute>} />
           <Route path="/viral-bots" element={<ProtectedRoute><ViralBots /></ProtectedRoute>} />
           <Route path="/video-generation" element={<ProtectedRoute><VideoGeneration /></ProtectedRoute>} />
-          <Route path="/video-player" element={<ProtectedRoute><VideoPlayer /></ProtectedRoute>} />
           <Route path="/remix-studio" element={<ProtectedRoute><RemixStudio /></ProtectedRoute>} />
           <Route path="/cloud-services" element={<ProtectedRoute><CloudServices /></ProtectedRoute>} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
