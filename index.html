@@ -2,25 +2,53 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes" />
+    
+    <!-- SEO Meta Tags -->
+    <title>StoryForge - AI-Powered Reality TV & Video Studio</title>
+    <meta name="description" content="Create viral AI-powered reality TV episodes with autonomous bot orchestration, instant video generation, and YouTube integration. Transform your ideas into engaging content." />
+    <meta name="keywords" content="AI video generation, reality TV creator, viral video maker, autonomous bots, episode generator, YouTube automation, content creation studio, AI storytelling" />
+    <meta name="author" content="StoryForge" />
+    <meta name="robots" content="index, follow" />
+    <link rel="canonical" href="https://storyforge.app" />
+    
+    <!-- Open Graph Meta Tags -->
+    <meta property="og:title" content="StoryForge - AI Reality TV Studio" />
+    <meta property="og:description" content="Create viral AI-powered reality TV episodes with autonomous bot orchestration and instant video generation." />
+    <meta property="og:type" content="website" />
+    <meta property="og:url" content="https://storyforge.app" />
+    <meta property="og:image" content="/og-image.png" />
+    <meta property="og:site_name" content="StoryForge" />
+    
+    <!-- Twitter Card Meta Tags -->
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="StoryForge - AI Reality TV Studio" />
+    <meta name="twitter:description" content="Create viral AI-powered reality TV episodes with autonomous bot orchestration." />
+    <meta name="twitter:image" content="/og-image.png" />
     
     <!-- PWA Meta Tags -->
-    <meta name="theme-color" content="#6366f1" />
+    <meta name="theme-color" content="#9b87f5" />
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
     <meta name="apple-mobile-web-app-title" content="StoryForge" />
     <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
     <link rel="manifest" href="/manifest.json" />
     
-    <title>StoryForge - AI Reality TV Studio</title>
-    <meta name="description" content="Create viral AI-powered reality TV episodes with autonomous bot orchestration. StoryForge - Your AI Reality TV Studio." />
-    <meta name="keywords" content="AI video, reality TV, content creation, viral videos, episode generator, autonomous bots" />
-    <meta name="author" content="StoryForge" />
+    <!-- Favicon -->
+    <link rel="icon" type="image/x-icon" href="/favicon.ico" />
     
-    <meta property="og:title" content="StoryForge - AI Reality TV Studio">
-</head>
+    <!-- Preconnect for Performance -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="dns-prefetch" href="https://cdn.botpress.cloud" />
+  </head>
 
   <body>
+    <noscript>
+      <div style="padding: 2rem; text-align: center; font-family: sans-serif;">
+        <h1>JavaScript Required</h1>
+        <p>StoryForge requires JavaScript to run. Please enable JavaScript in your browser settings.</p>
+      </div>
+    </noscript>
     <div id="root"></div>
     <script type="module" src="/src/main.tsx"></script>
   </body>
