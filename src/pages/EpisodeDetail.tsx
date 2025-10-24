@@ -12,6 +12,7 @@ import { Link } from "react-router-dom";
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from "@/hooks/use-toast";
 import { VideoManifestPlayer } from "@/components/VideoManifestPlayer";
+import { EpisodeVideoPlayer } from "@/components/EpisodeVideoPlayer";
 
 interface Episode {
   id: string;
@@ -37,6 +38,7 @@ const EpisodeDetail = () => {
   const [isSaving, setIsSaving] = useState(false);
   const [isGenerating, setIsGenerating] = useState(false);
   const [editedEpisode, setEditedEpisode] = useState<Partial<Episode>>({});
+  const [isPlayerOpen, setIsPlayerOpen] = useState(false);
 
   useEffect(() => {
     const checkAuth = async () => {
@@ -123,8 +125,30 @@ const EpisodeDetail = () => {
         description: "Ultra Video Bot is processing your episode",
       });
 
-      // Refresh episode data
-      fetchEpisode(episode.id);
+      // Refresh episode data and open player when video is ready
+      await fetchEpisode(episode.id);
+      
+      // Poll for video completion
+      const pollInterval = setInterval(async () => {
+        const { data } = await supabase
+          .from('episodes')
+          .select('video_status, video_url')
+          .eq('id', episode.id)
+          .single();
+
+        if (data?.video_status === 'completed' && data?.video_url) {
+          clearInterval(pollInterval);
+          setEpisode({ ...episode, ...data });
+          setIsPlayerOpen(true);
+          toast({
+            title: "🎬 Video Ready!",
+            description: "Your episode has been generated and is ready to watch",
+          });
+        }
+      }, 3000);
+
+      // Stop polling after 5 minutes
+      setTimeout(() => clearInterval(pollInterval), 300000);
     } catch (error) {
       toast({
         title: "Error",
@@ -258,21 +282,28 @@ const EpisodeDetail = () => {
                       />
                     )}
                   </div>
-                )}
-                <div className="flex gap-2">
-                  <Button onClick={handleGenerate} disabled={isGenerating}>
-                    <Play className="h-4 w-4 mr-2" />
-                    {isGenerating ? 'Generating...' : 'Generate Video'}
-                  </Button>
-                  {episode.video_url && (
-                    <Button variant="outline" asChild>
-                      <a href={episode.video_url} download>
-                        <Download className="h-4 w-4 mr-2" />
-                        Download
-                      </a>
-                    </Button>
-                  )}
-                </div>
+                 )}
+                 <div className="flex gap-2">
+                   {episode.video_url ? (
+                     <Button onClick={() => setIsPlayerOpen(true)}>
+                       <Play className="h-4 w-4 mr-2" />
+                       Play Video
+                     </Button>
+                   ) : (
+                     <Button onClick={handleGenerate} disabled={isGenerating}>
+                       <Play className="h-4 w-4 mr-2" />
+                       {isGenerating ? 'Generating...' : 'Generate Video'}
+                     </Button>
+                   )}
+                   {episode.video_url && (
+                     <Button variant="outline" asChild>
+                       <a href={episode.video_url} download>
+                         <Download className="h-4 w-4 mr-2" />
+                         Download
+                       </a>
+                     </Button>
+                   )}
+                 </div>
               </CardContent>
             </Card>
 
@@ -314,6 +345,16 @@ const EpisodeDetail = () => {
           </div>
         </div>
       </main>
+
+      <EpisodeVideoPlayer
+        isOpen={isPlayerOpen}
+        onClose={() => setIsPlayerOpen(false)}
+        videoUrl={episode?.video_url || null}
+        episodeTitle={episode?.title}
+        episodeNumber={episode?.episode_number}
+        season={episode?.season}
+        autoPlay={true}
+      />
     </div>
   );
 };

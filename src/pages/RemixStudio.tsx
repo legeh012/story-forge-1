@@ -9,6 +9,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { Loader2, Play } from "lucide-react";
 import SEOHead from "@/components/SEOHead";
+import { EpisodeVideoPlayer } from "@/components/EpisodeVideoPlayer";
 
 export default function RemixStudio() {
   const [episode, setEpisode] = useState("");
@@ -18,6 +19,7 @@ export default function RemixStudio() {
   const [remixable, setRemixable] = useState(true);
   const [isGenerating, setIsGenerating] = useState(false);
   const [videoUrl, setVideoUrl] = useState("");
+  const [isPlayerOpen, setIsPlayerOpen] = useState(false);
 
   const handleGenerate = async () => {
     if (!episode) {
@@ -47,6 +49,7 @@ export default function RemixStudio() {
       if (error) throw error;
 
       setVideoUrl(data.videoUrl);
+      setIsPlayerOpen(true);
       toast.success("Video generated and stored in Remix Vault! 🎬");
       
       console.log('Remix generated:', {
@@ -172,24 +175,16 @@ export default function RemixStudio() {
               </Button>
             </CardContent>
           </Card>
-
-          {videoUrl && (
-            <Card>
-              <CardHeader>
-                <CardTitle>Generated Video</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <video
-                  src={videoUrl}
-                  controls
-                  autoPlay
-                  className="w-full rounded-lg"
-                />
-              </CardContent>
-            </Card>
-          )}
         </div>
       </div>
+
+      <EpisodeVideoPlayer
+        isOpen={isPlayerOpen}
+        onClose={() => setIsPlayerOpen(false)}
+        videoUrl={videoUrl}
+        episodeTitle={episode || "Remix Video"}
+        autoPlay={true}
+      />
     </>
   );
 }
