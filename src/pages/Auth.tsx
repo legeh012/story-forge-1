@@ -10,6 +10,7 @@ import { useToast } from "@/components/ui/use-toast";
 import { Sparkles, Mail } from "lucide-react";
 import { Separator } from "@/components/ui/separator";
 import { z } from "zod";
+import { TwoFactorAuth } from "@/components/TwoFactorAuth";
 
 const signupSchema = z.object({
   email: z.string().trim().email({ message: "Invalid email address" }).max(255),
@@ -29,6 +30,7 @@ const Auth = () => {
   const [fullName, setFullName] = useState("");
   const [username, setUsername] = useState("");
   const [loading, setLoading] = useState(false);
+  const [show2FA, setShow2FA] = useState(false);
   const navigate = useNavigate();
   const { toast } = useToast();
 
@@ -74,8 +76,11 @@ const Auth = () => {
 
       toast({
         title: "Account created successfully!",
-        description: "Welcome to StoryForge",
+        description: "Set up two-factor authentication for extra security",
       });
+      
+      // Show 2FA setup after successful signup
+      setShow2FA(true);
     } catch (error: any) {
       if (error instanceof z.ZodError) {
         toast({
@@ -152,6 +157,19 @@ const Auth = () => {
       setLoading(false);
     }
   };
+
+  // If 2FA is being set up, show that instead
+  if (show2FA) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center p-4">
+        <div className="absolute inset-0 bg-gradient-to-b from-primary/10 via-transparent to-transparent pointer-events-none" />
+        <TwoFactorAuth 
+          onVerified={() => navigate("/dashboard")}
+          onSkip={() => navigate("/dashboard")}
+        />
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-background flex items-center justify-center p-4">
