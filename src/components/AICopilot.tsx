@@ -1,14 +1,17 @@
 import { useState, useRef, useEffect } from 'react';
-import { MessageCircle, X, Send, Loader2 } from 'lucide-react';
+import { MessageCircle, X, Send, Loader2, Code2, Sparkles, Terminal } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Card } from '@/components/ui/card';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/components/ui/use-toast';
+import { Badge } from '@/components/ui/badge';
 
 interface Message {
   role: 'user' | 'assistant';
   content: string;
+  action?: string;
+  timestamp?: string;
 }
 
 export const AICopilot = () => {
@@ -31,17 +34,20 @@ export const AICopilot = () => {
     if (!input.trim() || isLoading) return;
 
     const userMessage = input.trim();
+    const timestamp = new Date().toISOString();
     setInput('');
-    setMessages(prev => [...prev, { role: 'user', content: userMessage }]);
+    setMessages(prev => [...prev, { role: 'user', content: userMessage, timestamp }]);
     setIsLoading(true);
 
     try {
-      // Determine action based on keywords
-      let action: 'diagnose' | 'fix' | 'orchestrate' | 'generate_project' | undefined;
+      // Intelligent action detection
+      let action: 'diagnose' | 'fix' | 'orchestrate' | 'generate_project' | 'code_review' | undefined;
       const lowerInput = userMessage.toLowerCase();
       
-      if (lowerInput.includes('fix') || lowerInput.includes('repair') || lowerInput.includes('solve')) {
+      if (lowerInput.includes('fix') || lowerInput.includes('repair') || lowerInput.includes('solve') || lowerInput.includes('debug')) {
         action = 'fix';
+      } else if (lowerInput.includes('review') || lowerInput.includes('analyze') || lowerInput.includes('check code')) {
+        action = 'code_review';
       } else if (lowerInput.includes('orchestrate') || lowerInput.includes('coordinate') || lowerInput.includes('run bots')) {
         action = 'orchestrate';
       } else if (lowerInput.includes('generate project') || lowerInput.includes('create project') || lowerInput.includes('new project')) {
@@ -50,9 +56,12 @@ export const AICopilot = () => {
         action = 'diagnose';
       }
 
-      // Gather context
+      // Enhanced context gathering
       const context = {
         currentPage: window.location.pathname,
+        userAgent: navigator.userAgent,
+        timestamp,
+        screenSize: { width: window.innerWidth, height: window.innerHeight }
       };
 
       const { data, error } = await supabase.functions.invoke('ai-engineer', {
@@ -60,20 +69,26 @@ export const AICopilot = () => {
           message: userMessage,
           action,
           context,
-          conversationHistory: messages
+          conversationHistory: messages.slice(-10) // Last 10 messages for context
         }
       });
 
       if (error) throw error;
 
       const assistantMessage = data.response || 'Task completed!';
-      setMessages(prev => [...prev, { role: 'assistant', content: assistantMessage }]);
+      setMessages(prev => [...prev, { 
+        role: 'assistant', 
+        content: assistantMessage,
+        action,
+        timestamp: new Date().toISOString()
+      }]);
 
       toast({
-        title: 'AI Engineer',
-        description: `${action.charAt(0).toUpperCase() + action.slice(1)} completed successfully`
+        title: '✨ AI Code Space',
+        description: `${action.replace('_', ' ').charAt(0).toUpperCase() + action.slice(1).replace('_', ' ')} completed`
       });
     } catch (error) {
+      console.error('AI Engineer error:', error);
       toast({
         title: 'Error',
         description: 'Failed to process your request. Please try again.',
@@ -81,7 +96,8 @@ export const AICopilot = () => {
       });
       setMessages(prev => [...prev, { 
         role: 'assistant', 
-        content: 'I encountered an error processing your request. Please try again or rephrase your question.' 
+        content: 'I encountered an error processing your request. Please try again or rephrase your question.',
+        timestamp: new Date().toISOString()
       }]);
     } finally {
       setIsLoading(false);
@@ -99,65 +115,96 @@ export const AICopilot = () => {
     return (
       <Button
         onClick={() => setIsOpen(true)}
-        className="fixed bottom-6 right-6 h-14 w-14 rounded-full shadow-lg bg-gradient-to-r from-accent to-primary hover:opacity-90 transition-opacity z-50"
+        className="fixed bottom-6 right-6 h-16 w-16 rounded-full shadow-2xl bg-gradient-to-br from-primary via-accent to-primary hover:scale-110 transition-all duration-300 z-50 animate-pulse"
         size="icon"
       >
-        <MessageCircle className="h-6 w-6" />
+        <div className="relative">
+          <Sparkles className="h-7 w-7 text-primary-foreground" />
+          <Code2 className="h-4 w-4 text-primary-foreground absolute -bottom-1 -right-1" />
+        </div>
       </Button>
     );
   }
 
   return (
-    <Card className="fixed bottom-6 right-6 w-96 h-[600px] flex flex-col shadow-2xl z-50 bg-card border-border">
+    <Card className="fixed bottom-6 right-6 w-[480px] h-[700px] flex flex-col shadow-2xl z-50 bg-card/95 backdrop-blur-xl border-2 border-primary/20">
       {/* Header */}
-      <div className="flex items-center justify-between p-4 border-b border-border bg-gradient-to-r from-accent/10 to-primary/10">
-        <div className="flex items-center gap-2">
-          <MessageCircle className="h-5 w-5 text-accent" />
+      <div className="flex items-center justify-between p-4 border-b border-border bg-gradient-to-r from-primary/10 via-accent/10 to-primary/10">
+        <div className="flex items-center gap-3">
+          <div className="relative">
+            <Terminal className="h-6 w-6 text-primary" />
+            <Sparkles className="h-3 w-3 text-accent absolute -top-1 -right-1" />
+          </div>
           <div>
-            <h3 className="font-semibold">AI Engineer</h3>
-            <p className="text-xs text-muted-foreground">Diagnose, fix, orchestrate & generate</p>
+            <h3 className="font-bold text-lg">AI Code Space</h3>
+            <p className="text-xs text-muted-foreground">Natural language debugging & development</p>
           </div>
         </div>
         <Button
           variant="ghost"
           size="icon"
           onClick={() => setIsOpen(false)}
-          className="h-8 w-8"
+          className="h-8 w-8 hover:bg-destructive/10"
         >
           <X className="h-4 w-4" />
         </Button>
       </div>
 
       {/* Messages */}
-      <div className="flex-1 overflow-y-auto p-4 space-y-4">
+      <div className="flex-1 overflow-y-auto p-4 space-y-4 bg-gradient-to-b from-background/50 to-background">
         {messages.length === 0 && (
-          <div className="text-center text-muted-foreground text-sm mt-8">
-            <p className="mb-2 font-semibold">👋 AI Computer Engineer at your service!</p>
-            <p className="text-xs">I can:</p>
-            <ul className="text-xs mt-2 space-y-1 text-left max-w-xs mx-auto">
-              <li>🔍 <strong>Diagnose</strong> - Analyze issues in your app</li>
-              <li>🔧 <strong>Fix</strong> - Repair bugs and errors</li>
-              <li>🎯 <strong>Orchestrate</strong> - Coordinate bot workflows</li>
-              <li>🚀 <strong>Generate</strong> - Create complete projects</li>
-            </ul>
-            <p className="mt-4 text-xs italic">Try: "Fix the video rendering issue" or "Generate a new viral campaign project"</p>
+          <div className="text-center text-muted-foreground text-sm mt-8 space-y-4">
+            <div className="mb-4">
+              <Code2 className="h-12 w-12 mx-auto text-primary mb-2" />
+              <p className="text-base font-bold text-foreground">AI Code Space Ready</p>
+            </div>
+            <p className="text-xs text-muted-foreground px-4">
+              I understand natural language and can help you with your entire codebase
+            </p>
+            <div className="grid grid-cols-2 gap-2 max-w-md mx-auto mt-4">
+              <Badge variant="outline" className="justify-start p-2 text-xs">
+                <Sparkles className="h-3 w-3 mr-1" /> Debug issues
+              </Badge>
+              <Badge variant="outline" className="justify-start p-2 text-xs">
+                <Code2 className="h-3 w-3 mr-1" /> Review code
+              </Badge>
+              <Badge variant="outline" className="justify-start p-2 text-xs">
+                <Terminal className="h-3 w-3 mr-1" /> Fix errors
+              </Badge>
+              <Badge variant="outline" className="justify-start p-2 text-xs">
+                <MessageCircle className="h-3 w-3 mr-1" /> Explain logic
+              </Badge>
+            </div>
+            <p className="mt-6 text-xs italic text-muted-foreground px-4">
+              Try: "Debug the video rendering" or "Review my authentication code"
+            </p>
           </div>
         )}
         
         {messages.map((msg, idx) => (
           <div
             key={idx}
-            className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}
+            className={`flex flex-col ${msg.role === 'user' ? 'items-end' : 'items-start'}`}
           >
             <div
-              className={`max-w-[80%] rounded-lg p-3 ${
+              className={`max-w-[85%] rounded-xl p-3 shadow-lg ${
                 msg.role === 'user'
-                  ? 'bg-gradient-to-r from-accent to-primary text-primary-foreground'
-                  : 'bg-secondary text-foreground'
+                  ? 'bg-gradient-to-br from-primary to-accent text-primary-foreground'
+                  : 'bg-secondary/80 backdrop-blur text-foreground border border-border'
               }`}
             >
-              <p className="text-sm whitespace-pre-wrap">{msg.content}</p>
+              {msg.action && msg.role === 'assistant' && (
+                <Badge variant="secondary" className="mb-2 text-xs">
+                  {msg.action.replace('_', ' ')}
+                </Badge>
+              )}
+              <p className="text-sm whitespace-pre-wrap leading-relaxed">{msg.content}</p>
             </div>
+            {msg.timestamp && (
+              <span className="text-[10px] text-muted-foreground mt-1 px-2">
+                {new Date(msg.timestamp).toLocaleTimeString()}
+              </span>
+            )}
           </div>
         ))}
         
@@ -173,26 +220,33 @@ export const AICopilot = () => {
       </div>
 
       {/* Input */}
-      <div className="p-4 border-t border-border">
+      <div className="p-4 border-t border-border bg-background/50 backdrop-blur">
         <div className="flex gap-2">
           <Textarea
             value={input}
             onChange={(e) => setInput(e.target.value)}
             onKeyDown={handleKeyDown}
-            placeholder="Ask me anything..."
-            className="resize-none bg-background border-border"
-            rows={2}
+            placeholder="Describe what you need help with..."
+            className="resize-none bg-background border-border focus:border-primary transition-colors"
+            rows={3}
             disabled={isLoading}
           />
           <Button
             onClick={sendMessage}
             disabled={!input.trim() || isLoading}
             size="icon"
-            className="bg-gradient-to-r from-accent to-primary hover:opacity-90 transition-opacity"
+            className="bg-gradient-to-br from-primary via-accent to-primary hover:scale-105 transition-all shadow-lg h-auto"
           >
-            <Send className="h-4 w-4" />
+            {isLoading ? (
+              <Loader2 className="h-5 w-5 animate-spin" />
+            ) : (
+              <Send className="h-5 w-5" />
+            )}
           </Button>
         </div>
+        <p className="text-[10px] text-muted-foreground mt-2 text-center">
+          Powered by advanced AI • Context-aware • Natural language
+        </p>
       </div>
     </Card>
   );
