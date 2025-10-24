@@ -1,1 +1,0 @@
-<LocalVideoPlayer clipPath="/public/assets/say-wallahi-ep3.mp4" />
