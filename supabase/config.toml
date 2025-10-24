@@ -83,3 +83,18 @@ verify_jwt = false
 
 [functions.turbo-script-bot]
 verify_jwt = false
+
+[functions.confessional-logic-bot]
+verify_jwt = true
+
+[functions.suno-audio-sync-bot]
+verify_jwt = true
+
+[functions.ffmpeg-video-engine]
+verify_jwt = true
+
+[functions.generate-remix-video]
+verify_jwt = true
+
+[functions.compile-video]
+verify_jwt = true

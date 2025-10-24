@@ -20,6 +20,7 @@ import SystemMonitor from "./pages/SystemMonitor";
 import ViralBots from "./pages/ViralBots";
 import Install from "./pages/Install";
 import VideoGeneration from "./pages/VideoGeneration";
+import RemixStudio from "./pages/RemixStudio";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient({
@@ -57,6 +58,7 @@ const App = () => (
           <Route path="/system-monitor" element={<ProtectedRoute><SystemMonitor /></ProtectedRoute>} />
           <Route path="/viral-bots" element={<ProtectedRoute><ViralBots /></ProtectedRoute>} />
           <Route path="/video-generation" element={<ProtectedRoute><VideoGeneration /></ProtectedRoute>} />
+          <Route path="/remix-studio" element={<ProtectedRoute><RemixStudio /></ProtectedRoute>} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
         </Routes>

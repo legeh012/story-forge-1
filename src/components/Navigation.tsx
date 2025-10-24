@@ -11,6 +11,7 @@ const Navigation = () => {
     { to: "/create", label: "Create", icon: null },
     { to: "/media", label: "Media", icon: FolderOpen },
     { to: "/video-generation", label: "Video Studio", icon: Video },
+    { to: "/remix-studio", label: "Remix Studio", icon: Sparkles },
     { to: "/analytics", label: "Analytics", icon: TrendingUp },
     { to: "/system-monitor", label: "Monitor", icon: Activity },
     { to: "/viral-bots", label: "Viral Bots", icon: Bot },
