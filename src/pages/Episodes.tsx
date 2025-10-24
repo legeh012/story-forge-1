@@ -75,14 +75,14 @@ const Episodes = () => {
         projectId = newProject.id;
       }
 
-      console.log('🚀 Generating 3-minute video with full bot orchestration...');
+      console.log('🚀 Starting fully automated video production pipeline...');
 
       toast({
-        title: '🎬 Starting Video Production',
-        description: 'Activating AI bots for script generation, direction, and video rendering...',
+        title: '🎬 Full Production Started',
+        description: 'AI is generating your complete video episode - sit back and relax!',
       });
 
-      // Step 1: Generate episode from prompt
+      // SINGLE AUTOMATED PIPELINE: Episode → Script → Scenes → Video
       const { data: episodeData, error: episodeError } = await supabase.functions.invoke('generate-episode-from-prompt', {
         body: {
           projectId,
@@ -93,52 +93,35 @@ const Episodes = () => {
 
       if (episodeError) throw episodeError;
 
-      console.log('✅ Episode created:', episodeData);
-
       const episodeId = episodeData.episodeId;
 
       toast({
-        title: '🤖 Bot Orchestration Active',
-        description: 'AI bots are optimizing script, scenes, and generating video...',
+        title: '✅ Episode Created',
+        description: `"${episodeData.title}" is now processing automatically...`,
       });
 
-      // Step 2: Activate bot orchestrator for full production
-      const { data: orchestratorData, error: orchestratorError } = await supabase.functions.invoke('bot-orchestrator', {
-        body: {
-          campaign_type: 'full_viral_campaign',
-          topic: prompt.trim(),
-          episodeId,
-          projectId
-        }
-      });
-
-      if (orchestratorError) {
-        console.warn('Orchestrator warning:', orchestratorError);
-      } else {
-        console.log('✅ Orchestrator activated:', orchestratorData);
-      }
-
-      // Step 3: Trigger video rendering
-      const { data: videoData, error: videoError } = await supabase.functions.invoke('render-episode-video', {
-        body: {
-          episodeId
-        }
+      // Trigger complete video generation pipeline (all automated)
+      const { error: videoError } = await supabase.functions.invoke('generate-video', {
+        body: { episodeId }
       });
 
       if (videoError) {
-        console.warn('Video rendering warning:', videoError);
+        console.warn('Video pipeline error:', videoError);
+        toast({
+          title: '⚠️ Video Processing',
+          description: 'Video generation started but may take longer than expected. Check dashboard for progress.',
+          variant: 'default',
+        });
       } else {
-        console.log('✅ Video rendering started:', videoData);
+        toast({
+          title: '🎥 Complete Pipeline Active!',
+          description: 'Your video is being fully generated. This will take 2-5 minutes. Redirecting to dashboard...',
+        });
       }
-
-      toast({
-        title: '🎥 3-Minute Video Generation In Progress!',
-        description: `Episode: ${episodeData.title}\n\n🤖 ${orchestratorData?.activatedBots || 10} AI bots are working together to create your video. Check Dashboard for progress.`,
-      });
       
       setPrompt('');
       
-      // Navigate to dashboard to see the episode
+      // Navigate to dashboard to monitor progress
       setTimeout(() => {
         navigate('/dashboard');
       }, 2000);
