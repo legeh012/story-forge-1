@@ -27,6 +27,13 @@ export default function RemixStudio() {
 
     setIsGenerating(true);
     try {
+      // Get current user
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) {
+        toast.error("Please sign in to generate videos");
+        return;
+      }
+
       const { data, error } = await supabase.functions.invoke('generate-remix-video', {
         body: {
           episode,
@@ -40,7 +47,13 @@ export default function RemixStudio() {
       if (error) throw error;
 
       setVideoUrl(data.videoUrl);
-      toast.success("Video generated successfully!");
+      toast.success("Video generated and stored in Remix Vault! 🎬");
+      
+      console.log('Remix generated:', {
+        vaultId: data.vaultId,
+        videoUrl: data.videoUrl,
+        metadata: data.remixMetadata
+      });
     } catch (error) {
       console.error("Video generation error:", error);
       toast.error("Failed to generate video");

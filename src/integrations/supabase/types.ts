@@ -945,6 +945,62 @@ export type Database = {
         }
         Relationships: []
       }
+      remix_vault: {
+        Row: {
+          cast_reactions: Json | null
+          cast_selection: string | null
+          created_at: string | null
+          episode_id: string | null
+          id: string
+          music_track: string | null
+          overlay_style: string | null
+          remix_metadata: Json | null
+          ttl: string | null
+          updated_at: string | null
+          user_id: string
+          video_url: string
+          views: number | null
+        }
+        Insert: {
+          cast_reactions?: Json | null
+          cast_selection?: string | null
+          created_at?: string | null
+          episode_id?: string | null
+          id?: string
+          music_track?: string | null
+          overlay_style?: string | null
+          remix_metadata?: Json | null
+          ttl?: string | null
+          updated_at?: string | null
+          user_id: string
+          video_url: string
+          views?: number | null
+        }
+        Update: {
+          cast_reactions?: Json | null
+          cast_selection?: string | null
+          created_at?: string | null
+          episode_id?: string | null
+          id?: string
+          music_track?: string | null
+          overlay_style?: string | null
+          remix_metadata?: Json | null
+          ttl?: string | null
+          updated_at?: string | null
+          user_id?: string
+          video_url?: string
+          views?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "remix_vault_episode_id_fkey"
+            columns: ["episode_id"]
+            isOneToOne: false
+            referencedRelation: "episodes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       scheduled_posts: {
         Row: {
           activity_id: string | null
