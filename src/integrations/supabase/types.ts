@@ -288,6 +288,42 @@ export type Database = {
           },
         ]
       }
+      cloud_services: {
+        Row: {
+          config: Json | null
+          created_at: string | null
+          health_score: number | null
+          id: string
+          service_name: string
+          service_type: string
+          status: string | null
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          config?: Json | null
+          created_at?: string | null
+          health_score?: number | null
+          id?: string
+          service_name: string
+          service_type: string
+          status?: string | null
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          config?: Json | null
+          created_at?: string | null
+          health_score?: number | null
+          id?: string
+          service_name?: string
+          service_type?: string
+          status?: string | null
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       content_remixes: {
         Row: {
           activity_id: string | null
@@ -817,6 +853,39 @@ export type Database = {
           },
         ]
       }
+      orchestration_events: {
+        Row: {
+          actions_taken: Json | null
+          created_at: string | null
+          decision_reasoning: string | null
+          event_type: string
+          id: string
+          services_involved: string[] | null
+          success: boolean | null
+          user_id: string
+        }
+        Insert: {
+          actions_taken?: Json | null
+          created_at?: string | null
+          decision_reasoning?: string | null
+          event_type: string
+          id?: string
+          services_involved?: string[] | null
+          success?: boolean | null
+          user_id: string
+        }
+        Update: {
+          actions_taken?: Json | null
+          created_at?: string | null
+          decision_reasoning?: string | null
+          event_type?: string
+          id?: string
+          services_involved?: string[] | null
+          success?: boolean | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       performance_metrics: {
         Row: {
           activity_id: string | null
@@ -1050,6 +1119,94 @@ export type Database = {
             columns: ["activity_id"]
             isOneToOne: false
             referencedRelation: "bot_activities"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      service_metrics: {
+        Row: {
+          id: string
+          metadata: Json | null
+          metric_type: string
+          metric_value: number | null
+          recorded_at: string | null
+          service_id: string | null
+          user_id: string
+        }
+        Insert: {
+          id?: string
+          metadata?: Json | null
+          metric_type: string
+          metric_value?: number | null
+          recorded_at?: string | null
+          service_id?: string | null
+          user_id: string
+        }
+        Update: {
+          id?: string
+          metadata?: Json | null
+          metric_type?: string
+          metric_value?: number | null
+          recorded_at?: string | null
+          service_id?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "service_metrics_service_id_fkey"
+            columns: ["service_id"]
+            isOneToOne: false
+            referencedRelation: "cloud_services"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      service_operations: {
+        Row: {
+          completed_at: string | null
+          created_at: string | null
+          error_message: string | null
+          execution_time_ms: number | null
+          id: string
+          input_data: Json | null
+          operation_type: string
+          output_data: Json | null
+          service_id: string | null
+          status: string | null
+          user_id: string
+        }
+        Insert: {
+          completed_at?: string | null
+          created_at?: string | null
+          error_message?: string | null
+          execution_time_ms?: number | null
+          id?: string
+          input_data?: Json | null
+          operation_type: string
+          output_data?: Json | null
+          service_id?: string | null
+          status?: string | null
+          user_id: string
+        }
+        Update: {
+          completed_at?: string | null
+          created_at?: string | null
+          error_message?: string | null
+          execution_time_ms?: number | null
+          id?: string
+          input_data?: Json | null
+          operation_type?: string
+          output_data?: Json | null
+          service_id?: string | null
+          status?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "service_operations_service_id_fkey"
+            columns: ["service_id"]
+            isOneToOne: false
+            referencedRelation: "cloud_services"
             referencedColumns: ["id"]
           },
         ]
