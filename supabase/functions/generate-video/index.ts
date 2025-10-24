@@ -166,10 +166,10 @@ serve(async (req) => {
           .update({ video_status: 'rendering' })
           .eq('id', episodeId);
 
-        // PHASE 4: Ultra Video Bot - Parallel Frame Generation
-        console.log('🎥 PHASE 4: Ultra Video Bot - PARALLEL frame generation...');
-        const frameGenResponse = await fetch(
-          `${supabaseUrl}/functions/v1/parallel-frame-generator`,
+        // PHASE 4: Ultra Video Bot - Netflix-grade multi-scene generation
+        console.log('🎥 PHASE 4: Ultra Video Bot - Netflix-grade reality TV generation...');
+        const videoGenResponse = await fetch(
+          `${supabaseUrl}/functions/v1/ultra-video-bot`,
           {
             method: 'POST',
             headers: {
@@ -177,28 +177,28 @@ serve(async (req) => {
               'Authorization': `Bearer ${supabaseKey}`
             },
             body: JSON.stringify({
-              episodeId,
-              scenes,
-              userId: episode.user_id
+              episodeId: episodeId,
+              enhancementLevel: 'photorealistic'
             })
           }
         );
 
-        if (!frameGenResponse.ok) {
-          const errorText = await frameGenResponse.text();
-          throw new Error(`Ultra Video Bot failed: ${errorText}`);
+        if (!videoGenResponse.ok) {
+          const errorText = await videoGenResponse.text();
+          console.error('❌ Ultra Video Bot failed:', errorText);
+          throw new Error('Netflix-grade video generation failed');
         }
 
-        const frameData = await frameGenResponse.json();
+        const videoData = await videoGenResponse.json();
         
-        if (!frameData.success) {
-          throw new Error('Frame generation reported failure');
+        if (!videoData.success) {
+          throw new Error('Netflix-grade video generation reported failure');
         }
 
-        console.log(`✅ PHASE 4: ${frameData.performance?.framesGenerated || 0} frames generated`);
+        console.log(`✅ PHASE 4: ${videoData.framesGenerated || 0} scenes generated with Netflix-grade photorealism`);
 
-        // Video compilation is handled automatically by parallel-frame-generator
-        // Get public URL for the video manifest (not metadata.json)
+        // Video compilation is handled automatically by ultra-video-bot
+        // Get public URL for the video manifest
         const { data: { publicUrl } } = supabase.storage
           .from('episode-videos')
           .getPublicUrl(`${episode.user_id}/${episodeId}/video-manifest.json`);
@@ -272,7 +272,7 @@ serve(async (req) => {
         }
 
         console.log(`=== 🎉 COLLABORATIVE BOT PIPELINE COMPLETE for ${episodeId} ===`);
-        console.log(`Performance: ${JSON.stringify(frameData.performance)}`);
+        console.log(`Video Frames: ${videoData.framesGenerated || 0} Netflix-grade scenes`);
         console.log(`Total Bots Activated: ${phase1Success + phase5Success + 3} bots working in harmony`);
         
       } catch (error) {
