@@ -6,12 +6,10 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { ArrowLeft, Play, Download, Edit2, Save } from "lucide-react";
+import { ArrowLeft, Play, Edit2, Save, ExternalLink } from "lucide-react";
 import { Link } from "react-router-dom";
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from "@/hooks/use-toast";
-import { VideoManifestPlayer } from "@/components/VideoManifestPlayer";
 import { EpisodeVideoPlayer } from "@/components/EpisodeVideoPlayer";
 
 interface Episode {
@@ -262,45 +260,34 @@ const EpisodeDetail = () => {
               </CardHeader>
               <CardContent>
                 {episode.video_url && (
-                  <div className="mb-4">
-                    {episode.video_url.endsWith('.json') ? (
-                      <VideoManifestPlayer
-                        manifestUrl={episode.video_url}
-                        className="w-full rounded-lg aspect-video"
-                      />
-                    ) : episode.video_url.endsWith('.mp4') ? (
-                      <video
-                        src={episode.video_url}
-                        controls
-                        className="w-full rounded-lg"
-                      />
-                    ) : (
-                      <img
-                        src={episode.video_url}
-                        alt="Episode preview"
-                        className="w-full rounded-lg"
-                      />
-                    )}
+                  <div className="mb-4 relative w-full" style={{ paddingTop: "56.25%" }}>
+                    <iframe
+                      src={`https://www.youtube.com/embed/${episode.video_url.includes('youtube.com') || episode.video_url.includes('youtu.be') ? episode.video_url.match(/(?:youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/embed\/)([^&\s?]+)/)?.[1] || episode.video_url : episode.video_url}`}
+                      title={episode.title}
+                      className="absolute top-0 left-0 w-full h-full rounded-lg"
+                      allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                      allowFullScreen
+                    />
                   </div>
                  )}
                  <div className="flex gap-2">
                    {episode.video_url ? (
-                     <Button onClick={() => setIsPlayerOpen(true)}>
-                       <Play className="h-4 w-4 mr-2" />
-                       Play Video
-                     </Button>
+                     <>
+                       <Button onClick={() => setIsPlayerOpen(true)}>
+                         <Play className="h-4 w-4 mr-2" />
+                         Play Video
+                       </Button>
+                       <Button variant="outline" asChild>
+                         <a href={episode.video_url} target="_blank" rel="noopener noreferrer">
+                           <ExternalLink className="h-4 w-4 mr-2" />
+                           Open in YouTube
+                         </a>
+                       </Button>
+                     </>
                    ) : (
                      <Button onClick={handleGenerate} disabled={isGenerating}>
                        <Play className="h-4 w-4 mr-2" />
                        {isGenerating ? 'Generating...' : 'Generate Video'}
-                     </Button>
-                   )}
-                   {episode.video_url && (
-                     <Button variant="outline" asChild>
-                       <a href={episode.video_url} download>
-                         <Download className="h-4 w-4 mr-2" />
-                         Download
-                       </a>
                      </Button>
                    )}
                  </div>

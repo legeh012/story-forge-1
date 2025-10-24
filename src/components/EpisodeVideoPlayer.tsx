@@ -1,8 +1,6 @@
-import { useState, useEffect } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
-import { Play, Pause, Volume2, VolumeX, Maximize, Download, Share2 } from 'lucide-react';
-import { VideoManifestPlayer } from './VideoManifestPlayer';
+import { Share2, ExternalLink } from 'lucide-react';
 import { toast } from 'sonner';
 
 interface EpisodeVideoPlayerProps {
@@ -15,6 +13,20 @@ interface EpisodeVideoPlayerProps {
   autoPlay?: boolean;
 }
 
+// Extract YouTube video ID from various YouTube URL formats
+const extractYouTubeId = (url: string): string | null => {
+  const patterns = [
+    /(?:youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/embed\/)([^&\s?]+)/,
+    /^([a-zA-Z0-9_-]{11})$/  // Direct video ID
+  ];
+  
+  for (const pattern of patterns) {
+    const match = url.match(pattern);
+    if (match) return match[1];
+  }
+  return null;
+};
+
 export function EpisodeVideoPlayer({
   isOpen,
   onClose,
@@ -24,15 +36,16 @@ export function EpisodeVideoPlayer({
   season,
   autoPlay = false
 }: EpisodeVideoPlayerProps) {
-  const [isPlaying, setIsPlaying] = useState(autoPlay);
-  const [isMuted, setIsMuted] = useState(false);
-  const [showControls, setShowControls] = useState(true);
+  if (!videoUrl) return null;
 
-  useEffect(() => {
-    if (isOpen && autoPlay) {
-      setIsPlaying(true);
-    }
-  }, [isOpen, autoPlay]);
+  const episodeInfo = season && episodeNumber 
+    ? `S${season}E${episodeNumber} - ${episodeTitle}` 
+    : episodeTitle;
+
+  const youtubeId = extractYouTubeId(videoUrl);
+  const embedUrl = youtubeId 
+    ? `https://www.youtube.com/embed/${youtubeId}${autoPlay ? '?autoplay=1' : ''}`
+    : null;
 
   const handleShare = () => {
     if (videoUrl) {
@@ -41,34 +54,11 @@ export function EpisodeVideoPlayer({
     }
   };
 
-  const handleDownload = () => {
+  const handleOpenYouTube = () => {
     if (videoUrl) {
-      const link = document.createElement('a');
-      link.href = videoUrl;
-      link.download = `${episodeTitle.replace(/\s+/g, '_')}.mp4`;
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-      toast.success('Download started!');
+      window.open(videoUrl, '_blank');
     }
   };
-
-  const handleFullscreen = () => {
-    const videoElement = document.querySelector('video');
-    if (videoElement) {
-      if (document.fullscreenElement) {
-        document.exitFullscreen();
-      } else {
-        videoElement.requestFullscreen();
-      }
-    }
-  };
-
-  if (!videoUrl) return null;
-
-  const episodeInfo = season && episodeNumber 
-    ? `S${season}E${episodeNumber} - ${episodeTitle}` 
-    : episodeTitle;
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
@@ -79,114 +69,47 @@ export function EpisodeVideoPlayer({
           </DialogTitle>
         </DialogHeader>
         
-        <div 
-          className="relative bg-black group"
-          onMouseEnter={() => setShowControls(true)}
-          onMouseLeave={() => setShowControls(false)}
-        >
-          {videoUrl.endsWith('.json') ? (
-            <VideoManifestPlayer
-              manifestUrl={videoUrl}
-              className="w-full aspect-video"
-            />
-          ) : (
-            <video
-              src={videoUrl}
-              controls={showControls}
-              autoPlay={autoPlay}
-              muted={isMuted}
-              className="w-full aspect-video"
-              onPlay={() => setIsPlaying(true)}
-              onPause={() => setIsPlaying(false)}
-            />
-          )}
-
-          {/* Custom Controls Overlay */}
-          <div 
-            className={`absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/80 to-transparent p-6 transition-opacity duration-300 ${
-              showControls ? 'opacity-100' : 'opacity-0'
-            }`}
-          >
-            <div className="flex items-center justify-between gap-4">
-              <div className="flex items-center gap-2">
-                <Button
-                  size="icon"
-                  variant="ghost"
-                  className="text-white hover:bg-white/20"
-                  onClick={() => {
-                    const video = document.querySelector('video');
-                    if (video) {
-                      if (isPlaying) {
-                        video.pause();
-                      } else {
-                        video.play();
-                      }
-                    }
-                  }}
-                >
-                  {isPlaying ? (
-                    <Pause className="h-5 w-5" />
-                  ) : (
-                    <Play className="h-5 w-5" />
-                  )}
-                </Button>
-
-                <Button
-                  size="icon"
-                  variant="ghost"
-                  className="text-white hover:bg-white/20"
-                  onClick={() => {
-                    setIsMuted(!isMuted);
-                    const video = document.querySelector('video');
-                    if (video) {
-                      video.muted = !isMuted;
-                    }
-                  }}
-                >
-                  {isMuted ? (
-                    <VolumeX className="h-5 w-5" />
-                  ) : (
-                    <Volume2 className="h-5 w-5" />
-                  )}
-                </Button>
-              </div>
-
-              <div className="flex items-center gap-2">
-                <Button
-                  size="icon"
-                  variant="ghost"
-                  className="text-white hover:bg-white/20"
-                  onClick={handleShare}
-                >
-                  <Share2 className="h-5 w-5" />
-                </Button>
-
-                <Button
-                  size="icon"
-                  variant="ghost"
-                  className="text-white hover:bg-white/20"
-                  onClick={handleDownload}
-                >
-                  <Download className="h-5 w-5" />
-                </Button>
-
-                <Button
-                  size="icon"
-                  variant="ghost"
-                  className="text-white hover:bg-white/20"
-                  onClick={handleFullscreen}
-                >
-                  <Maximize className="h-5 w-5" />
-                </Button>
-              </div>
+        <div className="relative bg-black">
+          {embedUrl ? (
+            <div className="relative w-full" style={{ paddingTop: "56.25%" }}>
+              <iframe
+                src={embedUrl}
+                title={episodeInfo}
+                className="absolute top-0 left-0 w-full h-full"
+                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                allowFullScreen
+              />
             </div>
-          </div>
+          ) : (
+            <div className="aspect-video flex items-center justify-center bg-muted text-muted-foreground">
+              <p>Invalid YouTube URL</p>
+            </div>
+          )}
         </div>
 
         <div className="p-6 pt-4 bg-card">
-          <p className="text-sm text-muted-foreground">
-            Your episode has been generated and is ready to watch! Use the controls to play, share, or download.
-          </p>
+          <div className="flex items-center justify-between">
+            <p className="text-sm text-muted-foreground">
+              Your episode is ready to watch on YouTube!
+            </p>
+            <div className="flex gap-2">
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={handleShare}
+              >
+                <Share2 className="h-4 w-4 mr-2" />
+                Share
+              </Button>
+              <Button
+                size="sm"
+                onClick={handleOpenYouTube}
+              >
+                <ExternalLink className="h-4 w-4 mr-2" />
+                Open in YouTube
+              </Button>
+            </div>
+          </div>
         </div>
       </DialogContent>
     </Dialog>
