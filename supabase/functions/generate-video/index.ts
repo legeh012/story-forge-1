@@ -166,8 +166,41 @@ serve(async (req) => {
           .update({ video_status: 'rendering' })
           .eq('id', episodeId);
 
-        // PHASE 4: Ultra Video Bot - Parallel Frame Generation
-        console.log('🎥 PHASE 4: Ultra Video Bot - PARALLEL frame generation...');
+        // PHASE 4A: Godlike Voice Generation (Parallel with frame generation)
+        console.log('🎙️ PHASE 4A: Godlike Voice Bot - Generating scene dialogue...');
+        const voicePromises = scenes.map(async (scene: any, index: number) => {
+          const dialogue = scene.dialogue || scene.description || '';
+          if (!dialogue) return null;
+
+          try {
+            const voiceResponse = await fetch(`${supabaseUrl}/functions/v1/godlike-voice-bot`, {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${supabaseKey}`
+              },
+              body: JSON.stringify({
+                text: dialogue,
+                voice: 'nova', // Dynamic voice selection could be added per character
+                speed: 1.0,
+                episodeId: episodeId
+              })
+            });
+
+            if (voiceResponse.ok) {
+              const voiceData = await voiceResponse.json();
+              console.log(`✅ Voice generated for scene ${index + 1}`);
+              return { sceneIndex: index, ...voiceData };
+            }
+            return null;
+          } catch (err) {
+            console.log(`⚠️ Voice gen failed for scene ${index + 1}:`, err);
+            return null;
+          }
+        });
+
+        // PHASE 4B: Ultra Video Bot - Parallel Frame Generation
+        console.log('🎥 PHASE 4B: Ultra Video Bot - PARALLEL frame generation...');
         const frameGenResponse = await fetch(
           `${supabaseUrl}/functions/v1/parallel-frame-generator`,
           {
@@ -195,7 +228,11 @@ serve(async (req) => {
           throw new Error('Frame generation reported failure');
         }
 
-        console.log(`✅ PHASE 4: ${frameData.performance?.framesGenerated || 0} frames generated`);
+        // Wait for voice generation to complete
+        const voiceResults = await Promise.allSettled(voicePromises);
+        const successfulVoices = voiceResults.filter(r => r.status === 'fulfilled' && r.value).length;
+        console.log(`✅ PHASE 4A: ${successfulVoices}/${scenes.length} scene voiceovers generated`);
+        console.log(`✅ PHASE 4B: ${frameData.performance?.framesGenerated || 0} frames generated`);
 
         // Video compilation is handled automatically by parallel-frame-generator
         // Get public URL for the video manifest (not metadata.json)
