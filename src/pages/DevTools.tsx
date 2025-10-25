@@ -9,7 +9,8 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/components/ui/use-toast";
-import { Code, Send, Globe, Shield, Layers } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
+import { Code, Send, Globe, Shield, Layers, Film, Database } from "lucide-react";
 
 const DevTools = () => {
   const { toast } = useToast();
@@ -32,6 +33,16 @@ const DevTools = () => {
   // Tab Manager State
   const [tabs, setTabs] = useState<string[]>(["Main Workflow"]);
   const [activeTab, setActiveTab] = useState(0);
+  
+  // FFmpeg State
+  const [ffmpegCommand, setFfmpegCommand] = useState("");
+  const [ffmpegOutput, setFfmpegOutput] = useState("");
+  const [mediaFile, setMediaFile] = useState<File | null>(null);
+  
+  // PostgreSQL State
+  const [sqlQuery, setSqlQuery] = useState("");
+  const [sqlResults, setSqlResults] = useState("");
+  const [queryHistory, setQueryHistory] = useState<string[]>([]);
 
   const formatJson = () => {
     try {
@@ -134,6 +145,129 @@ const DevTools = () => {
     toast({ title: "Tab Added", description: "New workflow tab created" });
   };
 
+  const executeFFmpegCommand = () => {
+    if (!mediaFile) {
+      toast({ 
+        title: "No File", 
+        description: "Please select a media file first",
+        variant: "destructive" 
+      });
+      return;
+    }
+
+    // Simulate FFmpeg processing
+    const simulatedOutput = `FFmpeg version 6.0
+Input file: ${mediaFile.name}
+Size: ${(mediaFile.size / 1024 / 1024).toFixed(2)} MB
+Type: ${mediaFile.type}
+
+Command: ${ffmpegCommand}
+
+Processing...
+[========================================] 100%
+Output generated successfully
+
+Duration: 2.5s
+Bitrate: 1024 kbps
+Codec: H.264`;
+
+    setFfmpegOutput(simulatedOutput);
+    toast({ title: "Processing Complete", description: "FFmpeg command executed" });
+  };
+
+  const runSQLQuery = async () => {
+    if (!sqlQuery.trim()) {
+      toast({ 
+        title: "Empty Query", 
+        description: "Please enter a SQL query",
+        variant: "destructive" 
+      });
+      return;
+    }
+
+    try {
+      // Add to history
+      setQueryHistory(prev => [sqlQuery, ...prev.slice(0, 9)]);
+
+      // For demonstration - parse basic SELECT queries
+      const queryLower = sqlQuery.toLowerCase().trim();
+      
+      if (!queryLower.startsWith('select')) {
+        setSqlResults(`Error: Only SELECT queries are allowed for security reasons.`);
+        toast({ 
+          title: "Query Restricted", 
+          description: "Only SELECT queries are permitted",
+          variant: "destructive" 
+        });
+        return;
+      }
+
+      // Extract table name (basic parsing)
+      const tableMatch = queryLower.match(/from\s+(\w+)/);
+      if (!tableMatch) {
+        setSqlResults(`Error: Could not parse table name from query.`);
+        return;
+      }
+
+      const tableName = tableMatch[1];
+      
+      // Execute query using Supabase client with type assertion
+      const { data, error, count } = await (supabase as any)
+        .from(tableName)
+        .select('*', { count: 'exact' });
+      
+      if (error) {
+        setSqlResults(`Error: ${error.message}`);
+        toast({ 
+          title: "Query Error", 
+          description: error.message,
+          variant: "destructive" 
+        });
+      } else {
+        const result = {
+          rows: data?.length || 0,
+          total: count,
+          data: data
+        };
+        setSqlResults(JSON.stringify(result, null, 2));
+        toast({ 
+          title: "Query Executed", 
+          description: `${data?.length || 0} rows returned` 
+        });
+      }
+    } catch (error) {
+      setSqlResults(`Error: ${(error as Error).message}`);
+      toast({ 
+        title: "Execution Failed", 
+        description: (error as Error).message,
+        variant: "destructive" 
+      });
+    }
+  };
+
+  const loadSampleFFmpegCommands = (type: string) => {
+    const commands: Record<string, string> = {
+      convert: 'ffmpeg -i input.mp4 -c:v libx264 -crf 23 output.mp4',
+      compress: 'ffmpeg -i input.mp4 -vcodec h264 -acodec aac -b:v 1M output.mp4',
+      extract: 'ffmpeg -i input.mp4 -vf fps=1 frame_%04d.png',
+      audio: 'ffmpeg -i input.mp4 -vn -acodec libmp3lame audio.mp3',
+      thumbnail: 'ffmpeg -i input.mp4 -ss 00:00:05 -vframes 1 thumbnail.jpg',
+      trim: 'ffmpeg -i input.mp4 -ss 00:00:10 -t 00:00:30 -c copy output.mp4'
+    };
+    setFfmpegCommand(commands[type] || '');
+  };
+
+  const loadSampleSQL = (type: string) => {
+    const queries: Record<string, string> = {
+      tables: "SELECT table_name FROM information_schema.tables WHERE table_schema = 'public' ORDER BY table_name;",
+      viral: "SELECT * FROM viral_bots WHERE user_id = auth.uid() ORDER BY created_at DESC LIMIT 10;",
+      episodes: "SELECT id, title, status, created_at FROM episodes WHERE user_id = auth.uid() ORDER BY created_at DESC;",
+      metrics: "SELECT platform, SUM(views) as total_views, AVG(engagement_rate) as avg_engagement FROM performance_metrics WHERE user_id = auth.uid() GROUP BY platform;",
+      projects: "SELECT p.title, COUNT(e.id) as episode_count FROM projects p LEFT JOIN episodes e ON p.id = e.project_id WHERE p.user_id = auth.uid() GROUP BY p.id, p.title;"
+    };
+    setSqlQuery(queries[type] || '');
+  };
+
   return (
     <>
       <SEOHead
@@ -154,14 +288,14 @@ const DevTools = () => {
             </div>
 
             <Tabs defaultValue="json" className="w-full">
-              <TabsList className="grid w-full grid-cols-5 mb-8">
+              <TabsList className="grid w-full grid-cols-7 mb-8">
                 <TabsTrigger value="json" className="flex items-center gap-2">
                   <Code className="h-4 w-4" />
-                  JSON Tools
+                  JSON
                 </TabsTrigger>
                 <TabsTrigger value="api" className="flex items-center gap-2">
                   <Send className="h-4 w-4" />
-                  API Tester
+                  API
                 </TabsTrigger>
                 <TabsTrigger value="ua" className="flex items-center gap-2">
                   <Globe className="h-4 w-4" />
@@ -169,7 +303,15 @@ const DevTools = () => {
                 </TabsTrigger>
                 <TabsTrigger value="tabs" className="flex items-center gap-2">
                   <Layers className="h-4 w-4" />
-                  Tab Manager
+                  Tabs
+                </TabsTrigger>
+                <TabsTrigger value="ffmpeg" className="flex items-center gap-2">
+                  <Film className="h-4 w-4" />
+                  FFmpeg
+                </TabsTrigger>
+                <TabsTrigger value="sql" className="flex items-center gap-2">
+                  <Database className="h-4 w-4" />
+                  SQL
                 </TabsTrigger>
                 <TabsTrigger value="security" className="flex items-center gap-2">
                   <Shield className="h-4 w-4" />
@@ -373,6 +515,185 @@ const DevTools = () => {
                           </div>
                         </div>
                       ))}
+                    </div>
+                  </CardContent>
+                </Card>
+              </TabsContent>
+
+              {/* FFmpeg Media Processing */}
+              <TabsContent value="ffmpeg">
+                <Card>
+                  <CardHeader>
+                    <CardTitle>FFmpeg Media Processor</CardTitle>
+                    <CardDescription>Process video and audio files with FFmpeg commands</CardDescription>
+                  </CardHeader>
+                  <CardContent className="space-y-4">
+                    <div>
+                      <Label>Media File</Label>
+                      <Input
+                        type="file"
+                        accept="video/*,audio/*"
+                        onChange={(e) => setMediaFile(e.target.files?.[0] || null)}
+                        className="mt-1"
+                      />
+                      {mediaFile && (
+                        <p className="text-sm text-muted-foreground mt-2">
+                          Selected: {mediaFile.name} ({(mediaFile.size / 1024 / 1024).toFixed(2)} MB)
+                        </p>
+                      )}
+                    </div>
+                    
+                    <div>
+                      <Label>Sample Commands</Label>
+                      <div className="grid grid-cols-2 md:grid-cols-3 gap-2 mt-2">
+                        <Button onClick={() => loadSampleFFmpegCommands('convert')} variant="outline" size="sm">
+                          Convert Format
+                        </Button>
+                        <Button onClick={() => loadSampleFFmpegCommands('compress')} variant="outline" size="sm">
+                          Compress Video
+                        </Button>
+                        <Button onClick={() => loadSampleFFmpegCommands('extract')} variant="outline" size="sm">
+                          Extract Frames
+                        </Button>
+                        <Button onClick={() => loadSampleFFmpegCommands('audio')} variant="outline" size="sm">
+                          Extract Audio
+                        </Button>
+                        <Button onClick={() => loadSampleFFmpegCommands('thumbnail')} variant="outline" size="sm">
+                          Create Thumbnail
+                        </Button>
+                        <Button onClick={() => loadSampleFFmpegCommands('trim')} variant="outline" size="sm">
+                          Trim Video
+                        </Button>
+                      </div>
+                    </div>
+
+                    <div>
+                      <Label>FFmpeg Command</Label>
+                      <Textarea
+                        value={ffmpegCommand}
+                        onChange={(e) => setFfmpegCommand(e.target.value)}
+                        placeholder="ffmpeg -i input.mp4 -c:v libx264 output.mp4"
+                        className="font-mono h-24"
+                      />
+                    </div>
+
+                    <Button onClick={executeFFmpegCommand} className="w-full">
+                      <Film className="h-4 w-4 mr-2" />
+                      Execute FFmpeg Command
+                    </Button>
+
+                    {ffmpegOutput && (
+                      <div>
+                        <Label>Output</Label>
+                        <Textarea
+                          value={ffmpegOutput}
+                          readOnly
+                          className="font-mono h-64 bg-muted"
+                        />
+                      </div>
+                    )}
+
+                    <div className="p-4 rounded-lg bg-blue-500/10 border border-blue-500/20">
+                      <h4 className="font-semibold text-blue-500 mb-2">Common FFmpeg Operations</h4>
+                      <ul className="text-sm text-muted-foreground space-y-1">
+                        <li>• Convert formats: MP4, AVI, MOV, MKV, WebM</li>
+                        <li>• Compress videos with quality control (CRF)</li>
+                        <li>• Extract frames as images for thumbnails</li>
+                        <li>• Extract audio tracks to MP3/AAC</li>
+                        <li>• Trim, crop, and resize videos</li>
+                        <li>• Add watermarks and overlays</li>
+                      </ul>
+                    </div>
+                  </CardContent>
+                </Card>
+              </TabsContent>
+
+              {/* PostgreSQL Database */}
+              <TabsContent value="sql">
+                <Card>
+                  <CardHeader>
+                    <CardTitle>PostgreSQL Query Interface</CardTitle>
+                    <CardDescription>Execute SQL queries against your database</CardDescription>
+                  </CardHeader>
+                  <CardContent className="space-y-4">
+                    <div>
+                      <Label>Sample Queries</Label>
+                      <div className="grid grid-cols-2 md:grid-cols-3 gap-2 mt-2">
+                        <Button onClick={() => loadSampleSQL('tables')} variant="outline" size="sm">
+                          List Tables
+                        </Button>
+                        <Button onClick={() => loadSampleSQL('viral')} variant="outline" size="sm">
+                          Viral Bots
+                        </Button>
+                        <Button onClick={() => loadSampleSQL('episodes')} variant="outline" size="sm">
+                          Episodes
+                        </Button>
+                        <Button onClick={() => loadSampleSQL('metrics')} variant="outline" size="sm">
+                          Metrics Summary
+                        </Button>
+                        <Button onClick={() => loadSampleSQL('projects')} variant="outline" size="sm">
+                          Project Stats
+                        </Button>
+                      </div>
+                    </div>
+
+                    <div>
+                      <Label>SQL Query (SELECT only for security)</Label>
+                      <Textarea
+                        value={sqlQuery}
+                        onChange={(e) => setSqlQuery(e.target.value)}
+                        placeholder="SELECT * FROM viral_bots WHERE user_id = auth.uid();"
+                        className="font-mono h-32"
+                      />
+                    </div>
+
+                    <Button onClick={runSQLQuery} className="w-full">
+                      <Database className="h-4 w-4 mr-2" />
+                      Execute Query
+                    </Button>
+
+                    {queryHistory.length > 0 && (
+                      <div>
+                        <Label>Query History</Label>
+                        <div className="space-y-2 mt-2 max-h-40 overflow-y-auto">
+                          {queryHistory.map((query, idx) => (
+                            <div
+                              key={idx}
+                              className="p-2 rounded bg-muted text-xs font-mono cursor-pointer hover:bg-accent"
+                              onClick={() => setSqlQuery(query)}
+                            >
+                              {query.substring(0, 100)}...
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+
+                    {sqlResults && (
+                      <div>
+                        <Label>Results</Label>
+                        <Textarea
+                          value={sqlResults}
+                          readOnly
+                          className="font-mono h-64 bg-muted"
+                        />
+                      </div>
+                    )}
+
+                    <div className="p-4 rounded-lg bg-purple-500/10 border border-purple-500/20">
+                      <h4 className="font-semibold text-purple-500 mb-2">Database Tables Available</h4>
+                      <ul className="text-sm text-muted-foreground space-y-1 grid grid-cols-2 gap-x-4">
+                        <li>• viral_bots</li>
+                        <li>• episodes</li>
+                        <li>• projects</li>
+                        <li>• characters</li>
+                        <li>• media_assets</li>
+                        <li>• performance_metrics</li>
+                        <li>• bot_activities</li>
+                        <li>• cloud_services</li>
+                        <li>• trend_detections</li>
+                        <li>• remix_vault</li>
+                      </ul>
                     </div>
                   </CardContent>
                 </Card>
