@@ -80,6 +80,11 @@ export const EpisodeRegenerator = () => {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error('Not authenticated');
 
+      toast({
+        title: '🎬 God Mode Activated',
+        description: 'Reality TV production bots working together for maximum speed',
+      });
+
       // Create or get Khat and Karma project
       let projectId;
       const { data: existingProject } = await supabase
@@ -169,11 +174,12 @@ export const EpisodeRegenerator = () => {
           episodeId = newEpisode.id;
         }
 
-        // Generate cinematic video
-        const { error: genError } = await supabase.functions.invoke('cinematic-video-generator', {
+        // Activate God Mode production
+        const { data: godModeResult, error: genError } = await supabase.functions.invoke('reality-tv-god-mode', {
           body: {
             episodeId,
-            quality: 'cinematic'
+            projectId,
+            mode: 'ultra'
           }
         });
 
@@ -186,9 +192,10 @@ export const EpisodeRegenerator = () => {
           });
         } else {
           setCompletedEpisodes(prev => [...prev, ep.number]);
+          console.log(`God Mode result for Episode ${ep.number}:`, godModeResult);
           toast({
-            title: `Episode ${ep.number} Started`,
-            description: 'Video generation in progress with scenes, voiceovers, and natural movement',
+            title: `🎯 Episode ${ep.number} Complete`,
+            description: `Processed through ${godModeResult?.executionLog?.length || 'multiple'} production bots`,
           });
         }
 
@@ -199,8 +206,8 @@ export const EpisodeRegenerator = () => {
       }
 
       toast({
-        title: 'All Episodes Generated!',
-        description: `Khat and Karma - ${episodes.length} episodes are being generated with cinematic quality.`,
+        title: '🎬 God Mode Complete!',
+        description: `All ${episodes.length} episodes produced with reality TV god-level production bots.`,
       });
 
     } catch (error) {
@@ -338,7 +345,7 @@ export const EpisodeRegenerator = () => {
         </Button>
 
         <p className="text-xs text-center text-muted-foreground">
-          All {episodes.length} episodes will have 8-12 cinematic scenes with AI voiceovers, natural movement, and automatic YouTube upload
+          🎯 God-level production: All bots work together in parallel phases for maximum speed and quality
         </p>
       </CardContent>
     </Card>

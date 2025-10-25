@@ -1,5 +1,8 @@
 project_id = "akmeovotnnqbxotlerie"
 
+[functions.reality-tv-god-mode]
+verify_jwt = true
+
 [functions.import-from-photos]
 verify_jwt = true
 
