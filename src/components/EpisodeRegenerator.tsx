@@ -332,9 +332,9 @@ export const EpisodeRegenerator = () => {
         description: 'Ultra-video-bot generating photorealistic scenes...',
       });
 
-      // Poll for video completion (max 5 minutes)
+      // Poll for video completion (max 10 minutes)
       let attempts = 0;
-      const maxAttempts = 60; // 5 minutes (5 second intervals)
+      const maxAttempts = 120; // 10 minutes (5 second intervals)
       
       const pollInterval = setInterval(async () => {
         attempts++;
@@ -350,9 +350,12 @@ export const EpisodeRegenerator = () => {
           return;
         }
 
-        if (updatedEpisode.video_status === 'completed') {
+        console.log(`🔄 Poll ${attempts}/${maxAttempts}: Status=${updatedEpisode.video_status}, URL=${updatedEpisode.video_url ? 'present' : 'null'}`);
+
+        if (updatedEpisode.video_status === 'completed' && updatedEpisode.video_url) {
           clearInterval(pollInterval);
           setProgress(100);
+          setCompletedEpisodes(prev => [...prev, 1]);
           toast({
             title: '🎉 Video Complete!',
             description: 'Netflix-grade MP4 video successfully generated',
@@ -368,11 +371,12 @@ export const EpisodeRegenerator = () => {
           });
           setRegenerating(false);
           setCurrentEpisode(null);
+          setProgress(0);
         } else if (attempts >= maxAttempts) {
           clearInterval(pollInterval);
           toast({
             title: 'Video Still Processing',
-            description: 'Video generation is taking longer than expected. Check back soon.',
+            description: 'Video generation is taking longer than expected. Check back in a few minutes.',
           });
           setRegenerating(false);
           setCurrentEpisode(null);
@@ -380,6 +384,11 @@ export const EpisodeRegenerator = () => {
           // Update progress based on status
           const statusProgress = updatedEpisode.video_status === 'rendering' ? 75 : 50;
           setProgress(statusProgress);
+          
+          // Log progress every 20 seconds
+          if (attempts % 4 === 0) {
+            console.log(`⏳ Still rendering... ${Math.floor(attempts * 5 / 60)} min elapsed`);
+          }
         }
       }, 5000); // Poll every 5 seconds
 

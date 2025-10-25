@@ -376,6 +376,24 @@ ABSOLUTELY FORBIDDEN FOR REALITY TV PHOTOREALISM:
     console.log('✅ MP4 video compiled:', videoData.videoUrl);
     console.log(`📺 NETFLIX REALITY TV: ${generatedFrames.length} frames → MP4 video`);
 
+    // ✅ UPDATE STATUS TO COMPLETED
+    const { error: updateError } = await supabase
+      .from('episodes')
+      .update({
+        video_status: 'completed',
+        video_url: videoData.videoUrl,
+        video_render_completed_at: new Date().toISOString(),
+        storyboard: metadata.scenes,
+        updated_at: new Date().toISOString()
+      })
+      .eq('id', episodeId);
+
+    if (updateError) {
+      console.error('⚠️ Failed to update episode status:', updateError);
+    } else {
+      console.log('✅ Episode status updated to completed');
+    }
+
     return new Response(
       JSON.stringify({
         success: true,
