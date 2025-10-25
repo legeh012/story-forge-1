@@ -144,3 +144,6 @@ verify_jwt = true
 
 [functions.master-orchestrator]
 verify_jwt = true
+
+[functions.import-characters]
+verify_jwt = true

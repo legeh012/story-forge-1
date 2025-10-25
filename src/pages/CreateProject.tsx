@@ -88,7 +88,7 @@ const CreateProject = () => {
         return;
       }
 
-      const { error } = await supabase.from("projects").insert({
+      const { data: projectData, error } = await supabase.from("projects").insert({
         title: formData.title,
         description: formData.description || null,
         genre: formData.genre || null,
@@ -96,13 +96,26 @@ const CreateProject = () => {
         theme: formData.theme || null,
         user_id: user.id,
         status: "draft",
-      });
+      }).select().single();
 
       if (error) throw error;
 
+      // Import Say Walahi characters automatically
+      console.log('Importing Say Walahi cast for project:', projectData.id);
+      const { error: charactersError } = await supabase.functions.invoke('import-characters', {
+        body: { projectId: projectData.id }
+      });
+
+      if (charactersError) {
+        console.error('Error importing characters:', charactersError);
+        // Don't fail the project creation, just log it
+      } else {
+        console.log('✅ Say Walahi cast imported successfully');
+      }
+
       toast({
         title: "Success!",
-        description: "Your project has been created successfully",
+        description: "Your project with Say Walahi cast has been created successfully",
       });
 
       navigate("/dashboard");

@@ -21,10 +21,12 @@ export const PromptGenerator = ({ projectId, onEpisodeGenerated }: PromptGenerat
   const { withRecovery } = useSmartErrorRecovery();
 
   const promptSuggestions = [
-    "A tense dinner party where secrets are revealed",
-    "Two rivals forced to work together on a challenge",
-    "A shocking confession changes everything",
-    "A glamorous event with unexpected drama"
+    "Lucky presents her revolutionary schema design to skeptical investors",
+    "Luul hosts a confessional where ancestral truths are revealed",
+    "Samara and Ayaan clash over strategic decisions for the next episode",
+    "Zahra's satirical commentary on trending cultural moments goes viral",
+    "Nasra opens up about her emotional journey with the cast",
+    "Amal instigates chaos at a glamorous cast event"
   ];
 
   const generateEpisode = async () => {
@@ -98,7 +100,7 @@ export const PromptGenerator = ({ projectId, onEpisodeGenerated }: PromptGenerat
           <Label htmlFor="episode-prompt">Episode Prompt</Label>
           <Textarea
             id="episode-prompt"
-            placeholder="Example: Create a dramatic episode where the main character discovers a shocking secret about their family..."
+            placeholder="Example: Lucky unveils her latest vision while Zahra provides satirical commentary, and Luul shares ancestral wisdom that changes everything..."
             value={prompt}
             onChange={(e) => setPrompt(e.target.value)}
             rows={4}
@@ -129,7 +131,7 @@ export const PromptGenerator = ({ projectId, onEpisodeGenerated }: PromptGenerat
           </div>
 
           <p className="text-xs text-muted-foreground">
-            The AI will generate a full episode with script, synopsis, and 3 cinematic clips
+            The AI will generate a full episode with the Say Walahi cast (Lucky, Luul, Samara, Ayaan, Hani, Zahra, Nasra, Amal) featuring script, synopsis, and 3 cinematic clips
           </p>
         </div>
 
