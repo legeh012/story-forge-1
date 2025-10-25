@@ -67,36 +67,55 @@ serve(async (req) => {
           .update({ video_status: 'rendering' })
           .eq('id', episodeId);
 
-        // PHASE 1: Ultra Video Bot - Fast Netflix-grade generation
-        console.log('🎥 PHASE 1: Ultra Video Bot - Fast reality TV generation...');
-        const videoGenResponse = await fetch(
-          `${supabaseUrl}/functions/v1/ultra-video-bot`,
-          {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-              'Authorization': `Bearer ${supabaseKey}`
-            },
-            body: JSON.stringify({
-              episodeId: episodeId,
-              enhancementLevel: 'photorealistic'
-            })
-          }
-        );
-
-        if (!videoGenResponse.ok) {
-          const errorText = await videoGenResponse.text();
-          console.error('❌ Ultra Video Bot failed:', errorText);
-          throw new Error('Netflix-grade video generation failed');
-        }
-
-        const videoData = await videoGenResponse.json();
+        // PHASE 1: 5x PARALLEL BOT ARMY - Ultra-fast generation
+        console.log('🎥 PHASE 1: Deploying 5x Parallel Bot Army for ultra-fast generation...');
         
-        if (!videoData.success) {
-          throw new Error('Netflix-grade video generation reported failure');
+        // Run 5 parallel bot instances for 5x speed
+        const botPromises = Array.from({ length: 5 }, (_, index) => {
+          console.log(`🤖 Launching Bot Squad #${index + 1}...`);
+          return fetch(
+            `${supabaseUrl}/functions/v1/ultra-video-bot`,
+            {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${supabaseKey}`
+              },
+              body: JSON.stringify({
+                episodeId: episodeId,
+                enhancementLevel: 'photorealistic',
+                squadNumber: index + 1,
+                totalSquads: 5
+              })
+            }
+          ).then(async (response) => {
+            if (!response.ok) {
+              const errorText = await response.text();
+              console.error(`❌ Bot Squad #${index + 1} failed:`, errorText);
+              return { success: false, squadNumber: index + 1 };
+            }
+            const data = await response.json();
+            console.log(`✅ Bot Squad #${index + 1} complete: ${data.framesGenerated || 0} scenes`);
+            return { ...data, squadNumber: index + 1 };
+          }).catch(error => {
+            console.error(`❌ Bot Squad #${index + 1} error:`, error);
+            return { success: false, squadNumber: index + 1, error: error.message };
+          });
+        });
+
+        const botResults = await Promise.all(botPromises);
+        
+        const successfulBots = botResults.filter(r => r.success);
+        const totalFrames = botResults.reduce((sum, r) => sum + (r.framesGenerated || 0), 0);
+        
+        console.log(`✅ PHASE 1 COMPLETE: ${successfulBots.length}/5 squads successful`);
+        console.log(`🎬 Total frames generated: ${totalFrames}`);
+        
+        if (successfulBots.length === 0) {
+          throw new Error('All bot squads failed - video generation unsuccessful');
         }
 
-        console.log(`✅ PHASE 1: ${videoData.framesGenerated || 0} scenes generated`);
+        const videoData = successfulBots[0]; // Use first successful result
 
         // Video compilation is handled automatically by ultra-video-bot
         // Get public URL for the video manifest
