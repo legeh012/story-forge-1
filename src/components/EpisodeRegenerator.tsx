@@ -71,7 +71,52 @@ export const EpisodeRegenerator = () => {
     }
   ];
 
+  const deleteAllEpisodes = async () => {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error('Not authenticated');
+
+      toast({
+        title: '🗑️ Deleting old episodes...',
+        description: 'Clearing the slate for premium production',
+      });
+
+      // Get project
+      const { data: project } = await supabase
+        .from('projects')
+        .select('id')
+        .eq('user_id', user.id)
+        .eq('title', 'Khat and Karma')
+        .maybeSingle();
+
+      if (project) {
+        // Delete all episodes for this project
+        const { error: deleteError } = await supabase
+          .from('episodes')
+          .delete()
+          .eq('project_id', project.id);
+
+        if (deleteError) throw deleteError;
+
+        toast({
+          title: '✅ Episodes Deleted',
+          description: 'Ready for premium BET/VH1 quality regeneration',
+        });
+      }
+    } catch (error) {
+      console.error('Delete error:', error);
+      toast({
+        title: 'Delete Failed',
+        description: error instanceof Error ? error.message : 'Failed to delete episodes',
+        variant: 'destructive'
+      });
+    }
+  };
+
   const regenerateAllEpisodes = async () => {
+    // Delete old episodes first
+    await deleteAllEpisodes();
+    
     setRegenerating(true);
     setProgress(0);
     setCompletedEpisodes([]);
@@ -234,9 +279,9 @@ export const EpisodeRegenerator = () => {
             <Video className="h-6 w-6 text-white" />
           </div>
           <div>
-            <CardTitle className="text-2xl">Khat and Karma - Full Season</CardTitle>
+            <CardTitle className="text-2xl">🎬 Premium BET/VH1 Quality Production</CardTitle>
             <CardDescription>
-              Generate 9 episodes (Ep 1, 6-12, Reunion) with scenes, voiceovers, and natural movement
+              Khat and Karma - 9 episodes with luxury settings, designer fashion, and explosive drama
             </CardDescription>
           </div>
         </div>
@@ -345,7 +390,7 @@ export const EpisodeRegenerator = () => {
         </Button>
 
         <p className="text-xs text-center text-muted-foreground">
-          🎯 God-level production: All bots work together in parallel phases for maximum speed and quality
+          🔥 PREMIUM BET/VH1 QUALITY: Luxury settings, designer fashion, explosive confrontations, confessional drama
         </p>
       </CardContent>
     </Card>

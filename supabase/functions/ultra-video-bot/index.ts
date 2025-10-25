@@ -46,42 +46,59 @@ Deno.serve(async (req) => {
 
     console.log('🔥 GEN-3 ALPHA TURBO: God-level generation initiated for episode', episodeId);
 
-    // Step 1: LAKI PRODUCTION-GRADE REALITY TV Scene Analysis with Logical Flow & Natural Movement
-    const sceneAnalysisPrompt = `You are a LAKI Production reality TV showrunner specializing in photorealistic, high-end production with NATURAL HUMAN MOVEMENT. This is REALITY TV (Real Housewives, Selling Sunset, Love & Hip Hop quality) where characters MOVE, GESTURE, and ACT NATURALLY.
+    // Step 1: PREMIUM BET/VH1 REALITY TV Scene Analysis
+    const sceneAnalysisPrompt = `You are a PREMIUM REALITY TV SHOWRUNNER for BET and VH1 (Love & Hip Hop, Basketball Wives, Real Housewives of Atlanta level). Create EXPLOSIVE, DRAMATIC, MUST-SEE TV.
 
 Episode: "${episode.title}"
 Synopsis: ${episode.synopsis}
 Script: ${episode.script}
 
-LAKI PRODUCTION-GRADE REALITY TV REQUIREMENTS:
-- 10-20 second scenes with NATURAL CHARACTER MOVEMENT - walking, talking, gesturing, reacting
-- Characters should be ANIMATED and LIFELIKE - not frozen or static
-- PHOTOREALISTIC humans with NATURAL BODY LANGUAGE and realistic motion
-- Reality TV structure: confessionals, group drama, one-on-ones, confrontations
-- Natural professional lighting (bright, flattering, not harsh)
-- Authentic reactions and expressions with DYNAMIC MOVEMENT
-- Documentary-style camera work (handheld, multi-cam, confessional booth)
-- Real environments (luxury homes, restaurants, offices)
-- Continuity between scenes - each connects to previous/next
-- Natural dialogue with dramatic tension
-- High-end production values (LAKI Production standard)
+🔥 PREMIUM BET/VH1 PRODUCTION STANDARDS:
+- LUXURY SETTINGS: Upscale restaurants, rooftop lounges, penthouses, designer boutiques
+- DESIGNER FASHION: Every character in statement pieces (Gucci, Versace, Balenciaga visible)
+- FLAWLESS GLAM: HD camera-ready makeup, perfect hair (wigs, braids, natural styles)
+- DRAMATIC LIGHTING: Harsh for confrontations, soft for confessionals, cinematic for entrances
+- EXPLOSIVE MOMENTS: Table flips, drink throws, dramatic walk-offs, "I'M DONE" exits
 
-Return JSON with this EXACT structure:
+📺 REALITY TV SCENE STRUCTURE (Each scene):
+1. ESTABLISHING SHOT: Show the luxury venue/location
+2. TENSION BUILD: Start friendly, turn SHADY fast
+3. TEA SPILLING: Someone reveals something MESSY
+4. REACTIONS: Close-ups on EVERY face (gasps, side-eyes, "oh hell no" expressions)
+5. CONFRONTATION: Direct call-outs, pointing fingers, raised voices
+6. CONFESSIONAL: Character speaks directly to camera explaining their truth
+7. CLIFFHANGER: Scene ends on dramatic moment
+
+🎭 CHARACTER REQUIREMENTS (PHOTOREALISTIC):
+- PERFECT human anatomy (EXACTLY 5 fingers per hand)
+- Authentic Somali diaspora features (brown skin, natural textures, cultural accuracy)
+- Luxury styling: Designer labels visible, statement jewelry, perfect nails
+- Natural body language: neck rolls, finger pointing, hand on hip, dramatic gestures
+- Facial expressions: side-eye, smirks, shock faces, tears, anger
+- Hair: Reality TV glam (sleek ponytails, long curls, braids, wigs)
+
+🎬 CINEMATOGRAPHY:
+- Multiple camera angles (capture ALL reactions)
+- Handheld camera shake for raw authenticity
+- Confessional: tight single-camera shots, direct eye contact
+- Group scenes: wide to medium, quick cuts between faces
+- Dramatic moments: slow motion, music swells
+
+Return JSON with EXACTLY this structure:
 {
   "scenes": [
     {
       "number": 1,
-      "duration": "12s",
-      "realityTVType": "group-scene" | "confessional" | "confrontation" | "one-on-one" | "dramatic-reveal",
-      "description": "ULTRA-DETAILED photorealistic description with exact human features, emotions, environment",
-      "camera": "Reality TV camera work (e.g., handheld closeup, confessional tight shot, wide establishing)",
-      "lighting": "Professional reality TV lighting (e.g., bright natural window light, soft box fill, warm practical)",
-      "emotion": "Authentic human emotion with intensity 1-10",
-      "continuityNote": "How this scene connects to previous scene",
-      "dialogue": "Natural realistic dialogue",
-      "soundDesign": "Realistic ambient + reality TV music cues",
-      "prompt": "LAKI PRODUCTION-GRADE photorealistic generation prompt with NATURAL MOVEMENT",
-      "negativePrompt": "Everything to avoid (cartoon, filters, unrealistic elements)"
+      "duration": "8s",
+      "sceneType": "confrontation" | "confessional" | "tea-spilling" | "group-drama" | "walk-off" | "entrance",
+      "location": "Specific luxury venue (e.g., 'Upscale rooftop bar - Miami skyline backdrop')",
+      "description": "ULTRA-DETAILED 300+ word photorealistic description: exact setting, what characters wear, facial expressions, hand gestures, camera angles, lighting setup, background reactions",
+      "dialogue": "Actual dramatic dialogue exchange with SPICY moments",
+      "realityTVMoment": "The ICONIC scene moment (e.g., 'When Luul throws her drink and storms out')",
+      "cameraDirection": "Specific camera work (e.g., 'Start wide on group, zoom to face when tea is spilled, cut to confessional')",
+      "musicCue": "Background music direction (e.g., 'Dramatic strings swell, bass drop when she stands up')",
+      "photoRealisticPrompt": "DETAILED image generation prompt emphasizing: photorealistic humans with perfect anatomy, luxury BET/VH1 production value, designer fashion, dramatic reality TV lighting",
+      "negativePrompt": "cartoon, anime, illustration, 6+ fingers, deformed anatomy, plain backgrounds, casual clothing, bad lighting"
     }
   ]
 }`;
@@ -95,7 +112,7 @@ Return JSON with this EXACT structure:
       body: JSON.stringify({
         model: 'google/gemini-2.5-flash',
         messages: [
-          { role: 'system', content: 'You are a LAKI Production reality TV showrunner creating PHOTOREALISTIC, logically flowing episodes with NATURAL HUMAN MOVEMENT. Characters should MOVE, GESTURE, and ACT naturally like real people. You understand high-end reality TV production (Real Housewives, Selling Sunset), authentic human drama, and LAKI Production-grade quality standards. Every scene must be photorealistic with perfect human anatomy, natural movement, and flow logically to the next.' },
+          { role: 'system', content: 'You are a PREMIUM BET/VH1 REALITY TV SHOWRUNNER creating EXPLOSIVE, DRAMATIC content. You understand luxury reality TV production (Love & Hip Hop, Basketball Wives, Real Housewives of Atlanta). Every scene must be photorealistic with perfect human anatomy, designer fashion, luxury settings, and DRAMATIC confrontations.' },
           { role: 'user', content: sceneAnalysisPrompt }
         ],
         response_format: { type: 'json_object' }
@@ -111,18 +128,18 @@ Return JSON with this EXACT structure:
 
     console.log(`📊 Generated ${scenes.length} ultra-detailed scenes`);
 
-    // Step 2: SMART BATCHED image generation (prevents worker limit errors)
+    // Step 2: Generate PREMIUM REALITY TV images
     const generatedFrames: Array<{
       sceneNumber: number;
       imageUrl: string;
       description: string;
       duration: string;
-      realityTVType: string;
-      continuityNote: string;
+      sceneType: string;
+      location: string;
+      realityTVMoment: string;
       qualityScore: number;
-      emotion: string;
       dialogue: string;
-      soundDesign: string;
+      musicCue: string;
     }> = [];
     
     const frameGenStart = Date.now();
@@ -280,21 +297,21 @@ ABSOLUTELY FORBIDDEN FOR REALITY TV PHOTOREALISM:
         sceneNumber: f.sceneNumber,
         description: f.description,
         duration: f.duration,
-        realityTVType: f.realityTVType,
-        continuityNote: f.continuityNote,
+        sceneType: f.sceneType,
+        location: f.location,
+        realityTVMoment: f.realityTVMoment,
         qualityScore: f.qualityScore,
-        emotion: f.emotion,
         dialogue: f.dialogue,
-        soundDesign: f.soundDesign,
+        musicCue: f.musicCue,
         frameIndex: i
       }))
     };
 
-    console.log(`📊 Netflix Reality TV Generation Stats:
+    console.log(`📊 PREMIUM BET/VH1 Reality TV Generation Stats:
     - Total Frames: ${generatedFrames.length}
-    - Avg Quality: ${avgQuality.toFixed(1)}/100 (Netflix-grade photorealistic)
-    - Type: Reality TV with logical scene flow
-    - Model: NETFLIX-GRADE PHOTOREALISTIC`);
+    - Avg Quality: ${avgQuality.toFixed(1)}/100 (Premium BET/VH1 production value)
+    - Type: Luxury Reality TV with explosive drama
+    - Model: PREMIUM BET/VH1 PHOTOREALISTIC`);
 
     // OPTIMIZED: Upload frames in parallel batches (10 at a time to avoid rate limits)
     const batchSize = 10;
