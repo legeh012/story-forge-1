@@ -2,11 +2,12 @@ import { useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Video, Sparkles, Mic, Users, Play, CheckCircle2 } from 'lucide-react';
+import { Video, Sparkles, Mic, Users, Play, CheckCircle2, Youtube } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { SmartLoadingState } from './SmartLoadingState';
 import { Progress } from '@/components/ui/progress';
+import { YouTubeIntegrationStatus } from './YouTubeIntegrationStatus';
 
 interface Episode {
   id: string;
@@ -143,7 +144,10 @@ export const EpisodeRegenerator = () => {
   };
 
   return (
-    <Card className="border-primary/30 bg-gradient-to-br from-primary/10 via-background to-accent/10">
+    <div className="space-y-4">
+      <YouTubeIntegrationStatus />
+      
+      <Card className="border-primary/30 bg-gradient-to-br from-primary/10 via-background to-accent/10">
       <CardHeader>
         <div className="flex items-center gap-3">
           <div className="p-3 rounded-lg bg-gradient-to-br from-primary to-accent">
@@ -261,9 +265,10 @@ export const EpisodeRegenerator = () => {
         </Button>
 
         <p className="text-xs text-center text-muted-foreground">
-          Each episode will have 8-12 cinematic scenes with AI voiceovers and natural human movement
+          Each episode will have 8-12 cinematic scenes with AI voiceovers, natural movement, and automatic YouTube upload
         </p>
       </CardContent>
     </Card>
+    </div>
   );
 };

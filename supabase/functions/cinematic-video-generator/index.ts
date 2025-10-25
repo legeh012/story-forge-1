@@ -245,7 +245,7 @@ Style: Professional reality TV production, Netflix-grade cinematography, authent
           .from('episode-videos')
           .getPublicUrl(manifestFileName);
 
-        // Update episode with video URL
+        // Update episode with video manifest URL first
         await supabaseClient
           .from('episodes')
           .update({
@@ -255,6 +255,31 @@ Style: Professional reality TV production, Netflix-grade cinematography, authent
             updated_at: new Date().toISOString()
           })
           .eq('id', episodeId);
+
+        // Upload to YouTube automatically
+        try {
+          console.log('Starting automatic YouTube upload...');
+          const { data: youtubeResult, error: youtubeError } = await supabaseClient.functions.invoke(
+            'youtube-uploader',
+            {
+              body: {
+                videoUrl: manifestUrl,
+                title: episode.title,
+                description: `${episode.synopsis}\n\nGenerated with StoryForge AI - Cinematic Reality TV Production`,
+                episodeId: episodeId
+              }
+            }
+          );
+
+          if (youtubeError) {
+            console.error('YouTube upload failed:', youtubeError);
+          } else {
+            console.log('YouTube upload successful:', youtubeResult);
+          }
+        } catch (ytError) {
+          console.error('YouTube upload error:', ytError);
+          // Don't fail the whole process if YouTube upload fails
+        }
 
         console.log('Cinematic video generation complete!');
       } catch (error) {
@@ -269,8 +294,8 @@ Style: Professional reality TV production, Netflix-grade cinematography, authent
       }
     };
 
-    // Start background task
-    EdgeRuntime.waitUntil(backgroundTask());
+    // Start background task using Promise (EdgeRuntime not available in all environments)
+    backgroundTask().catch(err => console.error('Background task failed:', err));
 
     return new Response(
       JSON.stringify({
@@ -285,7 +310,7 @@ Style: Professional reality TV production, Netflix-grade cinematography, authent
   } catch (error) {
     console.error('Error:', error);
     return new Response(
-      JSON.stringify({ error: error.message }),
+      JSON.stringify({ error: error instanceof Error ? error.message : 'Unknown error' }),
       { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
   }
