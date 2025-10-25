@@ -229,12 +229,6 @@ Deno.serve(async (req) => {
         storyboard: enhancedEpisode.storyboard || episode.storyboard,
         video_status: 'completed',
         video_url: enhancedEpisode.video_url,
-        metadata: {
-          ...episode.metadata,
-          production_mode: mode,
-          god_mode_execution: executionLog,
-          enhanced_at: new Date().toISOString()
-        },
         updated_at: new Date().toISOString()
       })
       .eq('id', episodeId);
