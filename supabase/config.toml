@@ -141,3 +141,6 @@ verify_jwt = true
 
 [functions.suno-music-generator]
 verify_jwt = true
+
+[functions.master-orchestrator]
+verify_jwt = true
