@@ -1,5 +1,9 @@
 project_id = "akmeovotnnqbxotlerie"
 
+[functions.cleanup-old-episodes]
+verify_jwt = true
+
+
 [functions.god-level-ffmpeg-compiler]
 verify_jwt = true
 

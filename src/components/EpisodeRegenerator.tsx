@@ -8,6 +8,7 @@ import { useToast } from '@/hooks/use-toast';
 import { SmartLoadingState } from './SmartLoadingState';
 import { Progress } from '@/components/ui/progress';
 import { YouTubeIntegrationStatus } from './YouTubeIntegrationStatus';
+import { EpisodeCleanup } from './EpisodeCleanup';
 
 interface Episode {
   id: string;
@@ -328,6 +329,11 @@ export const EpisodeRegenerator = () => {
   return (
     <div className="space-y-4">
       <YouTubeIntegrationStatus />
+      
+      <EpisodeCleanup 
+        currentEpisodeId="6cf8137e-a95b-4db3-bd76-620e498a09d0"
+        currentEpisodeTitle="The Chai Debate (Episode 10)"
+      />
       
       <Card className="border-primary/30 bg-gradient-to-br from-primary/10 via-background to-accent/10">
       <CardHeader>
