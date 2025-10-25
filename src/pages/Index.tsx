@@ -8,6 +8,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import { EpisodeVideoPlayer } from "@/components/EpisodeVideoPlayer";
 
 const Index = () => {
   const navigate = useNavigate();
@@ -16,6 +17,7 @@ const Index = () => {
   const [episodes, setEpisodes] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [selectedVideo, setSelectedVideo] = useState<{url: string; title: string; episode: number; season: number} | null>(null);
 
   useEffect(() => {
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
@@ -325,7 +327,12 @@ const Index = () => {
                             className="w-full"
                             onClick={(e) => {
                               e.stopPropagation();
-                              window.open(episode.video_url, '_blank');
+                              setSelectedVideo({
+                                url: episode.video_url,
+                                title: episode.title,
+                                episode: episode.episode_number,
+                                season: episode.season
+                              });
                             }}
                           >
                             <Play className="mr-2 h-4 w-4" />
@@ -362,6 +369,17 @@ const Index = () => {
           </div>
         </Card>
       </section>
+
+      {/* YouTube Video Player */}
+      <EpisodeVideoPlayer
+        isOpen={!!selectedVideo}
+        onClose={() => setSelectedVideo(null)}
+        videoUrl={selectedVideo?.url || null}
+        episodeTitle={selectedVideo?.title}
+        episodeNumber={selectedVideo?.episode}
+        season={selectedVideo?.season}
+        autoPlay={true}
+      />
     </div>
   );
 };
