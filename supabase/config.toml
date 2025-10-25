@@ -1,5 +1,8 @@
 project_id = "akmeovotnnqbxotlerie"
 
+[functions.video-compiler]
+verify_jwt = true
+
 [functions.reality-tv-god-mode]
 verify_jwt = true
 

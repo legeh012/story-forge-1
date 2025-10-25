@@ -325,68 +325,61 @@ ABSOLUTELY FORBIDDEN FOR REALITY TV PHOTOREALISM:
         upsert: true
       });
 
-    // Trigger video compilation in the background
-    console.log('🎬 Starting video compilation from frames...');
+    // Compile frames into MP4 using FFmpeg
+    console.log('🎬 Compiling frames into MP4 video...');
     
-    // Compile frames into MP4 video
     const frameUrls = generatedFrames.map((_, index) => 
       `${Deno.env.get('SUPABASE_URL')}/storage/v1/object/public/episode-videos/${videoPath}/frame_${index.toString().padStart(4, '0')}.png`
     );
 
-    // For now, update with the first frame URL but mark as needs compilation
-    const firstFrameUrl = frameUrls[0];
-    
-    await supabase
-      .from('episodes')
-      .update({
-        video_status: 'rendering',
-        video_url: firstFrameUrl, // Temporary - will be replaced with MP4
-        storyboard: metadata.scenes,
-        updated_at: new Date().toISOString()
-      })
-      .eq('id', episodeId);
+    const frames = frameUrls.map((url, index) => ({
+      url,
+      duration: parseFloat(generatedFrames[index].duration) || 5
+    }));
 
-    // Call video compilation function in background
-    try {
-      const compileResponse = await fetch(`${Deno.env.get('SUPABASE_URL')}/functions/v1/compile-video`, {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')}`,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          episodeId,
-          userId: user.id,
-          frameUrls,
-          frameDurations: generatedFrames.map(f => parseFloat(f.duration) || 5),
-          metadata
-        }),
-      });
-
-      if (!compileResponse.ok) {
-        console.error('Video compilation trigger failed:', await compileResponse.text());
-        // Still return success as frames are generated
-      } else {
-        console.log('✅ Video compilation started in background');
+    // Call video-compiler to create actual MP4
+    const { data: videoData, error: compileError } = await supabase.functions.invoke('video-compiler', {
+      body: {
+        episodeId,
+        frames,
+        audioUrl: null // Can add audio later
       }
-    } catch (compileError) {
-      console.error('Failed to trigger video compilation:', compileError);
-      // Continue anyway - frames are generated
+    });
+
+    if (compileError) {
+      console.error('Video compilation failed:', compileError);
+      
+      // Fall back to first frame as thumbnail
+      await supabase
+        .from('episodes')
+        .update({
+          video_status: 'failed',
+          video_url: frameUrls[0],
+          storyboard: metadata.scenes,
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', episodeId);
+        
+      throw compileError;
     }
 
-    console.log('📺✅ NETFLIX REALITY TV: Photorealistic frames generated, video compilation in progress');
+    console.log('✅ MP4 video compiled:', videoData.videoUrl);
+    console.log(`📺 NETFLIX REALITY TV: ${generatedFrames.length} frames → MP4 video`);
 
     return new Response(
       JSON.stringify({
         success: true,
         model: 'NETFLIX-GRADE PHOTOREALISTIC REALITY TV',
         episodeId,
+        videoUrl: videoData.videoUrl,
+        format: 'mp4',
         framesGenerated: generatedFrames.length,
+        duration: videoData.duration,
         enhancementLevel: 'netflix-reality-tv',
         averageQualityScore: avgQuality,
         renderingType: 'photorealistic-reality-tv',
         videoPath,
-        message: '📺 Netflix-grade photorealistic reality TV frames generated with logical scene flow',
+        message: '🎬 Netflix-grade MP4 video created with photorealistic reality TV scenes',
         generationTime: new Date().toISOString()
       }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
