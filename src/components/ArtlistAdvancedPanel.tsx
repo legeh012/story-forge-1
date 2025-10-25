@@ -1,7 +1,6 @@
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
 import { supabase } from '@/integrations/supabase/client';
@@ -14,9 +13,9 @@ interface ArtlistAdvancedPanelProps {
 
 export const ArtlistAdvancedPanel = ({ episodeId }: ArtlistAdvancedPanelProps) => {
   const { toast } = useToast();
-  const [isRunning, setIsRunning] = useState(false);
+  const [runningMode, setRunningMode] = useState<string | null>(null);
   const [customPrompt, setCustomPrompt] = useState('');
-  const [results, setResults] = useState<any>(null);
+  const [results, setResults] = useState<Record<string, any>>({});
 
   const runArtlistBot = async (mode: string) => {
     if (!episodeId) {
@@ -28,8 +27,7 @@ export const ArtlistAdvancedPanel = ({ episodeId }: ArtlistAdvancedPanelProps) =
       return;
     }
 
-    setIsRunning(true);
-    setResults(null);
+    setRunningMode(mode);
 
     try {
       const { data: { session } } = await supabase.auth.getSession();
@@ -45,11 +43,11 @@ export const ArtlistAdvancedPanel = ({ episodeId }: ArtlistAdvancedPanelProps) =
 
       if (error) throw error;
 
-      setResults(data.results);
+      setResults(prev => ({ ...prev, [mode]: data.results }));
       
       toast({
-        title: "✨ Artlist Advanced Bot Complete",
-        description: `${mode} mode finished successfully`,
+        title: "✨ Artlist Bot Complete",
+        description: `${getModeLabel(mode)} finished successfully`,
       });
 
     } catch (error) {
@@ -60,9 +58,61 @@ export const ArtlistAdvancedPanel = ({ episodeId }: ArtlistAdvancedPanelProps) =
         variant: "destructive",
       });
     } finally {
-      setIsRunning(false);
+      setRunningMode(null);
     }
   };
+
+  const getModeLabel = (mode: string) => {
+    const labels: Record<string, string> = {
+      'full_production': 'Full Production',
+      'scene_analysis': 'Scene Analysis',
+      'color_grade': 'Color Grading',
+      'smart_editing': 'Smart Editing',
+      'content_optimization': 'Content Optimization',
+    };
+    return labels[mode] || mode;
+  };
+
+  const getModeIcon = (mode: string) => {
+    const icons: Record<string, any> = {
+      'full_production': Sparkles,
+      'scene_analysis': Film,
+      'color_grade': Palette,
+      'smart_editing': Scissors,
+      'content_optimization': TrendingUp,
+    };
+    return icons[mode] || Sparkles;
+  };
+
+  const getModeDescription = (mode: string) => {
+    const descriptions: Record<string, string> = {
+      'full_production': 'Complete AI production workflow with scene analysis, editing, color grading & optimization',
+      'scene_analysis': 'Advanced scene breakdown with emotional arc mapping and pacing analysis',
+      'color_grade': 'Professional color grading with LUT recommendations and emotional color mapping',
+      'smart_editing': 'Intelligent editing with cut timing, B-roll placement, and music cues',
+      'content_optimization': 'Maximize engagement with viral moment identification and platform optimization',
+    };
+    return descriptions[mode] || '';
+  };
+
+  const getModeFeatures = (mode: string) => {
+    const features: Record<string, string[]> = {
+      'full_production': ['Scene Analysis', 'Smart Editing', 'Color Grading', 'Content Optimization'],
+      'scene_analysis': ['Scene breakdown', 'Emotional arc', 'Pacing', 'Transitions', 'Retention'],
+      'color_grade': ['Color scheme', 'Adjustments', 'LUTs', 'Scene grading', 'Emotional colors'],
+      'smart_editing': ['Cut timing', 'B-roll points', 'Music cues', 'Effects', 'Pacing'],
+      'content_optimization': ['Hook analysis', 'Cliffhangers', 'Viral moments', 'Platform adapt', 'Retention'],
+    };
+    return features[mode] || [];
+  };
+
+  const modes = [
+    'full_production',
+    'scene_analysis',
+    'color_grade',
+    'smart_editing',
+    'content_optimization',
+  ];
 
   return (
     <div className="space-y-6">
@@ -73,183 +123,106 @@ export const ArtlistAdvancedPanel = ({ episodeId }: ArtlistAdvancedPanelProps) =
             <CardTitle>Artlist Advanced AI Studio</CardTitle>
           </div>
           <CardDescription>
-            Professional-grade AI tools for video production, inspired by industry-leading platforms
+            Professional-grade AI tools for video production - 5 powerful modes
           </CardDescription>
         </CardHeader>
-        <CardContent>
-          <Tabs defaultValue="full" className="w-full">
-            <TabsList className="grid w-full grid-cols-5">
-              <TabsTrigger value="full">Full Production</TabsTrigger>
-              <TabsTrigger value="scene">Scene Analysis</TabsTrigger>
-              <TabsTrigger value="color">Color Grade</TabsTrigger>
-              <TabsTrigger value="edit">Smart Edit</TabsTrigger>
-              <TabsTrigger value="optimize">Optimize</TabsTrigger>
-            </TabsList>
+        <CardContent className="space-y-4">
+          {/* All 5 Mode Cards */}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            {modes.map((mode) => {
+              const Icon = getModeIcon(mode);
+              const isRunning = runningMode === mode;
+              const hasResults = !!results[mode];
 
-            <TabsContent value="full" className="space-y-4">
-              <div className="space-y-2">
-                <h3 className="text-lg font-semibold flex items-center gap-2">
-                  <Film className="h-5 w-5 text-primary" />
-                  Full Production Pipeline
-                </h3>
-                <p className="text-sm text-muted-foreground">
-                  Complete AI-powered production workflow: scene analysis, smart editing, color grading, and content optimization
-                </p>
-                <div className="flex flex-wrap gap-2 mt-2">
-                  <Badge variant="secondary">Scene Analysis</Badge>
-                  <Badge variant="secondary">Smart Editing</Badge>
-                  <Badge variant="secondary">Color Grading</Badge>
-                  <Badge variant="secondary">Content Optimization</Badge>
-                </div>
-                <Button
-                  onClick={() => runArtlistBot('full_production')}
-                  disabled={isRunning || !episodeId}
-                  className="w-full mt-4"
-                  size="lg"
+              return (
+                <Card 
+                  key={mode}
+                  className={`cursor-pointer transition-all hover:shadow-lg ${
+                    isRunning ? 'border-primary border-2' : 'border-muted'
+                  } ${hasResults ? 'bg-primary/5' : ''}`}
                 >
-                  {isRunning ? (
-                    <>
-                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                      Processing...
-                    </>
-                  ) : (
-                    <>
-                      <Sparkles className="mr-2 h-4 w-4" />
-                      Run Full Production
-                    </>
-                  )}
-                </Button>
-              </div>
-            </TabsContent>
+                  <CardHeader className="pb-3">
+                    <div className="flex items-center gap-2">
+                      <Icon className={`h-5 w-5 ${isRunning ? 'text-primary animate-pulse' : 'text-primary'}`} />
+                      <CardTitle className="text-base">{getModeLabel(mode)}</CardTitle>
+                    </div>
+                    <CardDescription className="text-xs">
+                      {getModeDescription(mode)}
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent className="space-y-3">
+                    <div className="flex flex-wrap gap-1">
+                      {getModeFeatures(mode).slice(0, 3).map((feature, idx) => (
+                        <Badge key={idx} variant="secondary" className="text-xs">
+                          {feature}
+                        </Badge>
+                      ))}
+                    </div>
+                    
+                    <Button
+                      onClick={() => runArtlistBot(mode)}
+                      disabled={!!runningMode || !episodeId}
+                      className="w-full"
+                      size="sm"
+                    >
+                      {isRunning ? (
+                        <>
+                          <Loader2 className="mr-2 h-3 w-3 animate-spin" />
+                          Processing...
+                        </>
+                      ) : hasResults ? (
+                        <>
+                          <Sparkles className="mr-2 h-3 w-3" />
+                          Run Again
+                        </>
+                      ) : (
+                        <>
+                          <Icon className="mr-2 h-3 w-3" />
+                          Activate
+                        </>
+                      )}
+                    </Button>
 
-            <TabsContent value="scene" className="space-y-4">
-              <div className="space-y-2">
-                <h3 className="text-lg font-semibold flex items-center gap-2">
-                  <Film className="h-5 w-5 text-primary" />
-                  AI Scene Analysis
-                </h3>
-                <p className="text-sm text-muted-foreground">
-                  Advanced scene breakdown with emotional arc mapping, pacing analysis, and key moment identification
-                </p>
-                <ul className="text-sm space-y-1 mt-2">
-                  <li>• Scene breakdown with timestamps</li>
-                  <li>• Emotional arc mapping</li>
-                  <li>• Pacing recommendations</li>
-                  <li>• Transition suggestions</li>
-                  <li>• Audience retention points</li>
-                </ul>
-                <Button
-                  onClick={() => runArtlistBot('scene_analysis')}
-                  disabled={isRunning || !episodeId}
-                  className="w-full mt-4"
-                >
-                  {isRunning ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Film className="mr-2 h-4 w-4" />}
-                  Analyze Scenes
-                </Button>
-              </div>
-            </TabsContent>
+                    {hasResults && (
+                      <div className="text-xs text-primary font-medium">
+                        ✓ Completed
+                      </div>
+                    )}
+                  </CardContent>
+                </Card>
+              );
+            })}
+          </div>
 
-            <TabsContent value="color" className="space-y-4">
-              <div className="space-y-2">
-                <h3 className="text-lg font-semibold flex items-center gap-2">
-                  <Palette className="h-5 w-5 text-primary" />
-                  AI Color Grading
-                </h3>
-                <p className="text-sm text-muted-foreground">
-                  Professional color grading with LUT recommendations and emotional color mapping
-                </p>
-                <ul className="text-sm space-y-1 mt-2">
-                  <li>• Primary color scheme design</li>
-                  <li>• Shadows/midtones/highlights</li>
-                  <li>• LUT recommendations</li>
-                  <li>• Scene-specific grading</li>
-                  <li>• Emotional color mapping</li>
-                </ul>
-                <Button
-                  onClick={() => runArtlistBot('color_grade')}
-                  disabled={isRunning || !episodeId}
-                  className="w-full mt-4"
-                >
-                  {isRunning ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Palette className="mr-2 h-4 w-4" />}
-                  Generate Color Grade
-                </Button>
-              </div>
-            </TabsContent>
-
-            <TabsContent value="edit" className="space-y-4">
-              <div className="space-y-2">
-                <h3 className="text-lg font-semibold flex items-center gap-2">
-                  <Scissors className="h-5 w-5 text-primary" />
-                  Smart Editing AI
-                </h3>
-                <p className="text-sm text-muted-foreground">
-                  Intelligent editing suggestions with precise cut timing and B-roll placement
-                </p>
-                <ul className="text-sm space-y-1 mt-2">
-                  <li>• Cut timing precision</li>
-                  <li>• B-roll insertion points</li>
-                  <li>• Music cue placements</li>
-                  <li>• Sound effect triggers</li>
-                  <li>• Pacing adjustments</li>
-                </ul>
-                <Button
-                  onClick={() => runArtlistBot('smart_editing')}
-                  disabled={isRunning || !episodeId}
-                  className="w-full mt-4"
-                >
-                  {isRunning ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Scissors className="mr-2 h-4 w-4" />}
-                  Generate Edit Suggestions
-                </Button>
-              </div>
-            </TabsContent>
-
-            <TabsContent value="optimize" className="space-y-4">
-              <div className="space-y-2">
-                <h3 className="text-lg font-semibold flex items-center gap-2">
-                  <TrendingUp className="h-5 w-5 text-primary" />
-                  Content Optimization
-                </h3>
-                <p className="text-sm text-muted-foreground">
-                  Maximize engagement with viral moment identification and platform-specific optimization
-                </p>
-                <ul className="text-sm space-y-1 mt-2">
-                  <li>• Hook strength analysis</li>
-                  <li>• Cliffhanger placement</li>
-                  <li>• Viral moment identification</li>
-                  <li>• Platform adaptations (TikTok, YouTube, IG)</li>
-                  <li>• Retention strategy</li>
-                </ul>
-                <Button
-                  onClick={() => runArtlistBot('content_optimization')}
-                  disabled={isRunning || !episodeId}
-                  className="w-full mt-4"
-                >
-                  {isRunning ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <TrendingUp className="mr-2 h-4 w-4" />}
-                  Optimize Content
-                </Button>
-              </div>
-            </TabsContent>
-          </Tabs>
-
-          <div className="mt-6 space-y-2">
-            <label className="text-sm font-medium">Custom AI Prompt (Optional)</label>
+          {/* Custom Prompt */}
+          <div className="space-y-2 pt-4 border-t">
+            <label className="text-sm font-medium">Custom AI Instructions (Optional)</label>
             <Textarea
-              placeholder="Add custom instructions for the AI (e.g., 'Add more suspenseful moments' or 'Optimize for TikTok')"
+              placeholder="Add custom instructions for any mode (e.g., 'Focus on suspenseful moments' or 'Optimize for TikTok')"
               value={customPrompt}
               onChange={(e) => setCustomPrompt(e.target.value)}
-              className="min-h-[80px]"
+              className="min-h-[60px]"
             />
           </div>
 
-          {results && (
-            <Card className="mt-6 bg-muted/50">
+          {/* Results Display */}
+          {Object.keys(results).length > 0 && (
+            <Card className="bg-muted/50 border-t">
               <CardHeader>
-                <CardTitle className="text-lg">Results</CardTitle>
+                <CardTitle className="text-sm">Recent Results</CardTitle>
               </CardHeader>
-              <CardContent>
-                <pre className="text-xs overflow-auto max-h-96 bg-background p-4 rounded-md">
-                  {JSON.stringify(results.enhancements, null, 2)}
-                </pre>
+              <CardContent className="space-y-2">
+                {Object.entries(results).map(([mode, result]) => (
+                  <details key={mode} className="group">
+                    <summary className="cursor-pointer text-sm font-medium hover:text-primary flex items-center gap-2">
+                      <span>▸</span>
+                      {getModeLabel(mode)}
+                    </summary>
+                    <pre className="text-xs overflow-auto max-h-64 bg-background p-3 rounded-md mt-2">
+                      {JSON.stringify(result.enhancements, null, 2)}
+                    </pre>
+                  </details>
+                ))}
               </CardContent>
             </Card>
           )}
