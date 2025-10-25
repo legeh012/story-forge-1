@@ -268,6 +268,63 @@ export const EpisodeRegenerator = () => {
     }
   };
 
+  const testEpisode1 = async () => {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error('Not authenticated');
+
+      toast({
+        title: '🧪 Testing Episode 1',
+        description: 'Regenerating with FFmpeg MP4 compilation',
+      });
+
+      const { data: episode } = await supabase
+        .from('episodes')
+        .select('id, project_id')
+        .eq('episode_number', 1)
+        .single();
+
+      if (!episode) throw new Error('Episode 1 not found');
+
+      setRegenerating(true);
+      setCurrentEpisode(1);
+
+      // Call God Mode for Episode 1
+      const { data: godModeResult, error: genError } = await supabase.functions.invoke('reality-tv-god-mode', {
+        body: {
+          episodeId: episode.id,
+          projectId: episode.project_id,
+          mode: 'ultra'
+        }
+      });
+
+      if (genError) {
+        console.error('God Mode error:', genError);
+        toast({
+          title: 'Test Failed',
+          description: genError.message,
+          variant: 'destructive'
+        });
+      } else {
+        console.log('God Mode result:', godModeResult);
+        toast({
+          title: '✅ Episode 1 Complete',
+          description: 'Check the video URL - it should be an MP4 file now!',
+        });
+      }
+    } catch (error) {
+      console.error('Test error:', error);
+      toast({
+        title: 'Test Failed',
+        description: error instanceof Error ? error.message : 'Unknown error',
+        variant: 'destructive'
+      });
+    } finally {
+      setRegenerating(false);
+      setCurrentEpisode(null);
+    }
+  };
+
   return (
     <div className="space-y-4">
       <YouTubeIntegrationStatus />
@@ -369,25 +426,46 @@ export const EpisodeRegenerator = () => {
           </div>
         )}
 
-        {/* Action Button */}
-        <Button
-          onClick={regenerateAllEpisodes}
-          disabled={regenerating}
-          size="lg"
-          className="w-full bg-gradient-to-r from-primary via-accent to-primary-glow hover:opacity-90"
-        >
-          {regenerating ? (
-            <>
-              <Sparkles className="h-5 w-5 mr-2 animate-spin" />
-              Generating Episodes {currentEpisode ? `(${completedEpisodes.length + 1}/${episodes.length})` : '...'}
-            </>
-          ) : (
-            <>
-              <Video className="h-5 w-5 mr-2" />
-              Generate All {episodes.length} Episodes
-            </>
-          )}
-        </Button>
+        {/* Action Buttons */}
+        <div className="space-y-3">
+          <Button
+            onClick={testEpisode1}
+            disabled={regenerating}
+            size="lg"
+            className="w-full bg-gradient-to-r from-success via-primary to-success hover:opacity-90"
+          >
+            {regenerating && currentEpisode === 1 ? (
+              <>
+                <Sparkles className="h-5 w-5 mr-2 animate-spin" />
+                Testing Episode 1 (Creating MP4...)
+              </>
+            ) : (
+              <>
+                <Play className="h-5 w-5 mr-2" />
+                🧪 Test Episode 1 (FFmpeg MP4)
+              </>
+            )}
+          </Button>
+
+          <Button
+            onClick={regenerateAllEpisodes}
+            disabled={regenerating}
+            size="lg"
+            className="w-full bg-gradient-to-r from-primary via-accent to-primary-glow hover:opacity-90"
+          >
+            {regenerating && currentEpisode !== 1 ? (
+              <>
+                <Sparkles className="h-5 w-5 mr-2 animate-spin" />
+                Generating Episodes {currentEpisode ? `(${completedEpisodes.length + 1}/${episodes.length})` : '...'}
+              </>
+            ) : (
+              <>
+                <Video className="h-5 w-5 mr-2" />
+                Generate All {episodes.length} Episodes
+              </>
+            )}
+          </Button>
+        </div>
 
         <p className="text-xs text-center text-muted-foreground">
           🔥 PREMIUM BET/VH1 QUALITY: Luxury settings, designer fashion, explosive confrontations, confessional drama
