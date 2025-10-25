@@ -15,15 +15,22 @@ interface EpisodeVideoPlayerProps {
 
 // Extract YouTube video ID from various YouTube URL formats
 const extractYouTubeId = (url: string): string | null => {
+  if (!url) return null;
+  
   const patterns = [
-    /(?:youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/embed\/)([^&\s?]+)/,
-    /^([a-zA-Z0-9_-]{11})$/  // Direct video ID
+    /(?:youtube\.com\/watch\?v=)([^&\s?]+)/,           // youtube.com/watch?v=VIDEO_ID
+    /(?:youtu\.be\/)([^&\s?]+)/,                       // youtu.be/VIDEO_ID
+    /(?:youtube\.com\/embed\/)([^&\s?]+)/,             // youtube.com/embed/VIDEO_ID
+    /(?:youtube\.com\/v\/)([^&\s?]+)/,                 // youtube.com/v/VIDEO_ID
+    /(?:youtube\.com\/shorts\/)([^&\s?]+)/,            // youtube.com/shorts/VIDEO_ID
+    /^([a-zA-Z0-9_-]{11})$/                            // Direct video ID (11 chars)
   ];
   
   for (const pattern of patterns) {
     const match = url.match(pattern);
-    if (match) return match[1];
+    if (match && match[1]) return match[1];
   }
+  
   return null;
 };
 
@@ -81,8 +88,17 @@ export function EpisodeVideoPlayer({
               />
             </div>
           ) : (
-            <div className="aspect-video flex items-center justify-center bg-muted text-muted-foreground">
-              <p>Invalid YouTube URL</p>
+            <div className="aspect-video flex flex-col items-center justify-center bg-muted text-muted-foreground p-8">
+              <p className="text-lg font-semibold mb-2">Unable to load YouTube video</p>
+              <p className="text-sm mb-4">URL: {videoUrl}</p>
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={handleOpenYouTube}
+              >
+                <ExternalLink className="h-4 w-4 mr-2" />
+                Open URL Directly
+              </Button>
             </div>
           )}
         </div>
