@@ -58,6 +58,27 @@ Deno.serve(async (req) => {
     const productionSteps = [];
     const startTime = Date.now();
 
+    // Activate all industry-leading bots at the start
+    const allBots = [
+      'script_generator', 'hook_optimizer', 'trend_detector', 
+      'cultural_injector', 'expert_director', 'viral_optimizer',
+      'scene_orchestrator', 'production_team'
+    ];
+
+    const botActivationPromises = allBots.map(botType => 
+      supabase.from('bot_activities').insert({
+        bot_type: botType,
+        user_id: user.id,
+        project_id: projectId,
+        episode_id: episodeId,
+        status: 'active',
+        metadata: { phase: 'initialization', industryLeading: true, viewerOptimized: true }
+      })
+    );
+
+    await Promise.all(botActivationPromises);
+    console.log('✅ All 8 industry-leading reality TV bots activated');
+
     console.log('⚡ PARALLEL PRODUCTION: Launching all bots simultaneously for sub-minute production...');
 
     // PHASE 1: Run independent tasks in parallel (MAXIMUM SPEED + VIRAL INTELLIGENCE)
