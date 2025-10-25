@@ -227,7 +227,7 @@ Deno.serve(async (req) => {
         script: enhancedEpisode.script || episode.script,
         synopsis: enhancedEpisode.synopsis || episode.synopsis,
         storyboard: enhancedEpisode.storyboard || episode.storyboard,
-        video_status: 'processing',
+        video_status: 'script_ready', // Keep as script_ready, video gen will update to rendering
         video_url: enhancedEpisode.video_url,
         updated_at: new Date().toISOString()
       })
@@ -255,12 +255,22 @@ Deno.serve(async (req) => {
     console.log(`\n🎉 GOD MODE COMPLETE - Episode ${episodeId} processed`);
     console.log(`\n⚡ AUTO-TRIGGERING VIDEO GENERATION...`);
 
-    // 🔥 GOD MODE: Auto-trigger video generation in background
+    // 🔥 GOD MODE: Auto-trigger video generation with service role (runs in background)
     (async () => {
       try {
         console.log(`Starting video generation for episode ${episodeId}`);
-        const { data: videoData, error: videoError } = await supabase.functions.invoke('render-episode-video', {
-          body: { episodeId }
+        
+        // Create service role client for internal bot communication
+        const serviceSupabase = createClient(
+          Deno.env.get('SUPABASE_URL') ?? '',
+          Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
+        );
+        
+        const { data: videoData, error: videoError } = await serviceSupabase.functions.invoke('render-episode-video', {
+          body: { 
+            episodeId,
+            userId: episode.user_id // Pass userId for internal service call
+          }
         });
 
         if (videoError) {

@@ -16,16 +16,26 @@ Deno.serve(async (req) => {
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
     );
 
-    const authHeader = req.headers.get('Authorization');
-    if (!authHeader) throw new Error('No authorization header');
+    const { episodeId, userId } = await req.json();
+    
+    let user;
+    
+    // Support both authenticated user requests and internal service calls
+    if (userId) {
+      // Internal service call from another bot - use passed userId
+      user = { id: userId };
+    } else {
+      // Regular authenticated user request
+      const authHeader = req.headers.get('Authorization');
+      if (!authHeader) throw new Error('No authorization header');
 
-    const { data: { user }, error: userError } = await supabase.auth.getUser(
-      authHeader.replace('Bearer ', '')
-    );
+      const { data: { user: authUser }, error: userError } = await supabase.auth.getUser(
+        authHeader.replace('Bearer ', '')
+      );
 
-    if (userError || !user) throw new Error('Unauthorized');
-
-    const { episodeId } = await req.json();
+      if (userError || !authUser) throw new Error('Unauthorized');
+      user = authUser;
+    }
 
     if (!episodeId) {
       throw new Error('Episode ID is required');
