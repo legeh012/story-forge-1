@@ -3,10 +3,12 @@ import { useNavigate } from 'react-router-dom';
 import Navigation from "@/components/Navigation";
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Play, Film, Clock } from "lucide-react";
+import { Play, Film, Clock, Sparkles } from "lucide-react";
 import { supabase } from '@/integrations/supabase/client';
 import { VideoManifestPlayer } from '@/components/VideoManifestPlayer';
+import { useToast } from "@/hooks/use-toast";
 import SEOHead from '@/components/SEOHead';
 
 interface Episode {
@@ -22,9 +24,13 @@ interface Episode {
 
 const EpisodesGallery = () => {
   const navigate = useNavigate();
+  const { toast } = useToast();
   const [loading, setLoading] = useState(true);
   const [season1Episodes, setSeason1Episodes] = useState<Episode[]>([]);
   const [season2Episodes, setSeason2Episodes] = useState<Episode[]>([]);
+  const [season1Trailer, setSeason1Trailer] = useState<string | null>(null);
+  const [season2Trailer, setSeason2Trailer] = useState<string | null>(null);
+  const [generatingTrailer, setGeneratingTrailer] = useState<number | null>(null);
 
   useEffect(() => {
     const checkAuth = async () => {
@@ -55,10 +61,79 @@ const EpisodesGallery = () => {
 
       setSeason1Episodes(season1);
       setSeason2Episodes(season2);
+
+      // Check for existing trailers
+      await checkForTrailers();
     } catch (error) {
       console.error('Error fetching episodes:', error);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const checkForTrailers = async () => {
+    try {
+      const baseUrl = import.meta.env.VITE_SUPABASE_URL;
+      
+      // Check for season 1 trailer
+      const { data: s1Files } = await supabase.storage
+        .from('episode-videos')
+        .list('trailers/season-1');
+      
+      if (s1Files?.some(f => f.name === 'trailer-manifest.json')) {
+        const url = `${baseUrl}/storage/v1/object/public/episode-videos/trailers/season-1/trailer-manifest.json`;
+        setSeason1Trailer(url);
+      }
+
+      // Check for season 2 trailer
+      const { data: s2Files } = await supabase.storage
+        .from('episode-videos')
+        .list('trailers/season-2');
+      
+      if (s2Files?.some(f => f.name === 'trailer-manifest.json')) {
+        const url = `${baseUrl}/storage/v1/object/public/episode-videos/trailers/season-2/trailer-manifest.json`;
+        setSeason2Trailer(url);
+      }
+    } catch (error) {
+      console.error('Error checking trailers:', error);
+    }
+  };
+
+  const generateTrailer = async (season: number) => {
+    setGeneratingTrailer(season);
+    try {
+      toast({
+        title: `Generating Season ${season} Trailer`,
+        description: 'Creating dramatic photorealistic scenes...',
+      });
+
+      const { data, error } = await supabase.functions.invoke('generate-season-trailer', {
+        body: { 
+          season,
+          projectId: 'e4d77d29-e1ef-4ad7-a041-cc9421ad76a7' // The Real Sisters in the Diaspora
+        }
+      });
+
+      if (error) throw error;
+
+      if (data?.trailerUrl) {
+        if (season === 1) setSeason1Trailer(data.trailerUrl);
+        if (season === 2) setSeason2Trailer(data.trailerUrl);
+        
+        toast({
+          title: '🎬 Trailer Complete!',
+          description: `Season ${season} trailer generated successfully`,
+        });
+      }
+    } catch (error) {
+      console.error('Trailer generation error:', error);
+      toast({
+        title: 'Generation Failed',
+        description: error instanceof Error ? error.message : 'Failed to generate trailer',
+        variant: 'destructive',
+      });
+    } finally {
+      setGeneratingTrailer(null);
     }
   };
 
@@ -167,6 +242,41 @@ const EpisodesGallery = () => {
             </TabsList>
 
             <TabsContent value="season1" className="space-y-6">
+              {/* Season 1 Trailer */}
+              <Card className="border-primary/50 bg-gradient-to-br from-primary/10 to-accent/10">
+                <CardHeader>
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <CardTitle className="flex items-center gap-2">
+                        <Film className="h-5 w-5" />
+                        Season 1 Trailer
+                      </CardTitle>
+                      <CardDescription>Official season preview</CardDescription>
+                    </div>
+                    {!season1Trailer && (
+                      <Button 
+                        onClick={() => generateTrailer(1)}
+                        disabled={generatingTrailer === 1}
+                        className="bg-gradient-to-r from-primary to-accent"
+                      >
+                        <Sparkles className="h-4 w-4 mr-2" />
+                        {generatingTrailer === 1 ? 'Generating...' : 'Generate Trailer'}
+                      </Button>
+                    )}
+                  </div>
+                </CardHeader>
+                <CardContent>
+                  {season1Trailer ? (
+                    <VideoManifestPlayer manifestUrl={season1Trailer} />
+                  ) : (
+                    <div className="aspect-video bg-muted rounded-lg flex items-center justify-center">
+                      <p className="text-muted-foreground">No trailer generated yet</p>
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+
+              {/* Episodes */}
               {season1Episodes.length === 0 ? (
                 <Card className="p-12 text-center">
                   <p className="text-muted-foreground">No episodes in Season 1 yet</p>
@@ -181,6 +291,41 @@ const EpisodesGallery = () => {
             </TabsContent>
 
             <TabsContent value="season2" className="space-y-6">
+              {/* Season 2 Trailer */}
+              <Card className="border-accent/50 bg-gradient-to-br from-accent/10 to-primary-glow/10">
+                <CardHeader>
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <CardTitle className="flex items-center gap-2">
+                        <Film className="h-5 w-5" />
+                        Season 2 Trailer
+                      </CardTitle>
+                      <CardDescription>Official season preview</CardDescription>
+                    </div>
+                    {!season2Trailer && (
+                      <Button 
+                        onClick={() => generateTrailer(2)}
+                        disabled={generatingTrailer === 2}
+                        className="bg-gradient-to-r from-accent to-primary-glow"
+                      >
+                        <Sparkles className="h-4 w-4 mr-2" />
+                        {generatingTrailer === 2 ? 'Generating...' : 'Generate Trailer'}
+                      </Button>
+                    )}
+                  </div>
+                </CardHeader>
+                <CardContent>
+                  {season2Trailer ? (
+                    <VideoManifestPlayer manifestUrl={season2Trailer} />
+                  ) : (
+                    <div className="aspect-video bg-muted rounded-lg flex items-center justify-center">
+                      <p className="text-muted-foreground">No trailer generated yet</p>
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+
+              {/* Episodes */}
               {season2Episodes.length === 0 ? (
                 <Card className="p-12 text-center">
                   <p className="text-muted-foreground">No episodes in Season 2 yet</p>
