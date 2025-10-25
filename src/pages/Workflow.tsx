@@ -21,6 +21,7 @@ import { ActiveBotsPanel } from "@/components/ActiveBotsPanel";
 import { ScalabilityInfo } from "@/components/ScalabilityInfo";
 import { PromptGenerator } from "@/components/PromptGenerator";
 import { ProductionDashboard } from "@/components/ProductionDashboard";
+import { EpisodeWorkflowPipeline } from "@/components/EpisodeWorkflowPipeline";
 import { sayWalahiCharacters } from "@/data/sayWalahiCharacters";
 
 interface Project {
@@ -1023,20 +1024,83 @@ The episode should feature maximum drama, cultural authenticity, viral moments, 
                     </Card>
                   )}
 
-                  {/* Episode Renderers */}
-                  <div className="grid grid-cols-1 gap-4">
-                    {episodes.map((episode) => (
-                      <VideoRenderer
+                  {/* Episode Workflow Pipelines */}
+                  <div className="grid grid-cols-1 gap-6">
+                    {episodes.map((episode: any) => (
+                      <EpisodeWorkflowPipeline
                         key={episode.id}
-                        episode={episode as any}
-                        onStatusChange={() => fetchProjectDetails(selectedProject!)}
+                        episodeId={episode.id}
+                        episodeTitle={episode.title}
+                        episodeStatus={episode.status}
+                        videoStatus={episode.video_status}
+                        script={episode.script}
+                        voiceGenerated={!!episode.script}
+                        scenesGenerated={!!episode.storyboard && Array.isArray(episode.storyboard) && episode.storyboard.length > 0}
+                        videoUrl={episode.video_url}
+                        onGenerateScript={async () => {
+                          toast({ title: "Generating Script", description: "AI is writing the episode script..." });
+                          const { error } = await supabase.functions.invoke('script-generator-bot', {
+                            body: { episodeId: episode.id }
+                          });
+                          if (!error) {
+                            toast({ title: "Script Generated!", description: "Episode script is ready" });
+                            fetchProjectDetails(selectedProject!);
+                          }
+                        }}
+                        onGenerateVoice={async () => {
+                          toast({ title: "Generating Voice", description: "Creating voice-over for the episode..." });
+                          const { error } = await supabase.functions.invoke('godlike-voice-bot', {
+                            body: { episodeId: episode.id }
+                          });
+                          if (!error) {
+                            toast({ title: "Voice Generated!", description: "Voice-over is ready" });
+                            fetchProjectDetails(selectedProject!);
+                          }
+                        }}
+                        onGenerateScenes={async () => {
+                          toast({ title: "Generating Scenes", description: "Creating visual scenes..." });
+                          const { error } = await supabase.functions.invoke('scene-orchestration', {
+                            body: { episodeId: episode.id }
+                          });
+                          if (!error) {
+                            toast({ title: "Scenes Generated!", description: "All scenes are ready" });
+                            fetchProjectDetails(selectedProject!);
+                          }
+                        }}
+                        onStartRender={async () => {
+                          toast({ title: "Starting Render", description: "Video rendering has begun..." });
+                          const { error } = await supabase.functions.invoke('render-episode-video', {
+                            body: { episodeId: episode.id }
+                          });
+                          if (!error) {
+                            toast({ title: "Rendering Started!", description: "Check back soon for completed video" });
+                            fetchProjectDetails(selectedProject!);
+                          }
+                        }}
+                        onDownload={async () => {
+                          if (episode.video_url) {
+                            window.open(episode.video_url, '_blank');
+                            toast({ title: "Opening Video", description: "Video opened in new tab" });
+                          }
+                        }}
+                        onPublish={async () => {
+                          const { error } = await supabase
+                            .from('episodes')
+                            .update({ status: 'published' })
+                            .eq('id', episode.id);
+                          
+                          if (!error) {
+                            toast({ title: "Published!", description: "Episode is now live" });
+                            fetchProjectDetails(selectedProject!);
+                          }
+                        }}
                       />
                     ))}
                     {episodes.length === 0 && (
                       <Card>
                         <CardContent className="py-12 text-center">
                           <Clapperboard className="h-12 w-12 mx-auto mb-4 opacity-50 text-muted-foreground" />
-                          <p className="text-muted-foreground">No episodes yet. Use the AI copilot to create episodes!</p>
+                          <p className="text-muted-foreground">No episodes yet. Use the AI generator to create episodes!</p>
                         </CardContent>
                       </Card>
                     )}
