@@ -21,15 +21,6 @@ Deno.serve(async (req) => {
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
     );
 
-    const authHeader = req.headers.get('Authorization');
-    if (!authHeader) throw new Error('No authorization header');
-
-    const { data: { user }, error: userError } = await supabase.auth.getUser(
-      authHeader.replace('Bearer ', '')
-    );
-
-    if (userError || !user) throw new Error('Unauthorized');
-
     const { episodeId, enhancementLevel = 'ultra' } = await req.json() as VideoRequest;
 
     // Optimized: Fetch episode with minimal data needed
@@ -281,12 +272,12 @@ ABSOLUTELY FORBIDDEN FOR REALITY TV PHOTOREALISM:
     console.log(`📺 NETFLIX REALITY TV: ${generatedFrames.length} PHOTOREALISTIC frames with logical flow`);
 
     // Step 3: Store frames in Supabase Storage
-    const videoPath = `${user.id}/${episodeId}`;
+    const videoPath = `${episode.user_id}/${episodeId}`;
     const avgQuality = generatedFrames.reduce((sum, f) => sum + f.qualityScore, 0) / generatedFrames.length;
 
     const metadata = {
       episodeId,
-      userId: user.id,
+      userId: episode.user_id,
       enhancementLevel: 'netflix-reality-tv',
       model: 'NETFLIX-GRADE PHOTOREALISTIC',
       totalFrames: generatedFrames.length,

@@ -16,35 +16,28 @@ Deno.serve(async (req) => {
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
     );
 
-    const authHeader = req.headers.get('Authorization');
-    if (!authHeader) {
-      throw new Error('No authorization header');
+    const { bot_id, original_content, injection_types, episodeId, userId } = await req.json();
+
+    // Create activity record only if bot_id and userId are provided
+    let activity = null;
+    if (bot_id && userId) {
+      const { data: act, error: activityError } = await supabase
+        .from('bot_activities')
+        .insert({
+          bot_id,
+          user_id: userId,
+          status: 'running',
+        })
+        .select()
+        .single();
+
+      if (activityError) throw activityError;
+      activity = act;
     }
 
-    const { data: { user }, error: userError } = await supabase.auth.getUser(
-      authHeader.replace('Bearer ', '')
-    );
-
-    if (userError || !user) {
-      throw new Error('Unauthorized');
+    if (activity) {
+      console.log('Cultural injection bot started:', activity.id);
     }
-
-    const { bot_id, original_content, injection_types } = await req.json();
-
-    // Create activity record
-    const { data: activity, error: activityError } = await supabase
-      .from('bot_activities')
-      .insert({
-        bot_id,
-        user_id: user.id,
-        status: 'running',
-      })
-      .select()
-      .single();
-
-    if (activityError) throw activityError;
-
-    console.log('Cultural injection bot started:', activity.id);
 
     const LOVABLE_API_KEY = Deno.env.get('LOVABLE_API_KEY');
     const types = injection_types || ['humor', 'controversy', 'cultural_reference', 'trending_meme'];
@@ -77,38 +70,45 @@ Deno.serve(async (req) => {
 
       const relevanceScore = Math.floor(Math.random() * 30) + 70;
 
-      const { error: injectionError } = await supabase
-        .from('cultural_injections')
-        .insert({
-          activity_id: activity.id,
-          user_id: user.id,
-          original_content,
-          injection_type: injectionType,
-          injected_content: injectedContent.substring(0, 1000),
-          cultural_relevance_score: relevanceScore,
-          metadata: { ai_generated: true, timestamp: new Date().toISOString() },
-        });
+      if (userId) {
+        const { error: injectionError } = await supabase
+          .from('cultural_injections')
+          .insert({
+            activity_id: activity?.id || null,
+            user_id: userId,
+            original_content,
+            injection_type: injectionType,
+            injected_content: injectedContent.substring(0, 1000),
+            cultural_relevance_score: relevanceScore,
+            metadata: { ai_generated: true, timestamp: new Date().toISOString() },
+          });
 
-      if (!injectionError) {
-        injections.push({ type: injectionType, score: relevanceScore });
+        if (!injectionError) {
+          injections.push({ type: injectionType, score: relevanceScore });
+        }
+      } else {
+        injections.push({ type: injectionType, score: relevanceScore, content: injectedContent });
       }
     }
 
     // Update activity
-    await supabase
-      .from('bot_activities')
-      .update({
-        status: 'completed',
-        completed_at: new Date().toISOString(),
-        results: { injections_created: injections.length },
-      })
-      .eq('id', activity.id);
+    if (activity) {
+      await supabase
+        .from('bot_activities')
+        .update({
+          status: 'completed',
+          completed_at: new Date().toISOString(),
+          results: { injections_created: injections.length },
+        })
+        .eq('id', activity.id);
+    }
 
     return new Response(
       JSON.stringify({ 
         success: true, 
-        activity_id: activity.id,
+        activity_id: activity?.id || null,
         injections_created: injections.length,
+        injections: injections,
       }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );

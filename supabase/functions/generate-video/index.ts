@@ -154,6 +154,8 @@ serve(async (req) => {
           },
           body: JSON.stringify({
             episodeId: episodeId,
+            userId: episode.user_id,
+            original_content: episode.synopsis || episode.title,
             culturalContext: 'diaspora_life'
           })
         }).catch(err => console.log('⚠️ Cultural Injection skipped:', err.message));
