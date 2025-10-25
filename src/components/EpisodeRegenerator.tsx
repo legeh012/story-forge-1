@@ -292,8 +292,14 @@ export const EpisodeRegenerator = () => {
       const episode = episodes[0];
       setRegenerating(true);
       setCurrentEpisode(episode.episode_number);
+      setProgress(0);
 
-      // Call God Mode for the episode
+      // Step 1: Call God Mode for script and storyboard
+      toast({
+        title: '⚡ Phase 1/2: Bot Orchestra',
+        description: 'Generating script with cultural elements...',
+      });
+
       const { data: godModeResult, error: genError } = await supabase.functions.invoke('reality-tv-god-mode', {
         body: {
           episodeId: episode.id,
@@ -305,17 +311,44 @@ export const EpisodeRegenerator = () => {
       if (genError) {
         console.error('God Mode error:', genError);
         toast({
-          title: 'Test Failed',
+          title: 'God Mode Failed',
           description: genError.message,
           variant: 'destructive'
         });
-      } else {
-        console.log('God Mode result:', godModeResult);
-        toast({
-          title: '✅ Test Complete',
-          description: `Episode ${episode.episode_number}: "${episode.title}" - All 8 industry-leading bots activated successfully`,
-        });
+        return;
       }
+
+      console.log('God Mode result:', godModeResult);
+      setProgress(50);
+
+      // Step 2: Call video renderer for visual generation
+      toast({
+        title: '🎥 Phase 2/2: Video Generation',
+        description: 'Creating photorealistic scenes and compiling video...',
+      });
+
+      const { data: videoResult, error: videoError } = await supabase.functions.invoke('render-episode-video', {
+        body: { episodeId: episode.id }
+      });
+
+      if (videoError) {
+        console.error('Video render error:', videoError);
+        toast({
+          title: 'Video Generation Failed',
+          description: videoError.message,
+          variant: 'destructive'
+        });
+        return;
+      }
+
+      console.log('Video result:', videoResult);
+      setProgress(100);
+
+      toast({
+        title: '✅ Episode Complete!',
+        description: `Episode ${episode.episode_number}: "${episode.title}" - Video manifest ready!`,
+      });
+
     } catch (error) {
       console.error('Test error:', error);
       toast({
@@ -326,6 +359,7 @@ export const EpisodeRegenerator = () => {
     } finally {
       setRegenerating(false);
       setCurrentEpisode(null);
+      setProgress(0);
     }
   };
 
