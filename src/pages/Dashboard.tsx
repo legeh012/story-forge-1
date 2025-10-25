@@ -4,7 +4,7 @@ import Navigation from "@/components/Navigation";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Plus, Users, BookOpen, Sparkles, Zap, Play, Trash2 } from "lucide-react";
+import { Plus, Users, BookOpen, Sparkles, Zap, Play, Trash2, RefreshCw } from "lucide-react";
 import { Link } from "react-router-dom";
 import { SystemHealthMonitor } from "@/components/SystemHealthMonitor";
 import { OnboardingGuide } from "@/components/OnboardingGuide";
@@ -73,7 +73,7 @@ const Dashboard = () => {
           supabase.from('episodes').select('*', { count: 'exact', head: true }).eq('user_id', userId),
           supabase.from('projects').select('*', { count: 'exact', head: true }).eq('user_id', userId),
           supabase.from('characters').select('name, role').eq('user_id', userId).order('created_at', { ascending: false }).limit(3),
-          supabase.from('episodes').select('id, title, status, episode_number').eq('user_id', userId).order('created_at', { ascending: false }).limit(3),
+          supabase.from('episodes').select('id, title, status, episode_number, video_status').eq('user_id', userId).order('created_at', { ascending: false }).limit(3),
           supabase.from('projects').select('id, title, description, status, genre').eq('user_id', userId).order('created_at', { ascending: false }).limit(3)
         ]);
 
@@ -502,13 +502,46 @@ const Dashboard = () => {
                 recentEpisodes.map((episode) => (
                   <Card key={episode.id} className="p-4 bg-card border-border hover:border-accent/30 transition-all cursor-pointer">
                     <div className="flex items-center justify-between">
-                      <div>
+                      <div className="flex-1">
                         <h3 className="font-semibold">{episode.title}</h3>
-                        <p className="text-sm text-muted-foreground">{episode.status || 'Draft'} • Episode {episode.episode_number}</p>
+                        <div className="flex items-center gap-2 mt-1">
+                          <p className="text-sm text-muted-foreground">{episode.status || 'Draft'} • Episode {episode.episode_number}</p>
+                          {episode.video_status && (
+                            <Badge variant={episode.video_status === 'completed' ? 'default' : episode.video_status === 'failed' ? 'destructive' : 'secondary'}>
+                              {episode.video_status}
+                            </Badge>
+                          )}
+                        </div>
                       </div>
-                      <Link to={`/episodes/${episode.id}`}>
-                        <Button variant="ghost" size="sm">View</Button>
-                      </Link>
+                      <div className="flex gap-2">
+                        {episode.video_status === 'failed' && (
+                          <Button 
+                            variant="outline" 
+                            size="sm"
+                            onClick={async () => {
+                              try {
+                                toast({ title: '🎬 Restarting Video Generation', description: 'Processing...' });
+                                const { data: { session } } = await supabase.auth.getSession();
+                                const { error } = await supabase.functions.invoke('generate-video', {
+                                  body: { episodeId: episode.id },
+                                  headers: { Authorization: `Bearer ${session?.access_token}` },
+                                });
+                                if (error) throw error;
+                                toast({ title: '✅ Generation Started', description: 'Video is processing again' });
+                                setTimeout(() => fetchDashboardData(session!.user.id), 2000);
+                              } catch (error) {
+                                toast({ title: 'Error', description: 'Failed to restart generation', variant: 'destructive' });
+                              }
+                            }}
+                          >
+                            <RefreshCw className="h-3 w-3 mr-1" />
+                            Retry
+                          </Button>
+                        )}
+                        <Link to={`/episodes/${episode.id}`}>
+                          <Button variant="ghost" size="sm">View</Button>
+                        </Link>
+                      </div>
                     </div>
                   </Card>
                 ))
