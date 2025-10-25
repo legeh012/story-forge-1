@@ -8,6 +8,7 @@ import { Plus, Users, BookOpen, Sparkles, Zap, Play, Trash2 } from "lucide-react
 import { Link } from "react-router-dom";
 import { SystemHealthMonitor } from "@/components/SystemHealthMonitor";
 import { OnboardingGuide } from "@/components/OnboardingGuide";
+import { EpisodeRegenerator } from "@/components/EpisodeRegenerator";
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from "@/hooks/use-toast";
 import { useSmartErrorRecovery } from "@/hooks/useSmartErrorRecovery";
@@ -315,6 +316,11 @@ const Dashboard = () => {
               </Button>
             </div>
           </div>
+        </div>
+
+        {/* Episode Regenerator */}
+        <div className="mb-8">
+          <EpisodeRegenerator />
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
