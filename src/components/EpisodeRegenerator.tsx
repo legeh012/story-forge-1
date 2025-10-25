@@ -24,11 +24,7 @@ export const EpisodeRegenerator = () => {
   const [completedEpisodes, setCompletedEpisodes] = useState<number[]>([]);
 
   const episodes = [
-    { number: 1, title: "Say Walahi, We're Live" },
-    { number: 2, title: "Boutique Drama Unfolds" },
-    { number: 3, title: "Receipts Revealed" },
-    { number: 4, title: "The Confrontation" },
-    { number: 5, title: "Family Secrets" }
+    { number: 1, title: "Khat and Karma - Pilot Episode", projectName: "Khat and Karma" }
   ];
 
   const regenerateAllEpisodes = async () => {
@@ -40,7 +36,40 @@ export const EpisodeRegenerator = () => {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error('Not authenticated');
 
-      const projectId = 'ebae852a-56f4-4199-bea8-1b78f66d88c4'; // Real Sisters project
+      // Create or get Khat and Karma project
+      let projectId;
+      const { data: existingProject } = await supabase
+        .from('projects')
+        .select('id')
+        .eq('user_id', user.id)
+        .eq('title', 'Khat and Karma')
+        .maybeSingle();
+
+      if (existingProject) {
+        projectId = existingProject.id;
+      } else {
+        // Create new project
+        const { data: newProject, error: projectError } = await supabase
+          .from('projects')
+          .insert({
+            user_id: user.id,
+            title: 'Khat and Karma',
+            description: 'A dramatic reality series about karma, consequences, and cultural clashes',
+            genre: 'Reality TV',
+            status: 'active',
+            default_rendering_style: 'photorealistic'
+          })
+          .select()
+          .single();
+
+        if (projectError) throw projectError;
+        projectId = newProject.id;
+        
+        toast({
+          title: 'Project Created',
+          description: 'Created "Khat and Karma" project',
+        });
+      }
 
       for (let i = 0; i < episodes.length; i++) {
         const ep = episodes[i];
@@ -80,8 +109,8 @@ export const EpisodeRegenerator = () => {
             episode_number: ep.number,
             season: 1,
             title: ep.title,
-            synopsis: `Episode ${ep.number}: ${ep.title} - A dramatic installment in the Real Sisters in the Diaspora series.`,
-            script: `[Opening Scene]\nThe drama continues in episode ${ep.number}...\n\n[Confessional]\nCharacter speaking directly to camera...\n\n[Scene]\nDramatic confrontation unfolds...`,
+            synopsis: `Khat and Karma: ${ep.title} - A powerful reality TV episode exploring consequences, cultural dynamics, and real human drama.`,
+            script: `[Opening Scene - Khat Lounge]\nThe atmosphere is tense as decisions from the past come back with consequences...\n\n[Confessional]\n"In this life, everything you do comes back to you. That's karma."\n\n[Dramatic Scene]\nCultural traditions clash with modern reality as truth unfolds...`,
             status: 'draft',
             video_status: 'not_started'
           };
@@ -126,8 +155,8 @@ export const EpisodeRegenerator = () => {
       }
 
       toast({
-        title: 'All Episodes Queued!',
-        description: 'Episodes 1-5 are being generated with cinematic quality, voiceovers, and natural movement.',
+        title: 'Episode Generated!',
+        description: 'Khat and Karma pilot episode is being generated with cinematic quality, voiceovers, and natural movement.',
       });
 
     } catch (error) {
@@ -154,9 +183,9 @@ export const EpisodeRegenerator = () => {
             <Video className="h-6 w-6 text-white" />
           </div>
           <div>
-            <CardTitle className="text-2xl">Cinematic Episode Generator</CardTitle>
+            <CardTitle className="text-2xl">Khat and Karma - Episode Generator</CardTitle>
             <CardDescription>
-              Regenerate Episodes 1-5 with scenes, voiceovers, actors, and natural movement
+              Generate the pilot episode with scenes, voiceovers, actors, and natural movement
             </CardDescription>
           </div>
         </div>
@@ -184,7 +213,7 @@ export const EpisodeRegenerator = () => {
 
         {/* Episodes List */}
         <div className="space-y-2">
-          <p className="text-sm font-semibold text-muted-foreground">Episodes to Generate:</p>
+          <p className="text-sm font-semibold text-muted-foreground">Pilot Episode:</p>
           <div className="space-y-2">
             {episodes.map((ep) => (
               <div
@@ -254,18 +283,18 @@ export const EpisodeRegenerator = () => {
           {regenerating ? (
             <>
               <Sparkles className="h-5 w-5 mr-2 animate-spin" />
-              Generating Episodes {currentEpisode ? `(${currentEpisode}/5)` : '...'}
+              Generating Pilot Episode...
             </>
           ) : (
             <>
               <Video className="h-5 w-5 mr-2" />
-              Generate Episodes 1-5
+              Generate Khat and Karma Pilot
             </>
           )}
         </Button>
 
         <p className="text-xs text-center text-muted-foreground">
-          Each episode will have 8-12 cinematic scenes with AI voiceovers, natural movement, and automatic YouTube upload
+          The pilot episode will have 8-12 cinematic scenes with AI voiceovers, natural movement, and automatic YouTube upload
         </p>
       </CardContent>
     </Card>
