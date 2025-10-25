@@ -1,6 +1,6 @@
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
-import { Share2, ExternalLink } from 'lucide-react';
+import { Share2, ExternalLink, Video } from 'lucide-react';
 import { toast } from 'sonner';
 
 interface EpisodeVideoPlayerProps {
@@ -13,9 +13,14 @@ interface EpisodeVideoPlayerProps {
   autoPlay?: boolean;
 }
 
+// Check if URL is a YouTube channel
+const isYouTubeChannel = (url: string): boolean => {
+  return url.includes('/channel/') || url.includes('/c/') || url.includes('/@');
+};
+
 // Extract YouTube video ID from various YouTube URL formats
 const extractYouTubeId = (url: string): string | null => {
-  if (!url) return null;
+  if (!url || isYouTubeChannel(url)) return null;
   
   const patterns = [
     /(?:youtube\.com\/watch\?v=)([^&\s?]+)/,           // youtube.com/watch?v=VIDEO_ID
@@ -49,6 +54,7 @@ export function EpisodeVideoPlayer({
     ? `S${season}E${episodeNumber} - ${episodeTitle}` 
     : episodeTitle;
 
+  const isChannel = isYouTubeChannel(videoUrl);
   const youtubeId = extractYouTubeId(videoUrl);
   const embedUrl = youtubeId 
     ? `https://www.youtube.com/embed/${youtubeId}${autoPlay ? '?autoplay=1' : ''}`
@@ -87,10 +93,32 @@ export function EpisodeVideoPlayer({
                 allowFullScreen
               />
             </div>
+          ) : isChannel ? (
+            <div className="aspect-video flex flex-col items-center justify-center bg-gradient-to-br from-primary/10 to-accent/10 p-8">
+              <div className="text-center space-y-4">
+                <div className="p-4 rounded-full bg-primary/20 w-fit mx-auto">
+                  <Video className="h-12 w-12 text-primary" />
+                </div>
+                <div>
+                  <p className="text-lg font-semibold mb-2">YouTube Channel Link</p>
+                  <p className="text-sm text-muted-foreground mb-4">
+                    This is a channel URL, not a specific video. Visit the channel to see all videos.
+                  </p>
+                </div>
+                <Button
+                  size="lg"
+                  onClick={handleOpenYouTube}
+                  className="bg-gradient-to-r from-primary to-accent"
+                >
+                  <ExternalLink className="h-4 w-4 mr-2" />
+                  Open YouTube Channel
+                </Button>
+              </div>
+            </div>
           ) : (
             <div className="aspect-video flex flex-col items-center justify-center bg-muted text-muted-foreground p-8">
               <p className="text-lg font-semibold mb-2">Unable to load YouTube video</p>
-              <p className="text-sm mb-4">URL: {videoUrl}</p>
+              <p className="text-sm mb-4">Invalid video URL format</p>
               <Button
                 size="sm"
                 variant="outline"
@@ -106,7 +134,11 @@ export function EpisodeVideoPlayer({
         <div className="p-6 pt-4 bg-card">
           <div className="flex items-center justify-between">
             <p className="text-sm text-muted-foreground">
-              Your episode is ready to watch on YouTube!
+              {isChannel 
+                ? 'Visit this YouTube channel to see all episodes!' 
+                : embedUrl 
+                  ? 'Your episode is ready to watch on YouTube!' 
+                  : 'This link will open in YouTube'}
             </p>
             <div className="flex gap-2">
               <Button
