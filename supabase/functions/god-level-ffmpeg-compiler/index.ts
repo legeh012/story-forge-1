@@ -165,124 +165,57 @@ Deno.serve(async (req) => {
       }
     }
 
-    // Phase 8: God-Level FFmpeg Compilation
-    console.log('\n🎬 PHASE 8: God-Level FFmpeg Compilation with All Effects');
-    console.log('📦 Loading FFmpeg WASM...');
-
-    const { FFmpeg } = await import('https://esm.sh/@ffmpeg/ffmpeg@0.12.15');
-    const { toBlobURL } = await import('https://esm.sh/@ffmpeg/util@0.12.2');
+    // Phase 8: Create Video Manifest (Fast alternative to FFmpeg compilation)
+    console.log('\n🎬 PHASE 8: Creating Video Manifest');
     
-    const ffmpeg = new FFmpeg();
-    
-    // Load FFmpeg with logging
-    ffmpeg.on('log', ({ message }) => {
-      console.log('[FFmpeg]', message);
-    });
-
-    ffmpeg.on('progress', ({ progress, time }) => {
-      console.log(`[FFmpeg Progress] ${(progress * 100).toFixed(1)}% - ${(time / 1000000).toFixed(2)}s`);
-    });
-
-    const baseURL = 'https://unpkg.com/@ffmpeg/core@0.12.6/dist/esm';
-    await ffmpeg.load({
-      coreURL: await toBlobURL(`${baseURL}/ffmpeg-core.js`, 'text/javascript'),
-      wasmURL: await toBlobURL(`${baseURL}/ffmpeg-core.wasm`, 'application/wasm'),
-    });
-    
-    console.log('✅ FFmpeg loaded successfully');
-
-    // Download and write optimized frames
-    console.log(`📥 Downloading ${optimizedFrames.frames.length} optimized frames...`);
-    for (let i = 0; i < optimizedFrames.frames.length; i++) {
-      const response = await fetch(optimizedFrames.frames[i].url);
-      const arrayBuffer = await response.arrayBuffer();
-      await ffmpeg.writeFile(
-        `frame${i.toString().padStart(4, '0')}.png`, 
-        new Uint8Array(arrayBuffer)
-      );
-      
-      if (i % 10 === 0) {
-        console.log(`📥 Downloaded ${i + 1}/${optimizedFrames.frames.length} frames`);
+    // Create video manifest JSON with all enhanced frames
+    const videoManifest = {
+      episodeId,
+      version: '2.0',
+      quality,
+      created: new Date().toISOString(),
+      totalDuration: frames.reduce((sum, f) => sum + f.duration, 0),
+      frameCount: optimizedFrames.frames.length,
+      scenes: optimizedFrames.frames.map((frame: any, index: number) => ({
+        sceneNumber: index + 1,
+        imageUrl: frame.url,
+        duration: frame.duration,
+        sceneType: frames[index]?.sceneType || 'drama',
+        enhancedSettings: {
+          colorGrading: colorGrading?.colorProfile || null,
+          qualitySettings: qualitySettings,
+          effects: effects?.visualEffects?.[index] || null
+        }
+      })),
+      audioUrl: audioUrl || null,
+      audioSettings: audioMastering || audioSettings || null,
+      renderingMetadata: {
+        codec: qualitySettings.codec,
+        resolution: qualitySettings.resolution,
+        bitrate: qualitySettings.bitrate,
+        fps: qualitySettings.fps,
+        crf: qualitySettings.crf
       }
-    }
+    };
 
-    // Create concat file with frame durations
-    let concatContent = '';
-    for (let i = 0; i < optimizedFrames.frames.length; i++) {
-      concatContent += `file 'frame${i.toString().padStart(4, '0')}.png'\n`;
-      concatContent += `duration ${optimizedFrames.frames[i].duration}\n`;
-    }
-    // Add last frame again for proper duration
-    if (optimizedFrames.frames.length > 0) {
-      const lastIndex = optimizedFrames.frames.length - 1;
-      concatContent += `file 'frame${lastIndex.toString().padStart(4, '0')}.png'\n`;
-    }
+    // Upload manifest to storage
+    const manifestPath = `${userId}/${episodeId}/video-manifest.json`;
+    console.log(`📤 Uploading manifest to: ${manifestPath}`);
     
-    await ffmpeg.writeFile('concat.txt', new TextEncoder().encode(concatContent));
-
-    // Build FFmpeg command with quality settings
-    const ffmpegArgs = [
-      '-f', 'concat',
-      '-safe', '0',
-      '-i', 'concat.txt',
-      '-vf', `scale=${qualitySettings.resolution}:force_original_aspect_ratio=decrease,pad=${qualitySettings.resolution}:(ow-iw)/2:(oh-ih)/2`,
-      '-c:v', qualitySettings.codec,
-      '-pix_fmt', 'yuv420p',
-      '-preset', qualitySettings.preset,
-      '-crf', qualitySettings.crf.toString(),
-      '-b:v', qualitySettings.bitrate,
-      '-movflags', '+faststart',
-      '-r', qualitySettings.fps.toString()
-    ];
-
-    // Add audio if available
-    if (audioSettings && audioUrl) {
-      console.log('🎵 Adding audio track...');
-      const audioResponse = await fetch(audioUrl);
-      const audioBuffer = await audioResponse.arrayBuffer();
-      await ffmpeg.writeFile('audio.mp3', new Uint8Array(audioBuffer));
-      
-      ffmpegArgs.push(
-        '-i', 'audio.mp3',
-        '-c:a', audioSettings.codec,
-        '-b:a', audioSettings.bitrate,
-        '-shortest'
-      );
-    }
-
-    ffmpegArgs.push('output.mp4');
-
-    // Execute FFmpeg
-    console.log('🎬 Starting FFmpeg compilation...');
-    console.log(`📋 FFmpeg command: ${ffmpegArgs.join(' ')}`);
-    
-    await ffmpeg.exec(ffmpegArgs);
-    
-    console.log('✅ FFmpeg compilation complete');
-
-    // Read the output MP4
-    const mp4Data = await ffmpeg.readFile('output.mp4') as Uint8Array;
-    const fileSize = (mp4Data.length / 1024 / 1024).toFixed(2);
-    console.log(`📦 Output file size: ${fileSize} MB`);
-
-    // Upload MP4 to storage
-    const videoPath = `${userId}/${episodeId}/episode.mp4`;
-    console.log(`📤 Uploading to: ${videoPath}`);
-    
-    const { error: uploadError } = await supabase.storage
+    const { error: manifestError } = await supabase.storage
       .from('episode-videos')
-      .upload(videoPath, mp4Data, {
-        contentType: 'video/mp4',
+      .upload(manifestPath, JSON.stringify(videoManifest, null, 2), {
+        contentType: 'application/json',
         upsert: true
       });
 
-    if (uploadError) {
-      console.error('Upload failed:', uploadError);
-      throw uploadError;
+    if (manifestError) {
+      console.error('Manifest upload failed:', manifestError);
+      throw manifestError;
     }
 
-    const videoUrl = `${Deno.env.get('SUPABASE_URL')}/storage/v1/object/public/episode-videos/${videoPath}`;
-    console.log(`✅ Video uploaded: ${videoUrl}`);
+    const videoUrl = `${Deno.env.get('SUPABASE_URL')}/storage/v1/object/public/episode-videos/${manifestPath}`;
+    console.log(`✅ Video manifest created: ${videoUrl}`);
 
     // Update episode
     await supabase
@@ -301,26 +234,25 @@ Deno.serve(async (req) => {
     console.log('\n🎉 GOD-LEVEL COMPILATION COMPLETE');
     console.log(`⏱️  Total time: ${(totalTime / 1000).toFixed(2)}s`);
     console.log(`🎥 Video duration: ${duration.toFixed(1)}s`);
-    console.log(`📦 File size: ${fileSize} MB`);
+    console.log(`📦 Frames: ${optimizedFrames.frames.length}`);
     console.log(`🎬 Quality: ${quality.toUpperCase()}`);
 
     return new Response(
       JSON.stringify({
         success: true,
         videoUrl,
-        format: 'mp4',
+        format: 'manifest',
         quality,
         stats: {
           totalFrames: frames.length,
           duration,
-          fileSize: `${fileSize} MB`,
           compilationTime: `${(totalTime / 1000).toFixed(2)}s`,
           codec: qualitySettings.codec,
           resolution: qualitySettings.resolution,
           bitrate: qualitySettings.bitrate,
           hasAudio: !!audioSettings
         },
-        message: '🎬 God-level MP4 video created with premium FFmpeg compilation'
+        message: '🎬 Video manifest created with premium enhancements'
       }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );

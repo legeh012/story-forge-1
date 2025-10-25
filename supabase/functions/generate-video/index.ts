@@ -58,109 +58,8 @@ serve(async (req) => {
       console.log(`=== 🎬 COLLABORATIVE BOT PIPELINE STARTED for ${episodeId} ===`);
       
       try {
-        // PHASE 1: Expert Director + Production Team (Parallel)
-        console.log('🎯 PHASE 1: Director & Production Team activation...');
-        const phase1Promises = [
-          // Expert Director
-          fetch(`${supabaseUrl}/functions/v1/expert-director`, {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-              'Authorization': `Bearer ${supabaseKey}`
-            },
-            body: JSON.stringify({
-              prompt: episode.synopsis || episode.title,
-              episodeId: episodeId
-            })
-          }).catch(err => ({ ok: false, error: err.message })),
-          
-          // Production Team - Casting Director
-          fetch(`${supabaseUrl}/functions/v1/production-team`, {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-              'Authorization': `Bearer ${supabaseKey}`
-            },
-            body: JSON.stringify({
-              role: 'casting_director',
-              sceneData: scenes,
-              episodeId: episodeId
-            })
-          }).catch(err => ({ ok: false, error: err.message })),
-          
-          // Production Team - Scene Stylist
-          fetch(`${supabaseUrl}/functions/v1/production-team`, {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-              'Authorization': `Bearer ${supabaseKey}`
-            },
-            body: JSON.stringify({
-              role: 'scene_stylist',
-              sceneData: scenes,
-              episodeId: episodeId
-            })
-          }).catch(err => ({ ok: false, error: err.message })),
-          
-          // Production Team - Drama Editor
-          fetch(`${supabaseUrl}/functions/v1/production-team`, {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-              'Authorization': `Bearer ${supabaseKey}`
-            },
-            body: JSON.stringify({
-              role: 'drama_editor',
-              sceneData: scenes,
-              episodeId: episodeId
-            })
-          }).catch(err => ({ ok: false, error: err.message }))
-        ];
-
-        const phase1Results = await Promise.allSettled(phase1Promises);
-        const phase1Success = phase1Results.filter(r => 
-          r.status === 'fulfilled' && (r.value as any).ok
-        ).length;
-        console.log(`✅ PHASE 1: ${phase1Success}/4 bots completed successfully`);
-
-        // PHASE 2: Scene Orchestration
-        console.log('🎭 PHASE 2: Scene Orchestration Engine...');
-        const sceneOrchestrationResponse: any = await fetch(`${supabaseUrl}/functions/v1/scene-orchestration`, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${supabaseKey}`
-          },
-          body: JSON.stringify({
-            episodeId: episodeId
-          })
-        }).catch(err => {
-          console.log('⚠️ Scene Orchestration skipped:', err.message);
-          return { ok: false };
-        });
-
-        if (sceneOrchestrationResponse.ok) {
-          const orchestrationData = await sceneOrchestrationResponse.json();
-          console.log(`✅ PHASE 2: ${orchestrationData.scenesGenerated || 0} scenes orchestrated`);
-        }
-
-        // PHASE 3: Cultural Injection
-        console.log('🌍 PHASE 3: Cultural Injection Bot...');
-        await fetch(`${supabaseUrl}/functions/v1/cultural-injection-bot`, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${supabaseKey}`
-          },
-          body: JSON.stringify({
-            episodeId: episodeId,
-            userId: episode.user_id,
-            original_content: episode.synopsis || episode.title,
-            culturalContext: 'diaspora_life'
-          })
-        }).catch(err => console.log('⚠️ Cultural Injection skipped:', err.message));
-
-        console.log('✅ PHASE 3: Cultural context integrated');
+        // STREAMLINED: Skip heavy preprocessing bots, go straight to video generation
+        console.log('⚡ FAST MODE: Skipping preprocessing, starting video generation...');
 
         // Update to rendering status before frame generation
         await supabase
@@ -168,8 +67,8 @@ serve(async (req) => {
           .update({ video_status: 'rendering' })
           .eq('id', episodeId);
 
-        // PHASE 4: Ultra Video Bot - Netflix-grade multi-scene generation
-        console.log('🎥 PHASE 4: Ultra Video Bot - Netflix-grade reality TV generation...');
+        // PHASE 1: Ultra Video Bot - Fast Netflix-grade generation
+        console.log('🎥 PHASE 1: Ultra Video Bot - Fast reality TV generation...');
         const videoGenResponse = await fetch(
           `${supabaseUrl}/functions/v1/ultra-video-bot`,
           {
@@ -197,67 +96,13 @@ serve(async (req) => {
           throw new Error('Netflix-grade video generation reported failure');
         }
 
-        console.log(`✅ PHASE 4: ${videoData.framesGenerated || 0} scenes generated with Netflix-grade photorealism`);
+        console.log(`✅ PHASE 1: ${videoData.framesGenerated || 0} scenes generated`);
 
         // Video compilation is handled automatically by ultra-video-bot
         // Get public URL for the video manifest
         const { data: { publicUrl } } = supabase.storage
           .from('episode-videos')
           .getPublicUrl(`${episode.user_id}/${episodeId}/video-manifest.json`);
-
-        // PHASE 5: Post-Production Bots (Parallel - Non-blocking)
-        console.log('🚀 PHASE 5: Post-production bot activation...');
-        const phase5Promises = [
-          // Hook Optimization Bot
-          fetch(`${supabaseUrl}/functions/v1/hook-optimization-bot`, {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-              'Authorization': `Bearer ${supabaseKey}`
-            },
-            body: JSON.stringify({
-              episodeId: episodeId,
-              content: {
-                title: episode.title,
-                synopsis: episode.synopsis
-              }
-            })
-          }).catch(err => ({ ok: false, error: err.message })),
-          
-          // Trend Detection Bot
-          fetch(`${supabaseUrl}/functions/v1/trend-detection-bot`, {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-              'Authorization': `Bearer ${supabaseKey}`
-            },
-            body: JSON.stringify({
-              userId: episode.user_id,
-              platform: 'all',
-              trendType: 'viral'
-            })
-          }).catch(err => ({ ok: false, error: err.message })),
-          
-          // Performance Tracker Bot
-          fetch(`${supabaseUrl}/functions/v1/performance-tracker-bot`, {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-              'Authorization': `Bearer ${supabaseKey}`
-            },
-            body: JSON.stringify({
-              userId: episode.user_id,
-              contentId: episodeId,
-              platform: 'youtube'
-            })
-          }).catch(err => ({ ok: false, error: err.message }))
-        ];
-
-        const phase5Results = await Promise.allSettled(phase5Promises);
-        const phase5Success = phase5Results.filter(r => 
-          r.status === 'fulfilled' && (r.value as any).ok
-        ).length;
-        console.log(`✅ PHASE 5: ${phase5Success}/3 post-production bots completed`);
 
         // Update episode with video URL and completed status
         const { error: updateError } = await supabase
@@ -273,9 +118,9 @@ serve(async (req) => {
           console.error('Failed to update episode:', updateError);
         }
 
-        console.log(`=== 🎉 COLLABORATIVE BOT PIPELINE COMPLETE for ${episodeId} ===`);
-        console.log(`Video Frames: ${videoData.framesGenerated || 0} Netflix-grade scenes`);
-        console.log(`Total Bots Activated: ${phase1Success + phase5Success + 3} bots working in harmony`);
+        console.log(`=== 🎉 FAST VIDEO GENERATION COMPLETE for ${episodeId} ===`);
+        console.log(`Video Frames: ${videoData.framesGenerated || 0} scenes`);
+        console.log(`Total Time: Fast mode enabled`);
         
       } catch (error) {
         console.error('Background processing error:', error);
