@@ -29,73 +29,102 @@ Deno.serve(async (req) => {
     console.log(`🎬 Starting video compilation for episode ${episodeId}`);
     console.log(`📊 Processing ${frameUrls.length} frames`);
 
-    // In a production environment, you would use FFmpeg or a video processing service
-    // For now, we'll create an HTML5 video player that cycles through images
-    // This is a placeholder - in production you'd use:
-    // - FFmpeg WASM
-    // - Remotion
-    // - AWS Elemental MediaConvert
-    // - Cloudinary Video API
-    // - Shotstack API
+    console.log('🎬 Starting actual MP4 video compilation with FFmpeg...');
 
-    // For MVP: Create a video manifest that the frontend can use
-    const videoManifest = {
-      type: 'image-sequence',
-      episodeId,
-      frames: frameUrls.map((url, index) => ({
-        url,
-        duration: frameDurations[index] || 5,
-        index
-      })),
-      totalDuration: frameDurations.reduce((sum, d) => sum + d, 0),
-      metadata,
-      createdAt: new Date().toISOString(),
-      format: 'image-sequence', // Will be 'mp4' when we add real video compilation
-    };
+    // Import FFmpeg dynamically
+    const { FFmpeg } = await import('https://esm.sh/@ffmpeg/ffmpeg@0.12.15');
+    const { toBlobURL } = await import('https://esm.sh/@ffmpeg/util@0.12.2');
+    
+    const ffmpeg = new FFmpeg();
+    
+    // Load FFmpeg
+    const baseURL = 'https://unpkg.com/@ffmpeg/core@0.12.6/dist/esm';
+    await ffmpeg.load({
+      coreURL: await toBlobURL(`${baseURL}/ffmpeg-core.js`, 'text/javascript'),
+      wasmURL: await toBlobURL(`${baseURL}/ffmpeg-core.wasm`, 'application/wasm'),
+    });
+    
+    console.log('✅ FFmpeg loaded successfully');
 
-    // Upload manifest to storage
-    const manifestPath = `${userId}/${episodeId}/video-manifest.json`;
+    // Download and write frames to FFmpeg filesystem
+    for (let i = 0; i < frameUrls.length; i++) {
+      const response = await fetch(frameUrls[i]);
+      const arrayBuffer = await response.arrayBuffer();
+      await ffmpeg.writeFile(`frame${i.toString().padStart(4, '0')}.png`, new Uint8Array(arrayBuffer));
+      console.log(`📥 Downloaded frame ${i + 1}/${frameUrls.length}`);
+    }
+
+    // Create concat file for frame durations
+    let concatContent = '';
+    for (let i = 0; i < frameUrls.length; i++) {
+      concatContent += `file 'frame${i.toString().padStart(4, '0')}.png'\n`;
+      concatContent += `duration ${frameDurations[i] || 5}\n`;
+    }
+    if (frameUrls.length > 0) {
+      concatContent += `file 'frame${(frameUrls.length - 1).toString().padStart(4, '0')}.png'\n`;
+    }
+    
+    await ffmpeg.writeFile('concat.txt', new TextEncoder().encode(concatContent));
+
+    // Run FFmpeg to create MP4
+    console.log('🎥 Compiling frames into MP4...');
+    await ffmpeg.exec([
+      '-f', 'concat',
+      '-safe', '0',
+      '-i', 'concat.txt',
+      '-vf', 'scale=1920:1080:force_original_aspect_ratio=decrease,pad=1920:1080:(ow-iw)/2:(oh-ih)/2',
+      '-c:v', 'libx264',
+      '-pix_fmt', 'yuv420p',
+      '-preset', 'medium',
+      '-crf', '23',
+      '-movflags', '+faststart',
+      'output.mp4'
+    ]);
+    
+    console.log('✅ FFmpeg compilation complete');
+
+    // Read the output MP4 file
+    const mp4Data = await ffmpeg.readFile('output.mp4') as Uint8Array;
+
+    // Upload MP4 to storage
+    const videoPath = `${userId}/${episodeId}/episode.mp4`;
     const { error: uploadError } = await supabase.storage
       .from('episode-videos')
-      .upload(manifestPath, JSON.stringify(videoManifest, null, 2), {
-        contentType: 'application/json',
+      .upload(videoPath, mp4Data, {
+        contentType: 'video/mp4',
         upsert: true
       });
 
     if (uploadError) {
-      console.error('Failed to upload video manifest:', uploadError);
+      console.error('Failed to upload MP4:', uploadError);
       throw uploadError;
     }
 
-    const manifestUrl = `${Deno.env.get('SUPABASE_URL')}/storage/v1/object/public/episode-videos/${manifestPath}`;
+    const videoUrl = `${Deno.env.get('SUPABASE_URL')}/storage/v1/object/public/episode-videos/${videoPath}`;
 
-    console.log(`✅ Video manifest created: ${manifestUrl}`);
+    console.log(`✅ MP4 video created: ${videoUrl}`);
 
-    // TODO: Implement actual MP4 compilation here
-    // For now, we use the manifest approach
-    // Future implementation should use FFmpeg or video service
-
-    // Update episode with manifest URL (temporary solution)
+    // Update episode with MP4 URL
     await supabase
       .from('episodes')
       .update({
         video_status: 'completed',
-        video_url: manifestUrl,
+        video_url: videoUrl,
         video_render_completed_at: new Date().toISOString(),
         updated_at: new Date().toISOString()
       })
       .eq('id', episodeId);
 
-    console.log('🎥 Video compilation completed');
+    console.log('🎥 Real MP4 video compilation completed');
 
     return new Response(
       JSON.stringify({
         success: true,
-        manifestUrl,
-        format: 'image-sequence',
+        videoUrl,
+        format: 'mp4',
         totalFrames: frameUrls.length,
-        totalDuration: videoManifest.totalDuration,
-        message: 'Video manifest created (image sequence format)'
+        totalDuration: frameDurations.reduce((sum, d) => sum + d, 0),
+        message: 'Real MP4 video created with FFmpeg'
       }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
