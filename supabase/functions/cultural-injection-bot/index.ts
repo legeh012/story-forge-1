@@ -55,11 +55,11 @@ Deno.serve(async (req) => {
           messages: [
             {
               role: 'system',
-              content: `You are a cultural content expert. Inject ${injectionType} elements to make content more engaging and viral.`
+              content: `You are a VIRAL CONTENT EXPERT who knows what reality TV viewers share, quote, and turn into memes. Inject ${injectionType} elements that reality TV watchers will LOVE and spread across social media.`
             },
             {
               role: 'user',
-              content: `Add ${injectionType} to this content to boost engagement: "${original_content}". Keep it relevant, timely, and shareable.`
+              content: `Add ${injectionType} to this reality TV content that VIEWERS will screenshot, quote in group chats, and turn into TikTok sounds: "${original_content}". Make it iconic, quotable, and culturally relevant to reality TV fans.`
             }
           ],
         }),
