@@ -7,8 +7,10 @@ import { Badge } from "@/components/ui/badge";
 import { Plus, Users, BookOpen, Sparkles, Zap, Play, Trash2 } from "lucide-react";
 import { Link } from "react-router-dom";
 import { SystemHealthMonitor } from "@/components/SystemHealthMonitor";
+import { OnboardingGuide } from "@/components/OnboardingGuide";
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from "@/hooks/use-toast";
+import { useSmartErrorRecovery } from "@/hooks/useSmartErrorRecovery";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -23,11 +25,13 @@ import {
 const Dashboard = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { withRecovery, isRetrying } = useSmartErrorRecovery();
   const [loading, setLoading] = useState(true);
   const [generatingEpisode, setGeneratingEpisode] = useState(false);
   const [activatingBots, setActivatingBots] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [projectToDelete, setProjectToDelete] = useState<string | null>(null);
+  const [showOnboarding, setShowOnboarding] = useState(true);
   const [stats, setStats] = useState({
     characters: 0,
     episodes: 0,
@@ -61,28 +65,48 @@ const Dashboard = () => {
   }, [navigate]);
 
   const fetchDashboardData = async (userId: string) => {
-    try {
-      const [charCount, epCount, projCount, chars, eps, projs] = await Promise.all([
-        supabase.from('characters').select('*', { count: 'exact', head: true }).eq('user_id', userId),
-        supabase.from('episodes').select('*', { count: 'exact', head: true }).eq('user_id', userId),
-        supabase.from('projects').select('*', { count: 'exact', head: true }).eq('user_id', userId),
-        supabase.from('characters').select('name, role').eq('user_id', userId).order('created_at', { ascending: false }).limit(3),
-        supabase.from('episodes').select('id, title, status, episode_number').eq('user_id', userId).order('created_at', { ascending: false }).limit(3),
-        supabase.from('projects').select('id, title, description, status, genre').eq('user_id', userId).order('created_at', { ascending: false }).limit(3)
-      ]);
+    await withRecovery(
+      async () => {
+        const [charCount, epCount, projCount, chars, eps, projs] = await Promise.all([
+          supabase.from('characters').select('*', { count: 'exact', head: true }).eq('user_id', userId),
+          supabase.from('episodes').select('*', { count: 'exact', head: true }).eq('user_id', userId),
+          supabase.from('projects').select('*', { count: 'exact', head: true }).eq('user_id', userId),
+          supabase.from('characters').select('name, role').eq('user_id', userId).order('created_at', { ascending: false }).limit(3),
+          supabase.from('episodes').select('id, title, status, episode_number').eq('user_id', userId).order('created_at', { ascending: false }).limit(3),
+          supabase.from('projects').select('id, title, description, status, genre').eq('user_id', userId).order('created_at', { ascending: false }).limit(3)
+        ]);
 
-      setStats({
-        characters: charCount.count || 0,
-        episodes: epCount.count || 0,
-        projects: projCount.count || 0
-      });
+        setStats({
+          characters: charCount.count || 0,
+          episodes: epCount.count || 0,
+          projects: projCount.count || 0
+        });
 
-      setRecentCharacters(chars.data || []);
-      setRecentEpisodes(eps.data || []);
-      setRecentProjects(projs.data || []);
-    } catch (error) {
-      // Failed to fetch dashboard data
-    }
+        setRecentCharacters(chars.data || []);
+        setRecentEpisodes(eps.data || []);
+        setRecentProjects(projs.data || []);
+        
+        // Auto-dismiss onboarding if user has created content
+        const hasContent = (charCount.count || 0) > 0 || (epCount.count || 0) > 0 || (projCount.count || 0) > 0;
+        if (hasContent) {
+          const dismissed = localStorage.getItem('onboarding-dismissed');
+          if (!dismissed) {
+            setShowOnboarding(true);
+          }
+        }
+      },
+      {
+        component: 'Dashboard',
+        action: 'fetchDashboardData',
+        onFailure: () => {
+          toast({
+            title: "Unable to load dashboard",
+            description: "Please refresh the page or contact support",
+            variant: "destructive"
+          });
+        }
+      }
+    );
   };
 
   const activateProductionBots = async () => {
@@ -248,6 +272,18 @@ const Dashboard = () => {
       <Navigation />
       
       <main className="container mx-auto px-4 pt-24 pb-16">
+        {showOnboarding && stats.projects === 0 && (
+          <div className="mb-8">
+            <OnboardingGuide 
+              stats={stats} 
+              onDismiss={() => {
+                setShowOnboarding(false);
+                localStorage.setItem('onboarding-dismissed', 'true');
+              }}
+            />
+          </div>
+        )}
+
         <div className="mb-8">
           <div className="flex items-center justify-between">
             <div>
@@ -255,7 +291,9 @@ const Dashboard = () => {
                 Your Creative Studio
               </h1>
               <p className="text-muted-foreground text-lg">
-                Manage your characters, episodes, and projects
+                {stats.projects === 0 
+                  ? "Welcome! Let's create your first viral content" 
+                  : "Manage your characters, episodes, and projects"}
               </p>
             </div>
             <div className="flex gap-3">
