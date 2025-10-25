@@ -23,6 +23,7 @@ import { PromptGenerator } from "@/components/PromptGenerator";
 import { ProductionDashboard } from "@/components/ProductionDashboard";
 import { EpisodeWorkflowPipeline } from "@/components/EpisodeWorkflowPipeline";
 import { ArtlistAdvancedPanel } from "@/components/ArtlistAdvancedPanel";
+import { SunoMusicStudio } from "@/components/SunoMusicStudio";
 import { sayWalahiCharacters } from "@/data/sayWalahiCharacters";
 
 interface Project {
@@ -1422,6 +1423,8 @@ The episode should feature maximum drama, cultural authenticity, viral moments, 
 
             {/* Active Bots Tab */}
             <TabsContent value="bots" className="space-y-6">
+              <SunoMusicStudio projectId={selectedProject || undefined} episodeId={selectedProject || undefined} />
+              
               <ArtlistAdvancedPanel episodeId={selectedProject || undefined} />
               
               <Card>

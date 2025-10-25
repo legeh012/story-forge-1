@@ -138,3 +138,6 @@ verify_jwt = false
 
 [functions.artlist-advanced-bot]
 verify_jwt = true
+
+[functions.suno-music-generator]
+verify_jwt = true
