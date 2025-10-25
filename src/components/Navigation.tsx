@@ -16,6 +16,7 @@ const Navigation = () => {
     { to: "/analytics", label: "Analytics", icon: TrendingUp },
     { to: "/system-monitor", label: "Monitor", icon: Activity },
     { to: "/viral-bots", label: "Viral Bots", icon: Bot },
+    { to: "/dev-tools", label: "Dev Tools", icon: null },
     { to: "/workflow", label: "Workflow", icon: null },
     { to: "/dashboard", label: "Dashboard", icon: null },
   ];
