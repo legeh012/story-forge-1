@@ -22,6 +22,7 @@ import { ScalabilityInfo } from "@/components/ScalabilityInfo";
 import { PromptGenerator } from "@/components/PromptGenerator";
 import { ProductionDashboard } from "@/components/ProductionDashboard";
 import { EpisodeWorkflowPipeline } from "@/components/EpisodeWorkflowPipeline";
+import { ArtlistAdvancedPanel } from "@/components/ArtlistAdvancedPanel";
 import { sayWalahiCharacters } from "@/data/sayWalahiCharacters";
 
 interface Project {
@@ -1421,6 +1422,8 @@ The episode should feature maximum drama, cultural authenticity, viral moments, 
 
             {/* Active Bots Tab */}
             <TabsContent value="bots" className="space-y-6">
+              <ArtlistAdvancedPanel episodeId={selectedProject || undefined} />
+              
               <Card>
                 <CardHeader>
                   <CardTitle>Active Production Bots</CardTitle>

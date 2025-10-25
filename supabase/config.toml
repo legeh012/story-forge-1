@@ -135,3 +135,6 @@ verify_jwt = false
 
 [functions.verify-code]
 verify_jwt = false
+
+[functions.artlist-advanced-bot]
+verify_jwt = true
