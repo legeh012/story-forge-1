@@ -47,7 +47,7 @@ verify_jwt = true
 verify_jwt = true
 
 [functions.ultra-video-bot]
-verify_jwt = true
+verify_jwt = false
 
 [functions.self-healing]
 verify_jwt = true
@@ -62,7 +62,7 @@ verify_jwt = true
 verify_jwt = true
 
 [functions.cultural-injection-bot]
-verify_jwt = true
+verify_jwt = false
 
 [functions.script-generator-bot]
 verify_jwt = true
@@ -74,7 +74,7 @@ verify_jwt = true
 verify_jwt = true
 
 [functions.bot-orchestrator]
-verify_jwt = true
+verify_jwt = false
 
 [functions.ai-copilot]
 verify_jwt = true
@@ -83,10 +83,10 @@ verify_jwt = true
 verify_jwt = true
 
 [functions.expert-director]
-verify_jwt = true
+verify_jwt = false
 
 [functions.production-team]
-verify_jwt = true
+verify_jwt = false
 
 [functions.ai-engineer]
 verify_jwt = true
@@ -107,7 +107,7 @@ verify_jwt = true
 verify_jwt = true
 
 [functions.scene-orchestration]
-verify_jwt = true
+verify_jwt = false
 
 [functions.parallel-frame-generator]
 verify_jwt = false
