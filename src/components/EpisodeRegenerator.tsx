@@ -275,22 +275,25 @@ export const EpisodeRegenerator = () => {
       if (!user) throw new Error('Not authenticated');
 
       toast({
-        title: '🧪 Testing Episode 1',
+        title: '🧪 Testing First Episode',
         description: 'Regenerating with FFmpeg MP4 compilation',
       });
 
-      const { data: episode } = await supabase
+      // Get the first available episode
+      const { data: episodes } = await supabase
         .from('episodes')
-        .select('id, project_id')
-        .eq('episode_number', 1)
-        .single();
+        .select('id, project_id, episode_number, title')
+        .eq('user_id', user.id)
+        .order('episode_number', { ascending: true })
+        .limit(1);
 
-      if (!episode) throw new Error('Episode 1 not found');
+      if (!episodes || episodes.length === 0) throw new Error('No episodes found');
 
+      const episode = episodes[0];
       setRegenerating(true);
-      setCurrentEpisode(1);
+      setCurrentEpisode(episode.episode_number);
 
-      // Call God Mode for Episode 1
+      // Call God Mode for the episode
       const { data: godModeResult, error: genError } = await supabase.functions.invoke('reality-tv-god-mode', {
         body: {
           episodeId: episode.id,
@@ -308,6 +311,10 @@ export const EpisodeRegenerator = () => {
         });
       } else {
         console.log('God Mode result:', godModeResult);
+        toast({
+          title: '✅ Test Complete',
+          description: `Episode ${episode.episode_number}: "${episode.title}" processed successfully`,
+        });
         toast({
           title: '✅ Episode 1 Complete',
           description: 'Check the video URL - it should be an MP4 file now!',
@@ -440,15 +447,15 @@ export const EpisodeRegenerator = () => {
             size="lg"
             className="w-full bg-gradient-to-r from-success via-primary to-success hover:opacity-90"
           >
-            {regenerating && currentEpisode === 1 ? (
+            {regenerating ? (
               <>
                 <Sparkles className="h-5 w-5 mr-2 animate-spin" />
-                Testing Episode 1 (Creating MP4...)
+                Testing Episode (Creating MP4...)
               </>
             ) : (
               <>
                 <Play className="h-5 w-5 mr-2" />
-                🧪 Test Episode 1 (FFmpeg MP4)
+                🧪 Test First Episode (FFmpeg MP4)
               </>
             )}
           </Button>
