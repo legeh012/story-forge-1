@@ -342,8 +342,8 @@ ABSOLUTELY FORBIDDEN FOR REALITY TV PHOTOREALISM:
         upsert: true
       });
 
-    // Compile frames into MP4 using FFmpeg
-    console.log('🎬 Compiling frames into MP4 video...');
+    // Compile frames into MP4 using God-Level FFmpeg Compiler
+    console.log('🎬 Activating God-Level FFmpeg Compiler...');
     
     const frameUrls = generatedFrames.map((_, index) => 
       `${Deno.env.get('SUPABASE_URL')}/storage/v1/object/public/episode-videos/${videoPath}/frame_${index.toString().padStart(4, '0')}.png`
@@ -354,17 +354,19 @@ ABSOLUTELY FORBIDDEN FOR REALITY TV PHOTOREALISM:
       duration: parseFloat(generatedFrames[index].duration) || 5
     }));
 
-    // Call video-compiler to create actual MP4
-    const { data: videoData, error: compileError } = await supabase.functions.invoke('video-compiler', {
+    // Call god-level-ffmpeg-compiler with all bots working together
+    const { data: videoData, error: compileError } = await supabase.functions.invoke('god-level-ffmpeg-compiler', {
       body: {
         episodeId,
+        userId: episode.user_id,
         frames,
-        audioUrl: null // Can add audio later
+        audioUrl: null, // Can add audio later
+        quality: 'ultra' // Premium BET/VH1 quality
       }
     });
 
     if (compileError) {
-      console.error('Video compilation failed:', compileError);
+      console.error('God-level compilation failed:', compileError);
       
       // Fall back to first frame as thumbnail
       await supabase

@@ -1,6 +1,15 @@
 project_id = "akmeovotnnqbxotlerie"
 
-[functions.video-compiler]
+[functions.god-level-ffmpeg-compiler]
+verify_jwt = true
+
+[functions.frame-optimizer-bot]
+verify_jwt = true
+
+[functions.video-quality-enhancer-bot]
+verify_jwt = true
+
+[functions.audio-sync-bot]
 verify_jwt = true
 
 [functions.reality-tv-god-mode]
@@ -100,9 +109,6 @@ verify_jwt = true
 verify_jwt = true
 
 [functions.generate-remix-video]
-verify_jwt = true
-
-[functions.compile-video]
 verify_jwt = true
 
 [functions.botpress-webhook]
