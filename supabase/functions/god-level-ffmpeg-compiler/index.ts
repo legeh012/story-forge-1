@@ -8,7 +8,7 @@ const corsHeaders = {
 interface CompilationRequest {
   episodeId: string;
   userId: string;
-  frames: Array<{ url: string; duration: number }>;
+  frames: Array<{ url: string; duration: number; sceneType?: string }>;
   audioUrl?: string;
   quality?: 'ultra' | 'premium' | 'broadcast';
 }
@@ -34,8 +34,26 @@ Deno.serve(async (req) => {
     console.log(`⚡ Quality: ${quality.toUpperCase()}`);
     console.log(`🎵 Audio: ${audioUrl ? 'Yes' : 'No'}`);
 
-    // Phase 1: Frame Optimization Bot
-    console.log('\n🔧 PHASE 1: Frame Optimization');
+    // Phase 1: God-Level Scene Composer
+    console.log('\n🎬 PHASE 1: God-Level Scene Composition');
+    const { data: sceneComposition, error: sceneError } = await supabase.functions.invoke('god-level-scene-composer-bot', {
+      body: {
+        frames,
+        episodeId,
+        scenes: frames.map(f => ({ type: f.sceneType }))
+      }
+    });
+
+    if (sceneError) {
+      console.error('Scene composition failed:', sceneError);
+      // Continue with original frames
+      console.log('⚠️ Using original scene composition...');
+    } else {
+      console.log(`✅ Scenes composed: ${sceneComposition.transitionPoints.length} transitions`);
+    }
+
+    // Phase 2: Frame Optimization Bot
+    console.log('\n🔧 PHASE 2: Frame Optimization');
     const { data: optimizedFrames, error: optimizeError } = await supabase.functions.invoke('frame-optimizer-bot', {
       body: {
         frames,
@@ -51,8 +69,25 @@ Deno.serve(async (req) => {
 
     console.log(`✅ Frames optimized: ${optimizedFrames.optimizedCount} frames processed`);
 
-    // Phase 2: Video Quality Enhancement Bot
-    console.log('\n🎨 PHASE 2: Video Quality Enhancement');
+    // Phase 3: God-Level Color Grading
+    console.log('\n🎨 PHASE 3: God-Level Color Grading');
+    const { data: colorGrading, error: colorError } = await supabase.functions.invoke('god-level-color-grader-bot', {
+      body: {
+        frames: optimizedFrames.frames,
+        style: 'bet-vh1-premium',
+        scenes: frames.map(f => ({ type: f.sceneType }))
+      }
+    });
+
+    if (colorError) {
+      console.error('Color grading failed:', colorError);
+      console.log('⚠️ Using default color grading...');
+    } else {
+      console.log(`✅ Color graded: ${colorGrading.colorProfile.name}`);
+    }
+
+    // Phase 4: Video Quality Enhancement Bot
+    console.log('\n⚡ PHASE 4: Video Quality Enhancement');
     const { data: qualitySettings, error: qualityError } = await supabase.functions.invoke('video-quality-enhancer-bot', {
       body: {
         frames: optimizedFrames.frames,
@@ -69,10 +104,27 @@ Deno.serve(async (req) => {
 
     console.log(`✅ Quality enhanced: ${qualitySettings.codec} @ ${qualitySettings.bitrate}`);
 
-    // Phase 3: Audio Sync Bot (if audio exists)
+    // Phase 5: God-Level Effects
+    console.log('\n✨ PHASE 5: God-Level Visual Effects');
+    const { data: effects, error: effectsError } = await supabase.functions.invoke('god-level-effects-bot', {
+      body: {
+        frames: optimizedFrames.frames,
+        scenes: frames.map(f => ({ type: f.sceneType })),
+        style: 'reality-tv'
+      }
+    });
+
+    if (effectsError) {
+      console.error('Effects failed:', effectsError);
+      console.log('⚠️ Continuing without effects...');
+    } else {
+      console.log(`✅ Effects applied: ${effects.visualEffects.length} visual effects`);
+    }
+
+    // Phase 6: Audio Sync Bot (if audio exists)
     let audioSettings = null;
     if (audioUrl) {
-      console.log('\n🎵 PHASE 3: Audio Synchronization');
+      console.log('\n🎵 PHASE 6: Audio Synchronization');
       const { data: syncedAudio, error: audioError } = await supabase.functions.invoke('audio-sync-bot', {
         body: {
           audioUrl,
@@ -91,8 +143,30 @@ Deno.serve(async (req) => {
       }
     }
 
-    // Phase 4: FFmpeg Compilation
-    console.log('\n🎬 PHASE 4: God-Level FFmpeg Compilation');
+    // Phase 7: God-Level Audio Mastering (if audio exists)
+    let audioMastering = null;
+    if (audioUrl && audioSettings) {
+      console.log('\n🎚️ PHASE 7: God-Level Audio Mastering');
+      const { data: mastering, error: masterError } = await supabase.functions.invoke('god-level-audio-master-bot', {
+        body: {
+          audioUrl,
+          scenes: frames.map(f => ({ type: f.sceneType })),
+          frames: optimizedFrames.frames,
+          quality
+        }
+      });
+
+      if (masterError) {
+        console.error('Audio mastering failed:', masterError);
+        console.log('⚠️ Using basic audio settings...');
+      } else {
+        audioMastering = mastering;
+        console.log(`✅ Audio mastered: ${mastering.loudnessSettings.targetLUFS} LUFS`);
+      }
+    }
+
+    // Phase 8: God-Level FFmpeg Compilation
+    console.log('\n🎬 PHASE 8: God-Level FFmpeg Compilation with All Effects');
     console.log('📦 Loading FFmpeg WASM...');
 
     const { FFmpeg } = await import('https://esm.sh/@ffmpeg/ffmpeg@0.12.15');

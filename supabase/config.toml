@@ -3,6 +3,18 @@ project_id = "akmeovotnnqbxotlerie"
 [functions.god-level-ffmpeg-compiler]
 verify_jwt = true
 
+[functions.god-level-scene-composer-bot]
+verify_jwt = true
+
+[functions.god-level-color-grader-bot]
+verify_jwt = true
+
+[functions.god-level-audio-master-bot]
+verify_jwt = true
+
+[functions.god-level-effects-bot]
+verify_jwt = true
+
 [functions.frame-optimizer-bot]
 verify_jwt = true
 
