@@ -321,33 +321,67 @@ export const EpisodeRegenerator = () => {
       console.log('God Mode result:', godModeResult);
       setProgress(50);
 
-      // Step 2: Call video renderer for visual generation
       toast({
-        title: '🎥 Phase 2/2: Video Generation',
-        description: 'Creating photorealistic scenes and compiling video...',
+        title: '✅ Phase 1 Complete',
+        description: 'Script and storyboard ready. Video rendering auto-triggered.',
       });
 
-      const { data: videoResult, error: videoError } = await supabase.functions.invoke('render-episode-video', {
-        body: { episodeId: episode.id }
-      });
-
-      if (videoError) {
-        console.error('Video render error:', videoError);
-        toast({
-          title: 'Video Generation Failed',
-          description: videoError.message,
-          variant: 'destructive'
-        });
-        return;
-      }
-
-      console.log('Video result:', videoResult);
-      setProgress(100);
-
+      // Phase 2 is now automatic - just wait and poll for completion
       toast({
-        title: '✅ Episode Complete!',
-        description: `Episode ${episode.episode_number}: "${episode.title}" - Video manifest ready!`,
+        title: '🎬 Phase 2/2: Netflix-Grade Video',
+        description: 'Ultra-video-bot generating photorealistic scenes...',
       });
+
+      // Poll for video completion (max 5 minutes)
+      let attempts = 0;
+      const maxAttempts = 60; // 5 minutes (5 second intervals)
+      
+      const pollInterval = setInterval(async () => {
+        attempts++;
+        
+        const { data: updatedEpisode } = await supabase
+          .from('episodes')
+          .select('video_status, video_url, video_render_error')
+          .eq('id', episode.id)
+          .single();
+
+        if (!updatedEpisode) {
+          clearInterval(pollInterval);
+          return;
+        }
+
+        if (updatedEpisode.video_status === 'completed') {
+          clearInterval(pollInterval);
+          setProgress(100);
+          toast({
+            title: '🎉 Video Complete!',
+            description: 'Netflix-grade MP4 video successfully generated',
+          });
+          setRegenerating(false);
+          setCurrentEpisode(null);
+        } else if (updatedEpisode.video_status === 'failed') {
+          clearInterval(pollInterval);
+          toast({
+            title: 'Video Generation Failed',
+            description: updatedEpisode.video_render_error || 'Unknown error',
+            variant: 'destructive'
+          });
+          setRegenerating(false);
+          setCurrentEpisode(null);
+        } else if (attempts >= maxAttempts) {
+          clearInterval(pollInterval);
+          toast({
+            title: 'Video Still Processing',
+            description: 'Video generation is taking longer than expected. Check back soon.',
+          });
+          setRegenerating(false);
+          setCurrentEpisode(null);
+        } else {
+          // Update progress based on status
+          const statusProgress = updatedEpisode.video_status === 'rendering' ? 75 : 50;
+          setProgress(statusProgress);
+        }
+      }, 5000); // Poll every 5 seconds
 
     } catch (error) {
       console.error('Test error:', error);
@@ -356,7 +390,6 @@ export const EpisodeRegenerator = () => {
         description: error instanceof Error ? error.message : 'Unknown error',
         variant: 'destructive'
       });
-    } finally {
       setRegenerating(false);
       setCurrentEpisode(null);
       setProgress(0);

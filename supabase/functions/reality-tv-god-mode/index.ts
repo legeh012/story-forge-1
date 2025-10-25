@@ -253,38 +253,64 @@ Deno.serve(async (req) => {
     });
 
     console.log(`\n🎉 GOD MODE COMPLETE - Episode ${episodeId} processed`);
-    console.log(`\n⚡ AUTO-TRIGGERING VIDEO GENERATION...`);
+    console.log(`\n🎬 AUTO-TRIGGERING NETFLIX-GRADE VIDEO GENERATION...`);
 
-    // 🔥 GOD MODE: Auto-trigger video generation with service role (runs in background)
+    // 🔥 GOD MODE: Auto-trigger ultra-video-bot for Netflix-grade production (runs in background)
     (async () => {
       try {
-        console.log(`Starting video generation for episode ${episodeId}`);
+        console.log(`🚀 Starting ultra-video-bot for episode ${episodeId}`);
         
-        // Create service role client for internal bot communication
-        const serviceSupabase = createClient(
-          Deno.env.get('SUPABASE_URL') ?? '',
-          Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
-        );
-        
-        const { data: videoData, error: videoError } = await serviceSupabase.functions.invoke('render-episode-video', {
+        // Update status to rendering before video generation
+        await supabase
+          .from('episodes')
+          .update({ 
+            video_status: 'rendering',
+            video_render_started_at: new Date().toISOString()
+          })
+          .eq('id', episodeId);
+
+        // Call ultra-video-bot directly (no intermediate wrapper)
+        const { data: videoData, error: videoError } = await supabase.functions.invoke('ultra-video-bot', {
           body: { 
-            episodeId,
-            userId: episode.user_id // Pass userId for internal service call
+            episodeId: episode.id,
+            enhancementLevel: 'ultra' // Maximum Netflix-grade quality
           }
         });
 
         if (videoError) {
-          console.error('Auto-triggered video generation failed:', videoError);
-          // Update status to failed
+          console.error('❌ Ultra-video-bot failed:', videoError);
           await supabase
             .from('episodes')
-            .update({ video_status: 'failed' })
+            .update({ 
+              video_status: 'failed',
+              video_render_error: videoError.message || 'Video generation failed',
+              video_render_completed_at: new Date().toISOString()
+            })
             .eq('id', episodeId);
         } else {
-          console.log(`✅ Video generation complete for episode ${episodeId}:`, videoData);
+          console.log(`✅ Netflix-grade video complete: ${videoData?.videoUrl}`);
+          
+          // Update with completed video
+          await supabase
+            .from('episodes')
+            .update({ 
+              video_status: 'completed',
+              video_url: videoData?.videoUrl,
+              video_render_completed_at: new Date().toISOString(),
+              video_render_error: null
+            })
+            .eq('id', episodeId);
         }
       } catch (err) {
-        console.error('Video generation background task error:', err);
+        console.error('💥 Video generation background task error:', err);
+        await supabase
+          .from('episodes')
+          .update({ 
+            video_status: 'failed',
+            video_render_error: err instanceof Error ? err.message : 'Unknown error',
+            video_render_completed_at: new Date().toISOString()
+          })
+          .eq('id', episodeId);
       }
     })();
 
