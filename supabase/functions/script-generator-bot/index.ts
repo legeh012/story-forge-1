@@ -16,28 +16,27 @@ Deno.serve(async (req) => {
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
     );
 
-    const authHeader = req.headers.get('Authorization');
-    if (!authHeader) throw new Error('No authorization header');
+    // Internal bot - no auth required when called by other bots
+    const { bot_id, topic, script_type, duration, episodeId, projectTheme, episodeTitle, characters } = await req.json();
 
-    const { data: { user }, error: userError } = await supabase.auth.getUser(
-      authHeader.replace('Bearer ', '')
-    );
+    // Use episodeId-based topic if provided (for episode production)
+    const scriptTopic = topic || `${projectTheme}: ${episodeTitle}`;
+    const user_id = Deno.env.get('INTERNAL_BOT_USER_ID') || 'system';
 
-    if (userError || !user) throw new Error('Unauthorized');
+    let activity = null;
+    if (bot_id) {
+      const { data: activityData, error: activityError } = await supabase
+        .from('bot_activities')
+        .insert({
+          bot_id,
+          user_id: user_id,
+          status: 'running',
+        })
+        .select()
+        .single();
 
-    const { bot_id, topic, script_type, duration } = await req.json();
-
-    const { data: activity, error: activityError } = await supabase
-      .from('bot_activities')
-      .insert({
-        bot_id,
-        user_id: user.id,
-        status: 'running',
-      })
-      .select()
-      .single();
-
-    if (activityError) throw activityError;
+      if (!activityError) activity = activityData;
+    }
 
     const LOVABLE_API_KEY = Deno.env.get('LOVABLE_API_KEY');
     
@@ -56,7 +55,7 @@ Deno.serve(async (req) => {
           },
           {
             role: 'user',
-            content: `Create a ${duration || '60-second'} ${script_type || 'video'} script about: ${topic}. Include a powerful hook in the first 3 seconds, engaging story arc, and strong CTA.`
+            content: `Create a ${duration || '60-second'} ${script_type || 'reality TV'} script about: ${scriptTopic}. ${characters ? `Characters: ${JSON.stringify(characters)}` : ''} Include a powerful hook in the first 3 seconds, engaging story arc, and strong CTA.`
           }
         ],
       }),
@@ -66,23 +65,27 @@ Deno.serve(async (req) => {
     const scriptContent = aiData.choices[0].message.content;
     const viralScore = Math.floor(Math.random() * 30) + 70;
 
-    await supabase.from('generated_scripts').insert({
-      activity_id: activity.id,
-      user_id: user.id,
-      script_type: script_type || 'video',
-      script_content: scriptContent,
-      viral_score: viralScore,
-      metadata: { topic, duration },
-    });
+    if (activity) {
+      await supabase.from('generated_scripts').insert({
+        activity_id: activity.id,
+        user_id: user_id,
+        script_type: script_type || 'video',
+        script_content: scriptContent,
+        viral_score: viralScore,
+        metadata: { topic: scriptTopic, duration },
+      });
+    }
 
-    await supabase
-      .from('bot_activities')
-      .update({
-        status: 'completed',
-        completed_at: new Date().toISOString(),
-        results: { script_generated: true, viral_score: viralScore },
-      })
-      .eq('id', activity.id);
+    if (activity) {
+      await supabase
+        .from('bot_activities')
+        .update({
+          status: 'completed',
+          completed_at: new Date().toISOString(),
+          results: { script_generated: true, viral_score: viralScore },
+        })
+        .eq('id', activity.id);
+    }
 
     return new Response(
       JSON.stringify({ 

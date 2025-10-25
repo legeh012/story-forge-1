@@ -53,10 +53,10 @@ verify_jwt = false
 verify_jwt = true
 
 [functions.trend-detection-bot]
-verify_jwt = true
+verify_jwt = false
 
 [functions.hook-optimization-bot]
-verify_jwt = true
+verify_jwt = false
 
 [functions.remix-bot]
 verify_jwt = true
@@ -65,10 +65,10 @@ verify_jwt = true
 verify_jwt = false
 
 [functions.script-generator-bot]
-verify_jwt = true
+verify_jwt = false
 
 [functions.performance-tracker-bot]
-verify_jwt = true
+verify_jwt = false
 
 [functions.cross-platform-poster]
 verify_jwt = true

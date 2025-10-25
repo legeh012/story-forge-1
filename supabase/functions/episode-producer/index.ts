@@ -162,11 +162,12 @@ Deno.serve(async (req) => {
     const sceneResult = await supabase.functions.invoke('scene-orchestration', {
       body: {
         episodeId,
+        shortPrompt: `Generate reality TV scenes for: ${episode.title}`,
         script: culturalResult.data?.injected_content || scriptResult.data?.script,
         direction: directionResult.data?.direction,
         characters,
-        trends: trendResult.data?.trends, // Pass trends for viral scene construction
-        viralOptimizations: viralOptResult.data?.optimizations // Apply viral optimizations
+        trends: trendResult.data?.trends,
+        viralOptimizations: viralOptResult.data?.optimizations
       }
     });
 
@@ -178,18 +179,12 @@ Deno.serve(async (req) => {
       result: sceneResult.data
     });
 
-    // Step 6: Update episode with production results (including viral metadata)
+    // Step 6: Update episode with production results
     console.log('Step 6: Updating episode with viral-optimized content...');
     const updateData: any = {
       status: 'script_ready',
       script: culturalResult.data?.injected_content || scriptResult.data?.script,
-      storyboard: sceneResult.data?.scenes || [],
-      metadata: {
-        trends: trendResult.data?.trends || [],
-        viralScore: viralOptResult.data?.predicted_viral_score || 0,
-        optimizations: viralOptResult.data?.optimizations || {},
-        hooks: hookResult.data || {}
-      }
+      storyboard: sceneResult.data?.scenes || []
     };
 
     if (hookResult.data?.optimized_title) {

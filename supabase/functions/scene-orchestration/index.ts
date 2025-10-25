@@ -18,13 +18,16 @@ Deno.serve(async (req) => {
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
     );
 
-    const { shortPrompt, episodeId } = await req.json();
+    const { shortPrompt, episodeId, script, direction, characters, trends, viralOptimizations } = await req.json();
 
-    if (!shortPrompt) {
-      throw new Error('Short prompt is required');
+    // Create shortPrompt from provided data if not given directly
+    const actualPrompt = shortPrompt || `Generate reality TV scenes for: ${script?.substring(0, 200)}`;
+
+    if (!actualPrompt) {
+      throw new Error('Prompt or script is required');
     }
 
-    console.log('Scene orchestration request:', shortPrompt);
+    console.log('Scene orchestration request:', actualPrompt);
 
     // OPTIMIZED: Cache templates in memory with 5-minute TTL
     const cacheKey = 'scene_templates_cache';
@@ -56,7 +59,10 @@ Deno.serve(async (req) => {
 
     const matchingPrompt = `You are the 22nd century AI Scene Orchestrator for REALITY TV production. Generate instant, dramatic reality show scenes with minimum effort.
 
-SHORT PROMPT: "${shortPrompt}"
+SHORT PROMPT: "${actualPrompt}"
+SCRIPT: ${script ? script.substring(0, 500) : 'N/A'}
+CHARACTERS: ${characters ? JSON.stringify(characters.map((c: any) => c.name)) : 'N/A'}
+TRENDS: ${trends ? JSON.stringify(trends) : 'N/A'}
 
 AVAILABLE TEMPLATES:
 ${sceneTemplates.map((t: any) => `- ${t.name}: ${t.description}`).join('\n')}
