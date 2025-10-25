@@ -313,11 +313,7 @@ export const EpisodeRegenerator = () => {
         console.log('God Mode result:', godModeResult);
         toast({
           title: '✅ Test Complete',
-          description: `Episode ${episode.episode_number}: "${episode.title}" processed successfully`,
-        });
-        toast({
-          title: '✅ Episode 1 Complete',
-          description: 'Check the video URL - it should be an MP4 file now!',
+          description: `Episode ${episode.episode_number}: "${episode.title}" - All 8 industry-leading bots activated successfully`,
         });
       }
     } catch (error) {
