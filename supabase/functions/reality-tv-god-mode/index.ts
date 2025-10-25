@@ -227,7 +227,7 @@ Deno.serve(async (req) => {
         script: enhancedEpisode.script || episode.script,
         synopsis: enhancedEpisode.synopsis || episode.synopsis,
         storyboard: enhancedEpisode.storyboard || episode.storyboard,
-        video_status: 'completed',
+        video_status: 'processing',
         video_url: enhancedEpisode.video_url,
         updated_at: new Date().toISOString()
       })
@@ -253,6 +253,30 @@ Deno.serve(async (req) => {
     });
 
     console.log(`\n🎉 GOD MODE COMPLETE - Episode ${episodeId} processed`);
+    console.log(`\n⚡ AUTO-TRIGGERING VIDEO GENERATION...`);
+
+    // 🔥 GOD MODE: Auto-trigger video generation in background
+    (async () => {
+      try {
+        console.log(`Starting video generation for episode ${episodeId}`);
+        const { data: videoData, error: videoError } = await supabase.functions.invoke('render-episode-video', {
+          body: { episodeId }
+        });
+
+        if (videoError) {
+          console.error('Auto-triggered video generation failed:', videoError);
+          // Update status to failed
+          await supabase
+            .from('episodes')
+            .update({ video_status: 'failed' })
+            .eq('id', episodeId);
+        } else {
+          console.log(`✅ Video generation complete for episode ${episodeId}:`, videoData);
+        }
+      } catch (err) {
+        console.error('Video generation background task error:', err);
+      }
+    })();
 
     return new Response(
       JSON.stringify({
@@ -261,8 +285,9 @@ Deno.serve(async (req) => {
         episodeId,
         executionLog,
         totalDuration: executionLog.reduce((sum, log) => sum + (log.duration || 0), 0),
-        message: `🎬 God-level production complete! Episode processed through ${productionPipeline.length} phases with ${executionLog.length} bot executions.`,
-        enhancedEpisode
+        message: `🎬 God-level production complete! Episode processed through ${productionPipeline.length} phases with ${executionLog.length} bot executions. Video generation auto-triggered.`,
+        enhancedEpisode,
+        autoTriggeringVideo: true
       }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
