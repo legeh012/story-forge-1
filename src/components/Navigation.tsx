@@ -9,6 +9,7 @@ const Navigation = () => {
 
   const navLinks = [
     { to: "/create", label: "Create", icon: null },
+    { to: "/episodes-gallery", label: "Episodes", icon: Video },
     { to: "/media", label: "Media", icon: FolderOpen },
     { to: "/video-generation", label: "Video Studio", icon: Video },
     { to: "/remix-studio", label: "Remix Studio", icon: Sparkles },
