@@ -29,8 +29,8 @@ export const ActiveBotsPanel = ({ episodeId }: ActiveBotsPanelProps) => {
       color: 'text-purple-500',
       bgColor: 'bg-purple-500/10',
       borderColor: 'border-purple-500/20',
-      description: 'Virtual showrunner for cinematic direction',
-      features: ['Camera angles', 'Emotional tone', 'Auto-adjusts drama intensity', 'Character focus'],
+      description: 'BET/VH1-style showrunner - Love & Hip Hop, Basketball Wives expertise',
+      features: ['Multi-cam drama coverage', 'Confessional timing', 'Explosive moment buildup', 'Reality TV pacing'],
     },
     {
       id: 'production_team',
@@ -39,8 +39,8 @@ export const ActiveBotsPanel = ({ episodeId }: ActiveBotsPanelProps) => {
       color: 'text-blue-500',
       bgColor: 'bg-blue-500/10',
       borderColor: 'border-blue-500/20',
-      description: 'Casting, styling, and drama editing modules',
-      features: ['Character consistency', 'Cultural styling', 'Conflict optimization', 'Preloaded templates'],
+      description: 'Reality TV production crew - Real Housewives, Selling Sunset standards',
+      features: ['Cast consistency tracking', 'Glam squad optimization', 'Drama arc escalation', 'Reunion episode templates'],
     },
     {
       id: 'scene_orchestration',
@@ -49,8 +49,8 @@ export const ActiveBotsPanel = ({ episodeId }: ActiveBotsPanelProps) => {
       color: 'text-green-500',
       bgColor: 'bg-green-500/10',
       borderColor: 'border-green-500/20',
-      description: '60-80% faster with pre-generated setups',
-      features: ['Instant generation', 'Common scene templates', 'Boutique/brunch/reunion presets'],
+      description: 'Netflix/Hulu reality production - 60-80% faster generation',
+      features: ['Pre-built conflict scenarios', 'Luxury location templates', 'Brunch/dinner/party presets', 'Instant confessional setup'],
     },
   ];
 
@@ -204,7 +204,7 @@ export const ActiveBotsPanel = ({ episodeId }: ActiveBotsPanelProps) => {
             ExpertDirector Interface
           </CardTitle>
           <CardDescription>
-            Get cinematic direction, camera angles, and drama optimization
+            BET/VH1 showrunner expertise - Multi-cam coverage, confessional timing, explosive confrontations
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
@@ -214,7 +214,7 @@ export const ActiveBotsPanel = ({ episodeId }: ActiveBotsPanelProps) => {
               id="director-prompt"
               value={prompt}
               onChange={(e) => setPrompt(e.target.value)}
-              placeholder="Example: Create a dramatic confrontation between Amal and Nasra at an upscale boutique, building tension through subtle glances before erupting into argument"
+              placeholder="Example: Create Love & Hip Hop-style confrontation between Amal and Nasra at designer boutique - table flip, drink throw, dramatic exit"
               className="min-h-24"
             />
           </div>
@@ -246,7 +246,7 @@ export const ActiveBotsPanel = ({ episodeId }: ActiveBotsPanelProps) => {
             Production Team Modules
           </CardTitle>
           <CardDescription>
-            Specialized AI roles for character, styling, and drama optimization
+            Reality TV specialists - Real Housewives casting, glam squad, drama editor expertise
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-3">
@@ -290,7 +290,7 @@ export const ActiveBotsPanel = ({ episodeId }: ActiveBotsPanelProps) => {
             Scene Orchestration Engine
           </CardTitle>
           <CardDescription>
-            Instant generation from short prompts using pre-loaded templates
+            Netflix/Hulu reality templates - Selling Sunset luxury, Jersey Shore drama, instant scene generation
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
@@ -300,7 +300,7 @@ export const ActiveBotsPanel = ({ episodeId }: ActiveBotsPanelProps) => {
               id="scene-prompt"
               value={scenePrompt}
               onChange={(e) => setScenePrompt(e.target.value)}
-              placeholder='Example: "Amal exposes Nasra at brunch"'
+              placeholder='Example: "Amal brings receipts to rooftop brunch - Real Housewives style confrontation"'
               className="min-h-16"
             />
           </div>
