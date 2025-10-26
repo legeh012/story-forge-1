@@ -104,7 +104,25 @@ export const VideoManifestPlayer = ({ manifestUrl, className = '', controls = tr
     );
   }
 
+  // Safety check: ensure frames array exists and has items
+  if (!manifest.frames || manifest.frames.length === 0) {
+    return (
+      <div className={`flex items-center justify-center bg-black text-white p-8 ${className}`}>
+        <p>No video frames available</p>
+      </div>
+    );
+  }
+
   const currentFrame = manifest.frames[currentFrameIndex];
+
+  // Safety check: ensure current frame exists
+  if (!currentFrame) {
+    return (
+      <div className={`flex items-center justify-center bg-black text-white p-8 ${className}`}>
+        <p>Invalid frame index</p>
+      </div>
+    );
+  }
 
   return (
     <div className={`relative ${className}`}>
