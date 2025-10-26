@@ -17,10 +17,10 @@ export const MasterOrchestratorPanel = ({ episodeId, projectId }: MasterOrchestr
   const [results, setResults] = useState<any>(null);
 
   const runOrchestration = async (task: string) => {
-    if (!episodeId && !projectId) {
+    if (!projectId) {
       toast({
         title: "Missing Context",
-        description: "Please select an episode or project first",
+        description: "Please select a project first",
         variant: "destructive",
       });
       return;
@@ -30,11 +30,21 @@ export const MasterOrchestratorPanel = ({ episodeId, projectId }: MasterOrchestr
     setResults(null);
 
     try {
-      const { data, error } = await supabase.functions.invoke('master-orchestrator', {
+      // Map tasks to workflow parameters
+      const workflowParams: Record<string, { style?: string; duration?: number }> = {
+        'full_production': { style: 'cinematic', duration: 60 },
+        'music_production': { style: 'dramatic', duration: 30 },
+        'video_enhancement': { style: 'polished', duration: 45 },
+        'viral_optimization': { style: 'trendy', duration: 30 },
+      };
+
+      const params = workflowParams[task] || { style: 'cinematic', duration: 60 };
+
+      const { data, error } = await supabase.functions.invoke('director-workflow', {
         body: {
-          task,
-          episodeId,
           projectId,
+          prompt: `Execute ${task.replace('_', ' ')} workflow`,
+          ...params,
         },
       });
 
@@ -43,15 +53,15 @@ export const MasterOrchestratorPanel = ({ episodeId, projectId }: MasterOrchestr
       setResults(data);
       
       toast({
-        title: "🎬 Orchestration Complete",
-        description: `${data.results.length} bots coordinated successfully`,
+        title: "🎬 Production Complete",
+        description: `Workflow executed successfully - Episode ${data.episodeId}`,
       });
 
     } catch (error) {
-      console.error('Orchestration error:', error);
+      console.error('Workflow error:', error);
       toast({
         title: "Error",
-        description: error instanceof Error ? error.message : 'Failed to run orchestration',
+        description: error instanceof Error ? error.message : 'Failed to run workflow',
         variant: "destructive",
       });
     } finally {
@@ -152,22 +162,24 @@ export const MasterOrchestratorPanel = ({ episodeId, projectId }: MasterOrchestr
         {results && (
           <Card className="mt-6 bg-muted/50">
             <CardHeader>
-              <CardTitle className="text-sm">Orchestration Results</CardTitle>
+              <CardTitle className="text-sm">Production Results</CardTitle>
             </CardHeader>
             <CardContent>
               <div className="space-y-2">
                 <div className="text-sm">
-                  <span className="font-medium">Task:</span> {results.task}
+                  <span className="font-medium">Episode ID:</span> {results.episodeId}
                 </div>
                 <div className="text-sm">
-                  <span className="font-medium">Bots Executed:</span> {results.results.length}
+                  <span className="font-medium">Status:</span> {results.workflowStatus}
                 </div>
-                <div className="text-sm">
-                  <span className="font-medium">Reasoning:</span> {results.orchestrationPlan.reasoning}
-                </div>
-                <div className="text-sm">
-                  <span className="font-medium">Estimated Time:</span> {results.orchestrationPlan.estimatedTime}
-                </div>
+                {results.manifestUrl && (
+                  <div className="text-sm">
+                    <span className="font-medium">Video Manifest:</span>{' '}
+                    <a href={results.manifestUrl} target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">
+                      View
+                    </a>
+                  </div>
+                )}
                 <details className="mt-4">
                   <summary className="cursor-pointer text-sm font-medium hover:text-primary">
                     View Detailed Results
