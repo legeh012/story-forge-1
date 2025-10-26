@@ -10,6 +10,66 @@ interface ProductionRequest {
   uploadToYouTube?: boolean;
 }
 
+// Say Walahi Sisters - The Diaspora Characters
+const sayWalahiCharacters = [
+  {
+    name: "Lucky",
+    role: "The Founder - Visionary Architect",
+    personality: "Builds cinematic OSs while flipping tropes into monetization, always architecting the next cultural disruption",
+    voice: "commanding, visionary, powerful",
+    appearance: "rich espresso skin, commanding presence, flowing waves under designer headwrap, power suits with statement jewelry"
+  },
+  {
+    name: "Luul",
+    role: "The Flamekeeper - Cultural Anchor",
+    personality: "Holds the ancestral line and lights the confessional fire, pure legacy and cultural wisdom",
+    voice: "ancestral, wise, powerful",
+    appearance: "warm caramel skin, sharp features with ancestral wisdom, sleek bun under traditional hijab, elegant traditional meets modern power"
+  },
+  {
+    name: "Samara",
+    role: "The Strategist - Quiet Architect",
+    personality: "Precision over noise. Codes emotional logic into every scene and sees monetization arcs before they drop",
+    voice: "calculating, precise, strategic",
+    appearance: "honey beige skin, calculating eyes with strategic smile, sleek styling under minimalist hijab, architectural precision"
+  },
+  {
+    name: "Ayaan",
+    role: "The Architect - Systems Queen",
+    personality: "Builds backend brilliance and front-end finesse. Her overlays are schema poetry in motion",
+    voice: "tech-forward, systematic, poetic",
+    appearance: "deep mahogany skin, focused intensity, natural curls under bold printed wrap, tech-forward elegance"
+  },
+  {
+    name: "Hani",
+    role: "The Oracle - Spiritual Strategist",
+    personality: "Reads trauma maps like episode scripts. Her energy grid is the show's emotional compass",
+    voice: "spiritual, knowing, compassionate",
+    appearance: "soft cinnamon skin, knowing eyes with spiritual presence, flowing hair under elegant hijab, spiritual elegance"
+  },
+  {
+    name: "Zahra",
+    role: "The Flame - Satirical Provocateur",
+    personality: "Weaponizes humor to dismantle tropes. Her confessionals are viral think pieces",
+    voice: "sharp, satirical, provocative",
+    appearance: "honey beige skin, sharp wit with provocative smile, bold styling under statement hijab, provocateur chic"
+  },
+  {
+    name: "Nasra",
+    role: "Sweetheart - Emotional Core",
+    personality: "The softness in the chaos. Her vulnerability is her superpower and her storyline always lands perfectly",
+    voice: "gentle, heartfelt, vulnerable",
+    appearance: "deep mahogany skin, gentle features with heartfelt expression, soft styling under pastel hijab, sweetheart aesthetic"
+  },
+  {
+    name: "Amal",
+    role: "The Instigator - Chaos Console",
+    personality: "Thrives on pivots, plot twists, and viral disruption. Every scene becomes a cinematic upgrade",
+    voice: "mischievous, dynamic, disruptive",
+    appearance: "warm bronze skin, mischievous energy, dynamic styling under bold chiffon hijab, chaos chic aesthetic"
+  }
+];
+
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
@@ -64,7 +124,8 @@ Deno.serve(async (req) => {
       body: {
         episodeId: episodeId,
         projectId: episode.project_id,
-        mode: 'ultra'
+        mode: 'ultra',
+        characters: sayWalahiCharacters // Pass diaspora sisters data
       }
     });
 
@@ -181,6 +242,7 @@ Deno.serve(async (req) => {
         manifestUrl: ffmpegResult.manifestUrl,
         youtubeUrl: youtubeUrl,
         godModeExecutionLog: godModeResult?.executionLog,
+        cast: sayWalahiCharacters.map(c => ({ name: c.name, role: c.role })),
         ffmpegProcessing: {
           godLevelBots: [
             'god-level-scene-composer-bot',
@@ -194,8 +256,8 @@ Deno.serve(async (req) => {
           status: 'completed'
         },
         message: youtubeUrl 
-          ? 'Episode produced and uploaded to YouTube successfully'
-          : 'Episode produced successfully'
+          ? `Episode featuring Say Walahi Sisters produced and uploaded to YouTube successfully`
+          : `Episode featuring Say Walahi Sisters produced successfully`
       }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );

@@ -352,12 +352,40 @@ export const EpisodeProductionPanel = () => {
         )}
 
         <div className="mt-6 p-4 bg-muted/50 rounded-lg">
-          <h4 className="font-semibold text-sm mb-2">🎥 Production Pipeline:</h4>
+          <h4 className="font-semibold text-sm mb-2">👭 Cast: Say Walahi Sisters</h4>
+          <div className="grid grid-cols-2 gap-2 mb-4">
+            <div className="text-xs">
+              <span className="font-medium">Lucky</span> - The Visionary Architect
+            </div>
+            <div className="text-xs">
+              <span className="font-medium">Luul</span> - The Cultural Anchor
+            </div>
+            <div className="text-xs">
+              <span className="font-medium">Samara</span> - The Strategist
+            </div>
+            <div className="text-xs">
+              <span className="font-medium">Ayaan</span> - The Systems Queen
+            </div>
+            <div className="text-xs">
+              <span className="font-medium">Hani</span> - The Oracle
+            </div>
+            <div className="text-xs">
+              <span className="font-medium">Zahra</span> - The Satirical Provocateur
+            </div>
+            <div className="text-xs">
+              <span className="font-medium">Nasra</span> - The Emotional Core
+            </div>
+            <div className="text-xs">
+              <span className="font-medium">Amal</span> - The Chaos Console
+            </div>
+          </div>
+          
+          <h4 className="font-semibold text-sm mb-2 mt-4">🎥 Production Pipeline:</h4>
           <div className="text-xs text-muted-foreground space-y-1">
-            <p>1. God Mode Reality TV Production (Script, Music, Scenes, Voiceovers, Images)</p>
+            <p>1. God Mode Reality TV Production (Script with Say Walahi Sisters, Music, Scenes, Voiceovers, Images)</p>
             <p>2. FFmpeg God-Level Video Compilation (Scene Composer, Frame Optimizer, Color Grader, Quality Enhancer, Effects, Audio Sync & Master)</p>
-            <p>3. High-Quality MP4 Video Generation</p>
-            <p>4. YouTube Upload (Optional)</p>
+            <p>3. High-Quality MP4 Video Generation (BET/VH1 Production Quality)</p>
+            <p>4. YouTube Upload (Optional - One-Click Publishing)</p>
           </div>
         </div>
       </CardContent>

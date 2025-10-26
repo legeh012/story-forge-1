@@ -175,7 +175,9 @@ const Episodes = () => {
                 <Wand2 className="h-6 w-6 text-accent" />
                 <div>
                   <h2 className="text-xl font-semibold">AI Episode Generator</h2>
-                  <p className="text-sm text-muted-foreground">Describe your episode and let AI create it</p>
+                  <p className="text-sm text-muted-foreground">
+                    Featuring the Say Walahi Sisters - 8 diaspora sisters in luxury reality TV drama
+                  </p>
                 </div>
               </div>
               
@@ -206,6 +208,60 @@ const Episodes = () => {
 
           <div className="mt-8">
             <EpisodeProductionPanel />
+          </div>
+
+          <div className="mt-8">
+            <h2 className="text-2xl font-bold mb-4">Say Walahi Sisters Cast</h2>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8">
+              <Card className="p-4 bg-card border-border hover:border-accent/30 transition-all">
+                <h3 className="font-semibold mb-2">👑 Lucky - The Visionary Architect</h3>
+                <p className="text-sm text-muted-foreground">
+                  The founder who builds cinematic systems and architects cultural disruption
+                </p>
+              </Card>
+              <Card className="p-4 bg-card border-border hover:border-primary/30 transition-all">
+                <h3 className="font-semibold mb-2">🔥 Luul - The Cultural Anchor</h3>
+                <p className="text-sm text-muted-foreground">
+                  The flamekeeper who holds ancestral wisdom and lights the confessional fire
+                </p>
+              </Card>
+              <Card className="p-4 bg-card border-border hover:border-primary-glow/30 transition-all">
+                <h3 className="font-semibold mb-2">📊 Samara - The Strategist</h3>
+                <p className="text-sm text-muted-foreground">
+                  The quiet architect who codes emotional logic into every scene
+                </p>
+              </Card>
+              <Card className="p-4 bg-card border-border hover:border-accent/30 transition-all">
+                <h3 className="font-semibold mb-2">💻 Ayaan - The Systems Queen</h3>
+                <p className="text-sm text-muted-foreground">
+                  The architect with backend brilliance and front-end finesse
+                </p>
+              </Card>
+              <Card className="p-4 bg-card border-border hover:border-primary/30 transition-all">
+                <h3 className="font-semibold mb-2">🔮 Hani - The Oracle</h3>
+                <p className="text-sm text-muted-foreground">
+                  The spiritual strategist who reads trauma maps and keeps the energy grid
+                </p>
+              </Card>
+              <Card className="p-4 bg-card border-border hover:border-accent/30 transition-all">
+                <h3 className="font-semibold mb-2">⚡ Zahra - The Provocateur</h3>
+                <p className="text-sm text-muted-foreground">
+                  The satirical flame who weaponizes humor to dismantle tropes
+                </p>
+              </Card>
+              <Card className="p-4 bg-card border-border hover:border-primary-glow/30 transition-all">
+                <h3 className="font-semibold mb-2">💖 Nasra - The Emotional Core</h3>
+                <p className="text-sm text-muted-foreground">
+                  The sweetheart whose vulnerability is her superpower
+                </p>
+              </Card>
+              <Card className="p-4 bg-card border-border hover:border-accent/30 transition-all">
+                <h3 className="font-semibold mb-2">🌪️ Amal - The Chaos Console</h3>
+                <p className="text-sm text-muted-foreground">
+                  The instigator who thrives on plot twists and viral disruption
+                </p>
+              </Card>
+            </div>
           </div>
 
           <div className="mt-8">

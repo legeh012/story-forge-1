@@ -12,15 +12,120 @@ interface DirectorRequest {
   duration?: number;
 }
 
+// Say Walahi Sisters - The Diaspora Characters
 const sayWalahiCharacters = [
-  { name: 'Lucky', personality: 'charismatic leader', voice: 'confident, smooth' },
-  { name: 'Luul', personality: 'dramatic queen', voice: 'bold, expressive' },
-  { name: 'Samara', personality: 'peace keeper', voice: 'calm, diplomatic' },
-  { name: 'Ayaan', personality: 'troublemaker', voice: 'mischievous, witty' },
-  { name: 'Hani', personality: 'loyal friend', voice: 'fierce, honest' },
-  { name: 'Zahra', personality: 'gossip master', voice: 'animated, social' },
-  { name: 'Nasra', personality: 'mysterious', voice: 'thoughtful, deep' },
-  { name: 'Amal', personality: 'comic relief', voice: 'funny, light-hearted' }
+  {
+    name: "Lucky",
+    role: "The Founder - Visionary Architect",
+    traits: ["chaos-native", "schema-driven", "visionary", "ten steps ahead"],
+    personality: "Builds cinematic OSs while flipping tropes into monetization, always architecting the next cultural disruption",
+    voice: "commanding, visionary, powerful",
+    appearance: {
+      skin_tone: "rich espresso",
+      face: "commanding presence, visionary gaze",
+      hair: "flowing waves under designer headwrap",
+      style: "power suits, statement jewelry, architectural aesthetic",
+      aura: "visionary architect meets cultural disruptor"
+    }
+  },
+  {
+    name: "Luul",
+    role: "The Flamekeeper - Cultural Anchor",
+    traits: ["ancestral", "legacy-keeper", "confessional fire", "pure presence"],
+    personality: "Holds the ancestral line and lights the confessional fire, her presence is pure legacy and cultural wisdom",
+    voice: "ancestral, wise, powerful",
+    appearance: {
+      skin_tone: "warm caramel",
+      face: "sharp features, ancestral wisdom in her gaze",
+      hair: "sleek bun under traditional hijab",
+      style: "elegant traditional meets modern power, heritage fabrics",
+      aura: "ancestral flame meets generational keeper"
+    }
+  },
+  {
+    name: "Samara",
+    role: "The Strategist - Quiet Architect",
+    traits: ["precise", "emotional logic coder", "monetization visionary", "quiet power"],
+    personality: "Precision over noise. Codes emotional logic into every scene and sees monetization arcs before they drop",
+    voice: "calculating, precise, strategic",
+    appearance: {
+      skin_tone: "honey beige",
+      face: "calculating eyes, strategic smile",
+      hair: "sleek styling under minimalist hijab",
+      style: "architectural precision, clean lines, strategic aesthetic",
+      aura: "quiet architect of emotional systems"
+    }
+  },
+  {
+    name: "Ayaan",
+    role: "The Architect - Systems Queen",
+    traits: ["backend brilliant", "front-end finesse", "schema poet", "systems thinker"],
+    personality: "Builds backend brilliance and front-end finesse. Her overlays are schema poetry in motion",
+    voice: "tech-forward, systematic, poetic",
+    appearance: {
+      skin_tone: "deep mahogany",
+      face: "focused intensity, architectural vision",
+      hair: "natural curls under bold printed wrap",
+      style: "tech-forward elegance, systematic aesthetic",
+      aura: "systems queen meets code poetry"
+    }
+  },
+  {
+    name: "Hani",
+    role: "The Oracle - Spiritual Strategist",
+    traits: ["trauma map reader", "energy grid keeper", "emotional compass", "spiritual"],
+    personality: "Reads trauma maps like episode scripts. Her energy grid is the show's emotional compass and spiritual north",
+    voice: "spiritual, knowing, compassionate",
+    appearance: {
+      skin_tone: "soft cinnamon",
+      face: "knowing eyes, spiritual presence",
+      hair: "flowing under elegant hijab",
+      style: "spiritual elegance, energy-aware aesthetic, mystical touches",
+      aura: "oracle meets emotional cartographer"
+    }
+  },
+  {
+    name: "Zahra",
+    role: "The Flame - Satirical Provocateur",
+    traits: ["satirical", "trope dismantler", "viral thinker", "weaponized humor"],
+    personality: "Weaponizes humor to dismantle tropes. Her confessionals are viral think pieces that break the internet",
+    voice: "sharp, satirical, provocative",
+    appearance: {
+      skin_tone: "honey beige",
+      face: "sharp wit, provocative smile",
+      hair: "bold styling under statement hijab",
+      style: "provocateur chic, satirical aesthetic, viral ready",
+      aura: "flame meets satirical genius"
+    }
+  },
+  {
+    name: "Nasra",
+    role: "Sweetheart - Emotional Core",
+    traits: ["vulnerable", "emotional superpower", "soft chaos", "storyline magnet"],
+    personality: "The softness in the chaos. Her vulnerability is her superpower and her storyline always lands perfectly",
+    voice: "gentle, heartfelt, vulnerable",
+    appearance: {
+      skin_tone: "deep mahogany",
+      face: "gentle features, heartfelt expression",
+      hair: "soft styling under pastel hijab",
+      style: "sweetheart aesthetic, emotional elegance, vulnerability as power",
+      aura: "emotional core meets gentle strength"
+    }
+  },
+  {
+    name: "Amal",
+    role: "The Instigator - Chaos Console",
+    traits: ["pivot master", "plot twist queen", "viral disruptor", "cinematic upgrader"],
+    personality: "Thrives on pivots, plot twists, and viral disruption. Every scene she enters becomes a cinematic upgrade",
+    voice: "mischievous, dynamic, disruptive",
+    appearance: {
+      skin_tone: "warm bronze",
+      face: "mischievous energy, instigator smile",
+      hair: "dynamic styling under bold chiffon hijab",
+      style: "chaos chic, plot twist aesthetic, viral energy",
+      aura: "instigator meets cinematic chaos architect"
+    }
+  }
 ];
 
 Deno.serve(async (req) => {
@@ -118,15 +223,34 @@ Deno.serve(async (req) => {
       const scene = scenes[i];
       console.log(`Generating image ${i + 1}/${scenes.length}`);
 
-      const imagePrompt = `PHOTOREALISTIC REALITY TV SCENE:
+      const imagePrompt = `PHOTOREALISTIC REALITY TV SCENE - SAY WALAHI SISTERS:
 ${scene.visualDescription}
 
-Characters: ${scene.characters.join(', ')}
-Location: ${scene.location}
-Style: Netflix-grade cinematography, dramatic lighting, 4K quality
-Camera: ${scene.cameraMovement}
+CAST MEMBERS PRESENT:
+${scene.characters.map((charName: string) => {
+  const char = sayWalahiCharacters.find(c => c.name === charName);
+  if (!char) return `${charName} - Somali woman in modern setting`;
+  return `${char.name} (${char.role}):
+  - Appearance: ${char.appearance.skin_tone} skin, ${char.appearance.face}, ${char.appearance.hair}
+  - Style: ${char.appearance.style}
+  - Energy: ${char.appearance.aura}
+  - Personality: ${char.personality}`;
+}).join('\n\n')}
 
-Ultra-realistic human features, professional production value`;
+SCENE SETTING:
+Location: ${scene.location}
+Camera Movement: ${scene.cameraMovement}
+Lighting: Netflix-grade cinematic, dramatic reality TV lighting
+Quality: 4K photorealistic, BET/VH1 production value
+
+CRITICAL REQUIREMENTS:
+- Show REAL Somali diaspora sisters in luxury modern setting
+- Authentic hijabi fashion - elegant, modern, designer
+- Natural human expressions and body language
+- Professional reality TV cinematography
+- No cartoon or anime style - PHOTOREALISTIC ONLY
+- Accurate human anatomy and proportions`;
+
 
       const imageResponse = await fetch(aiGatewayUrl, {
         method: 'POST',
