@@ -150,3 +150,9 @@ verify_jwt = false
 
 [functions.director-workflow]
 verify_jwt = true
+
+[functions.youtube-uploader]
+verify_jwt = true
+
+[functions.produce-and-upload-episode]
+verify_jwt = true

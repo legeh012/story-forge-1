@@ -9,6 +9,7 @@ import { Label } from "@/components/ui/label";
 import { BookOpen, Sparkles, Wand2 } from "lucide-react";
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from "@/hooks/use-toast";
+import { EpisodeProductionPanel } from "@/components/EpisodeProductionPanel";
 
 const Episodes = () => {
   const navigate = useNavigate();
@@ -202,6 +203,10 @@ const Episodes = () => {
               </Button>
             </div>
           </Card>
+
+          <div className="mt-8">
+            <EpisodeProductionPanel />
+          </div>
 
           <div className="mt-8">
             <h2 className="text-2xl font-bold mb-4">Episode Features</h2>
