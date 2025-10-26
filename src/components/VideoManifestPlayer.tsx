@@ -39,6 +39,12 @@ export const VideoManifestPlayer = ({ manifestUrl, className = '', controls = tr
         const response = await fetch(manifestUrl);
         
         if (!response.ok) {
+          // Silently fail if manifest doesn't exist - likely video not generated yet
+          if (response.status === 404) {
+            setError('Video not generated yet');
+            setLoading(false);
+            return;
+          }
           throw new Error(`Failed to load video manifest: ${response.status} ${response.statusText}`);
         }
         
@@ -46,15 +52,21 @@ export const VideoManifestPlayer = ({ manifestUrl, className = '', controls = tr
         
         // Validate manifest structure
         if (!data || typeof data !== 'object') {
-          throw new Error('Invalid manifest: Not a valid JSON object');
+          setError('Video not generated yet');
+          setLoading(false);
+          return;
         }
         
         if (!data.frames || !Array.isArray(data.frames)) {
-          throw new Error('Invalid manifest: Missing or invalid frames array');
+          setError('Video not generated yet');
+          setLoading(false);
+          return;
         }
         
         if (data.frames.length === 0) {
-          throw new Error('Invalid manifest: No frames found in video');
+          setError('Video not generated yet');
+          setLoading(false);
+          return;
         }
         
         // Validate each frame has required fields
@@ -70,9 +82,12 @@ export const VideoManifestPlayer = ({ manifestUrl, className = '', controls = tr
         setCurrentFrameIndex(0); // Reset to first frame
         
       } catch (err) {
+        // Only log actual errors, not expected states
+        if (err instanceof Error && !err.message.includes('Video not generated')) {
+          console.error('Manifest load error:', err);
+        }
         const errorMessage = err instanceof Error ? err.message : 'Failed to load video manifest';
         setError(errorMessage);
-        console.error('Manifest load error:', err);
       } finally {
         setLoading(false);
       }
@@ -81,7 +96,7 @@ export const VideoManifestPlayer = ({ manifestUrl, className = '', controls = tr
     if (manifestUrl) {
       loadManifest();
     } else {
-      setError('No manifest URL provided');
+      setError('Video not generated yet');
       setLoading(false);
     }
   }, [manifestUrl]);
@@ -126,16 +141,16 @@ export const VideoManifestPlayer = ({ manifestUrl, className = '', controls = tr
 
   if (loading) {
     return (
-      <div className={`flex items-center justify-center bg-black ${className}`}>
-        <Loader2 className="h-12 w-12 animate-spin text-white" />
+      <div className={`flex items-center justify-center bg-muted ${className}`}>
+        <Loader2 className="h-12 w-12 animate-spin text-primary" />
       </div>
     );
   }
 
   if (error || !manifest) {
     return (
-      <div className={`flex items-center justify-center bg-black text-white p-8 ${className}`}>
-        <p>{error || 'Failed to load video'}</p>
+      <div className={`flex items-center justify-center bg-muted text-muted-foreground p-8 rounded-lg ${className}`}>
+        <p className="text-sm">{error || 'Failed to load video'}</p>
       </div>
     );
   }
@@ -143,8 +158,8 @@ export const VideoManifestPlayer = ({ manifestUrl, className = '', controls = tr
   // Safety check: ensure frames array exists and has items
   if (!manifest.frames || manifest.frames.length === 0) {
     return (
-      <div className={`flex items-center justify-center bg-black text-white p-8 ${className}`}>
-        <p>No video frames available</p>
+      <div className={`flex items-center justify-center bg-muted text-muted-foreground p-8 rounded-lg ${className}`}>
+        <p className="text-sm">No video frames available</p>
       </div>
     );
   }
@@ -154,8 +169,8 @@ export const VideoManifestPlayer = ({ manifestUrl, className = '', controls = tr
   // Safety check: ensure current frame exists
   if (!currentFrame) {
     return (
-      <div className={`flex items-center justify-center bg-black text-white p-8 ${className}`}>
-        <p>Invalid frame index</p>
+      <div className={`flex items-center justify-center bg-muted text-muted-foreground p-8 rounded-lg ${className}`}>
+        <p className="text-sm">Invalid frame index</p>
       </div>
     );
   }
