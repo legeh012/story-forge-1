@@ -6,6 +6,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { AICopilot } from "@/components/AICopilot";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
+import { ErrorBoundary } from "@/components/ErrorBoundary";
 import BotpressChat from "@/components/BotpressChat";
 import Index from "./pages/Index";
 import Dashboard from "./pages/Dashboard";
@@ -42,39 +43,41 @@ const App = () => {
   return (
     <QueryClientProvider client={queryClient}>
       <TooltipProvider>
-        <Toaster />
-        <Sonner />
-        {botId && <BotpressChat botId={botId} />}
-        <BrowserRouter
-          future={{
-            v7_startTransition: true,
-            v7_relativeSplatPath: true,
-          }}
-        >
-          <Routes>
-            <Route path="/" element={<Index />} />
-            <Route path="/auth" element={<Auth />} />
-            <Route path="/install" element={<ProtectedRoute><Install /></ProtectedRoute>} />
-            <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
-            <Route path="/characters" element={<ProtectedRoute><Characters /></ProtectedRoute>} />
-            <Route path="/episodes" element={<ProtectedRoute><Episodes /></ProtectedRoute>} />
-            <Route path="/episodes-gallery" element={<ProtectedRoute><EpisodesGallery /></ProtectedRoute>} />
-            <Route path="/episodes/:id" element={<ProtectedRoute><EpisodeDetail /></ProtectedRoute>} />
-            <Route path="/workflow" element={<ProtectedRoute><Workflow /></ProtectedRoute>} />
-            <Route path="/create" element={<ProtectedRoute><CreateProject /></ProtectedRoute>} />
-            <Route path="/media" element={<ProtectedRoute><MediaLibrary /></ProtectedRoute>} />
-            <Route path="/analytics" element={<ProtectedRoute><Analytics /></ProtectedRoute>} />
-            <Route path="/system-monitor" element={<ProtectedRoute><SystemMonitor /></ProtectedRoute>} />
-            <Route path="/viral-bots" element={<ProtectedRoute><ViralBots /></ProtectedRoute>} />
-            <Route path="/video-generation" element={<ProtectedRoute><VideoGeneration /></ProtectedRoute>} />
-            <Route path="/remix-studio" element={<ProtectedRoute><RemixStudio /></ProtectedRoute>} />
-            <Route path="/cloud-services" element={<ProtectedRoute><CloudServices /></ProtectedRoute>} />
-            <Route path="/dev-tools" element={<ProtectedRoute><DevTools /></ProtectedRoute>} />
-            {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
-            <Route path="*" element={<NotFound />} />
-          </Routes>
-          <AICopilot />
-        </BrowserRouter>
+        <ErrorBoundary>
+          <Toaster />
+          <Sonner />
+          {botId && <BotpressChat botId={botId} />}
+          <BrowserRouter
+            future={{
+              v7_startTransition: true,
+              v7_relativeSplatPath: true,
+            }}
+          >
+            <Routes>
+              <Route path="/" element={<Index />} />
+              <Route path="/auth" element={<Auth />} />
+              <Route path="/install" element={<ProtectedRoute><Install /></ProtectedRoute>} />
+              <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
+              <Route path="/characters" element={<ProtectedRoute><Characters /></ProtectedRoute>} />
+              <Route path="/episodes" element={<ProtectedRoute><Episodes /></ProtectedRoute>} />
+              <Route path="/episodes-gallery" element={<ProtectedRoute><EpisodesGallery /></ProtectedRoute>} />
+              <Route path="/episodes/:id" element={<ProtectedRoute><EpisodeDetail /></ProtectedRoute>} />
+              <Route path="/workflow" element={<ProtectedRoute><Workflow /></ProtectedRoute>} />
+              <Route path="/create" element={<ProtectedRoute><CreateProject /></ProtectedRoute>} />
+              <Route path="/media" element={<ProtectedRoute><MediaLibrary /></ProtectedRoute>} />
+              <Route path="/analytics" element={<ProtectedRoute><Analytics /></ProtectedRoute>} />
+              <Route path="/system-monitor" element={<ProtectedRoute><SystemMonitor /></ProtectedRoute>} />
+              <Route path="/viral-bots" element={<ProtectedRoute><ViralBots /></ProtectedRoute>} />
+              <Route path="/video-generation" element={<ProtectedRoute><VideoGeneration /></ProtectedRoute>} />
+              <Route path="/remix-studio" element={<ProtectedRoute><RemixStudio /></ProtectedRoute>} />
+              <Route path="/cloud-services" element={<ProtectedRoute><CloudServices /></ProtectedRoute>} />
+              <Route path="/dev-tools" element={<ProtectedRoute><DevTools /></ProtectedRoute>} />
+              {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
+              <Route path="*" element={<NotFound />} />
+            </Routes>
+            <AICopilot />
+          </BrowserRouter>
+        </ErrorBoundary>
       </TooltipProvider>
     </QueryClientProvider>
   );

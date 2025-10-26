@@ -73,6 +73,13 @@ export const EpisodeProductionPanel = () => {
     });
 
     try {
+      // Verify authentication
+      const { data: { session }, error: authError } = await supabase.auth.getSession();
+      
+      if (authError || !session) {
+        throw new Error('Authentication required. Please log in again.');
+      }
+
       // Start polling for progress
       const pollInterval = setInterval(async () => {
         const { data: updatedEpisode } = await supabase
@@ -104,7 +111,16 @@ export const EpisodeProductionPanel = () => {
 
       clearInterval(pollInterval);
 
-      if (error) throw error;
+      if (error) {
+        console.error('Production function error:', error);
+        
+        // Check if it's a network error
+        if (error.message?.includes('Failed to send') || error.message?.includes('Load failed')) {
+          throw new Error('Network error: Unable to reach production service. The edge functions may be deploying. Please wait a moment and try again.');
+        }
+        
+        throw error;
+      }
 
       setProgress({ ...progress, [episodeId]: 100 });
 
@@ -124,12 +140,27 @@ export const EpisodeProductionPanel = () => {
       }
 
     } catch (error) {
-      console.error('Production error:', error);
+      console.error(`Episode ${episode.title} production error:`, error);
+      
+      const errorMessage = error instanceof Error ? error.message : 'Failed to produce episode';
+      
       toast({
         title: 'Production Failed',
-        description: error instanceof Error ? error.message : 'Failed to produce episode',
-        variant: 'destructive'
+        description: errorMessage,
+        variant: 'destructive',
+        duration: 10000
       });
+      
+      // Update episode status to failed
+      await supabase
+        .from('episodes')
+        .update({
+          video_status: 'failed',
+          video_render_error: errorMessage
+        })
+        .eq('id', episodeId);
+      
+      await loadEpisodes();
     } finally {
       setProducingEpisode(null);
       setProgress(prev => {

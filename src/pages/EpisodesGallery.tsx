@@ -103,6 +103,13 @@ const EpisodesGallery = () => {
   const generateTrailer = async (season: number) => {
     setGeneratingTrailer(season);
     try {
+      // Verify authentication
+      const { data: { session }, error: authError } = await supabase.auth.getSession();
+      
+      if (authError || !session) {
+        throw new Error('Authentication required. Please log in again.');
+      }
+
       toast({
         title: `Generating Season ${season} Trailer`,
         description: 'Creating dramatic photorealistic scenes...',
@@ -115,7 +122,16 @@ const EpisodesGallery = () => {
         }
       });
 
-      if (error) throw error;
+      if (error) {
+        console.error('Trailer generation function error:', error);
+        
+        // Check if it's a network error
+        if (error.message?.includes('Failed to send') || error.message?.includes('Load failed')) {
+          throw new Error('Network error: Unable to reach trailer generation service. Edge functions may be deploying. Please try again in a moment.');
+        }
+        
+        throw error;
+      }
 
       if (data?.trailerUrl) {
         if (season === 1) setSeason1Trailer(data.trailerUrl);
@@ -128,10 +144,14 @@ const EpisodesGallery = () => {
       }
     } catch (error) {
       console.error('Trailer generation error:', error);
+      
+      const errorMessage = error instanceof Error ? error.message : 'Failed to generate trailer';
+      
       toast({
         title: 'Generation Failed',
-        description: error instanceof Error ? error.message : 'Failed to generate trailer',
+        description: errorMessage,
         variant: 'destructive',
+        duration: 10000
       });
     } finally {
       setGeneratingTrailer(null);

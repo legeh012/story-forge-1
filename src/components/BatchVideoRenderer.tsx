@@ -28,6 +28,13 @@ export const BatchVideoRenderer = () => {
     setResults([]);
     
     try {
+      // Verify authentication first
+      const { data: { session }, error: authError } = await supabase.auth.getSession();
+      
+      if (authError || !session) {
+        throw new Error('Authentication required. Please log in again.');
+      }
+
       toast.info('🎬 Starting batch video rendering...', {
         description: 'Processing all episodes with premium settings'
       });
@@ -56,6 +63,13 @@ export const BatchVideoRenderer = () => {
       });
 
       if (error) {
+        console.error('Edge function error:', error);
+        
+        // Check if it's a network error
+        if (error.message?.includes('Failed to send') || error.message?.includes('Load failed')) {
+          throw new Error('Network error: Unable to reach video rendering service. Please check your connection and try again.');
+        }
+        
         throw error;
       }
 
@@ -69,8 +83,12 @@ export const BatchVideoRenderer = () => {
 
     } catch (error) {
       console.error('Batch rendering error:', error);
+      
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
+      
       toast.error('Failed to render videos', {
-        description: error instanceof Error ? error.message : 'Unknown error'
+        description: errorMessage,
+        duration: 10000
       });
     } finally {
       setIsRendering(false);

@@ -34,20 +34,56 @@ export const VideoManifestPlayer = ({ manifestUrl, className = '', controls = tr
     const loadManifest = async () => {
       try {
         setLoading(true);
-        const response = await fetch(manifestUrl);
-        if (!response.ok) throw new Error('Failed to load video manifest');
-        const data = await response.json();
-        setManifest(data);
         setError(null);
+        
+        const response = await fetch(manifestUrl);
+        
+        if (!response.ok) {
+          throw new Error(`Failed to load video manifest: ${response.status} ${response.statusText}`);
+        }
+        
+        const data = await response.json();
+        
+        // Validate manifest structure
+        if (!data || typeof data !== 'object') {
+          throw new Error('Invalid manifest: Not a valid JSON object');
+        }
+        
+        if (!data.frames || !Array.isArray(data.frames)) {
+          throw new Error('Invalid manifest: Missing or invalid frames array');
+        }
+        
+        if (data.frames.length === 0) {
+          throw new Error('Invalid manifest: No frames found in video');
+        }
+        
+        // Validate each frame has required fields
+        const invalidFrames = data.frames.filter((frame: any, index: number) => 
+          !frame || !frame.url || typeof frame.duration !== 'number'
+        );
+        
+        if (invalidFrames.length > 0) {
+          console.warn('Some frames have invalid data:', invalidFrames);
+        }
+        
+        setManifest(data);
+        setCurrentFrameIndex(0); // Reset to first frame
+        
       } catch (err) {
-        setError(err instanceof Error ? err.message : 'Failed to load video');
+        const errorMessage = err instanceof Error ? err.message : 'Failed to load video manifest';
+        setError(errorMessage);
         console.error('Manifest load error:', err);
       } finally {
         setLoading(false);
       }
     };
 
-    loadManifest();
+    if (manifestUrl) {
+      loadManifest();
+    } else {
+      setError('No manifest URL provided');
+      setLoading(false);
+    }
   }, [manifestUrl]);
 
   useEffect(() => {
