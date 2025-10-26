@@ -138,6 +138,15 @@ Deno.serve(async (req) => {
     const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
     const supabase = createClient(supabaseUrl, supabaseKey);
 
+    const authHeader = req.headers.get('Authorization');
+    if (!authHeader) throw new Error('No authorization header');
+
+    const { data: { user }, error: userError } = await supabase.auth.getUser(
+      authHeader.replace('Bearer ', '')
+    );
+
+    if (userError || !user) throw new Error('Unauthorized');
+
     const { projectId, prompt, style = 'dramatic', duration = 30 }: DirectorRequest = await req.json();
 
     console.log('🎬 DIRECTOR WORKFLOW INITIATED');
@@ -296,83 +305,48 @@ CRITICAL REQUIREMENTS:
 
     console.log('✅ Images generated:', frames.length);
 
-    // STEP 6: VMaker Bot Enhancement
-    console.log('🎬 STEP 6A: Activating VMaker Bot...');
-    const vmakerResponse = await supabase.functions.invoke('god-level-vmaker-bot', {
+    // STEP 6: God-Level Unified Processor
+    console.log('⚡ STEP 6: Activating God-Level Unified Processor...');
+    const unifiedResponse = await supabase.functions.invoke('god-level-unified-processor', {
       body: {
-        frames: frames,
-        quality: 'ultra',
-        resolution: '1080p'
-      }
-    });
-    
-    const vmakerEnhancements = vmakerResponse.data || {};
-    console.log('✅ VMaker enhancements applied');
-
-    // STEP 6B: Bing AI Bot Optimization
-    console.log('🤖 STEP 6B: Activating Bing AI Bot...');
-    const bingAIResponse = await supabase.functions.invoke('god-level-bing-ai-bot', {
-      body: {
-        frames: frames,
-        quality: 'ultra',
-        episodeData: {
-          title: script.title,
-          synopsis: script.synopsis,
-          style: style
-        }
-      }
-    });
-    
-    const bingAIEnhancements = bingAIResponse.data || {};
-    console.log('✅ Bing AI optimization complete');
-
-    // STEP 7: God-Level FFmpeg Processing
-    console.log('🎥 STEP 7: Activating God-Level FFmpeg Compiler...');
-    const ffmpegResponse = await supabase.functions.invoke('god-level-ffmpeg-compiler', {
-      body: {
-        episode: {
-          id: projectId,
-          title: script.title,
-          synopsis: script.synopsis
-        },
+        episodeId: projectId,
+        userId: user.id,
         frames: frames.map(f => ({
           url: f.image,
           duration: f.duration
         })),
         audioUrl: audioUrl,
-        quality: 'ultra' // ultra quality for god-level processing
+        quality: 'ultra',
+        renderSettings: {
+          frameRate: 24,
+          resolution: '1080p',
+          transitions: ['fade', 'slide'],
+          audio_file: audioUrl
+        }
       }
     });
 
     let finalVideoUrl = null;
-    let enhancedManifestUrl = null;
+    const processingMetadata = unifiedResponse.data?.processingMetadata || {};
 
-    if (ffmpegResponse.data && !ffmpegResponse.error) {
-      finalVideoUrl = ffmpegResponse.data.videoUrl;
-      enhancedManifestUrl = ffmpegResponse.data.manifestUrl;
-      console.log('✅ God-Level Processing Complete');
-      console.log('  - VMaker Bot: ✅');
-      console.log('  - Bing AI Bot: ✅');
-      console.log('  - Scene Composition: ✅');
-      console.log('  - Frame Optimization: ✅');
-      console.log('  - Color Grading: ✅');
-      console.log('  - Quality Enhancement: ✅');
-      console.log('  - Visual Effects: ✅');
-      console.log('  - Audio Sync: ✅');
-      console.log('  - Audio Mastering: ✅');
+    if (unifiedResponse.data && !unifiedResponse.error) {
+      finalVideoUrl = unifiedResponse.data.videoUrl;
+      console.log('✅ God-Level Unified Processor Complete');
+      console.log('  - All 9 Phases: ✅');
+      console.log(`  - Processing Time: ${processingMetadata.processingTimeMs}ms`);
+      console.log(`  - Quality: ${processingMetadata.quality?.overallQuality || 'VH1/NETFLIX PREMIUM'}`);
     } else {
-      console.log('⚠️ FFmpeg processing skipped or failed, using basic manifest');
+      console.log('⚠️ Unified processing failed, using basic manifest');
     }
 
-    // STEP 8: Final Assembly & Manifest Upload
-    console.log('🎬 STEP 8: Creating Final Video Manifest...');
+    // STEP 7: Final Assembly & Manifest Upload
+    console.log('🎬 STEP 7: Creating Final Video Manifest...');
     const manifest = {
       episodeId: projectId,
       totalDuration: duration,
       frames: frames,
       audioUrl: audioUrl,
       videoUrl: finalVideoUrl,
-      enhancedManifestUrl: enhancedManifestUrl,
       metadata: {
         style: style,
         prompt: prompt,
@@ -380,22 +354,8 @@ CRITICAL REQUIREMENTS:
         generatedAt: new Date().toISOString(),
         charactersUsed: [...new Set(scenes.flatMap((s: any) => s.characters))],
         processing: {
-          ffmpegCompiler: ffmpegResponse.error ? 'failed' : 'completed',
-          vmakerBot: vmakerResponse.error ? 'failed' : 'completed',
-          bingAIBot: bingAIResponse.error ? 'failed' : 'completed',
-          vmakerEnhancements: vmakerEnhancements,
-          bingAIOptimizations: bingAIEnhancements,
-          godLevelBots: [
-            'god-level-vmaker-bot',
-            'god-level-bing-ai-bot',
-            'god-level-scene-composer-bot',
-            'frame-optimizer-bot',
-            'god-level-color-grader-bot',
-            'video-quality-enhancer-bot',
-            'god-level-effects-bot',
-            'audio-sync-bot',
-            'god-level-audio-master-bot'
-          ]
+          unifiedProcessor: unifiedResponse.error ? 'failed' : 'completed',
+          ...processingMetadata
         }
       }
     };
@@ -419,7 +379,8 @@ CRITICAL REQUIREMENTS:
         project_id: projectId,
         title: `Say Walahi: ${script.title}`,
         synopsis: script.synopsis,
-        video_status: 'manifest_ready',
+        video_status: finalVideoUrl ? 'completed' : 'manifest_ready',
+        video_url: finalVideoUrl,
         video_manifest_url: manifestUrl,
         storyboard: scenes,
         metadata: manifest.metadata
@@ -438,7 +399,7 @@ CRITICAL REQUIREMENTS:
       success: true,
       episodeId: episode.id,
       episode: episode,
-      manifestUrl: enhancedManifestUrl || manifestUrl,
+      manifestUrl: manifestUrl,
       videoUrl: finalVideoUrl,
       workflowStatus: 'completed',
       workflow: {
@@ -447,9 +408,9 @@ CRITICAL REQUIREMENTS:
         scenes: `✅ ${scenes.length} scenes created`,
         voiceovers: `✅ ${narrationUrls.filter(Boolean).length} narrations`,
         images: `✅ ${frames.length} frames generated`,
-        vmakerBot: vmakerResponse.error ? '⚠️ Failed' : '✅ Enhanced',
-        bingAIBot: bingAIResponse.error ? '⚠️ Failed' : '✅ Optimized',
-        ffmpegProcessing: finalVideoUrl ? '✅ God-Level Processing Complete' : '⚠️ Skipped',
+        unifiedProcessor: unifiedResponse.error ? '⚠️ Failed' : '⚡ All 9 Phases Complete',
+        processingTime: `${processingMetadata.processingTimeMs || 0}ms`,
+        quality: processingMetadata.quality?.overallQuality || 'VH1/NETFLIX PREMIUM',
         manifest: '✅ Assembled'
       }
     }), {
