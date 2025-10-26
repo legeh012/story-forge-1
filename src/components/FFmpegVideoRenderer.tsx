@@ -131,7 +131,8 @@ export const FFmpegVideoRenderer = ({ manifestUrl, episodeTitle, onComplete }: F
 
       // Read the output video
       const data = await ffmpeg.readFile('output.mp4') as Uint8Array;
-      const blob = new Blob([data], { type: 'video/mp4' });
+      const videoData = new Uint8Array(data);
+      const blob = new Blob([videoData], { type: 'video/mp4' });
       const url = URL.createObjectURL(blob);
 
       setVideoUrl(url);

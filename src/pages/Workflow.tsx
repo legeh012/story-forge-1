@@ -25,6 +25,7 @@ import { EpisodeWorkflowPipeline } from "@/components/EpisodeWorkflowPipeline";
 import { ArtlistAdvancedPanel } from "@/components/ArtlistAdvancedPanel";
 import { SunoMusicStudio } from "@/components/SunoMusicStudio";
 import { MasterOrchestratorPanel } from "@/components/MasterOrchestratorPanel";
+import { DirectorPanel } from "@/components/DirectorPanel";
 import { sayWalahiCharacters } from "@/data/sayWalahiCharacters";
 
 interface Project {
@@ -1424,6 +1425,8 @@ The episode should feature maximum drama, cultural authenticity, viral moments, 
 
             {/* Active Bots Tab */}
             <TabsContent value="bots" className="space-y-6">
+              <DirectorPanel />
+              
               <MasterOrchestratorPanel episodeId={selectedProject || undefined} projectId={selectedProject || undefined} />
               
               <SunoMusicStudio projectId={selectedProject || undefined} episodeId={selectedProject || undefined} />
