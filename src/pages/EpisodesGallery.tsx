@@ -8,6 +8,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Play, Film, Clock, Sparkles } from "lucide-react";
 import { supabase } from '@/integrations/supabase/client';
 import { VideoManifestPlayer } from '@/components/VideoManifestPlayer';
+import { BatchVideoRenderer } from '@/components/BatchVideoRenderer';
 import { useToast } from "@/hooks/use-toast";
 import SEOHead from '@/components/SEOHead';
 
@@ -227,6 +228,11 @@ const EpisodesGallery = () => {
               <Film className="h-5 w-5" />
               Khat and Karma - Premium Reality TV Series
             </p>
+          </div>
+
+          {/* Batch Video Renderer */}
+          <div className="mb-8">
+            <BatchVideoRenderer />
           </div>
 
           <Tabs defaultValue="season1" className="w-full">
