@@ -51,7 +51,7 @@ export const BatchVideoRenderer = () => {
             resolution: '1080p',
             audio_file: 'Suno_djluckluck.mp3',
             transitions: ['fade', 'slide'],
-            output_format: 'mp4',
+            output_format: '.mp4',
             audio_instructions: 'Use Suno by @djluckluck throughout all episodes, loop if necessary, keep narration and dialogue clear'
           },
           output_paths: [

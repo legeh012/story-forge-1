@@ -66,7 +66,7 @@ Deno.serve(async (req) => {
           resolution: settings?.resolution || '1080p',
           transitions: settings?.transitions || ['fade', 'slide'],
           captionsFile: settings?.captions_file,
-          outputFormat: settings?.output_format || 'mp4',
+          outputFormat: settings?.output_format || '.mp4',
           audioInstructions: settings?.audio_instructions || 'Use Suno by @djluckluck as background music with clear narration'
         }
       }
