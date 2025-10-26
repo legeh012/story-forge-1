@@ -54,12 +54,22 @@ export const EpisodeProductionPanel = () => {
     const episode = episodes.find(ep => ep.id === episodeId);
     if (!episode) return;
 
+    // Prevent multiple episodes from processing simultaneously
+    if (producingEpisode) {
+      toast({
+        title: '⚠️ Production In Progress',
+        description: 'Please wait for the current episode to finish before starting another.',
+        variant: 'destructive'
+      });
+      return;
+    }
+
     setProducingEpisode(episodeId);
     setProgress({ ...progress, [episodeId]: 0 });
 
     toast({
-      title: '🎬 Starting Production',
-      description: `Producing Episode ${episode.episode_number}: ${episode.title}`,
+      title: '🎬 VH1/Netflix Production Started',
+      description: `Episode ${episode.episode_number}: ${episode.title} - Full Video Generation Active`,
     });
 
     try {
@@ -102,10 +112,10 @@ export const EpisodeProductionPanel = () => {
       await loadEpisodes();
 
       toast({
-        title: '🎉 Production Complete!',
+        title: '🎉 VH1/Netflix Production Complete!',
         description: data.youtubeUrl 
-          ? `Episode produced and uploaded to YouTube: ${data.youtubeUrl}`
-          : 'High-quality video generated successfully',
+          ? `Full MP4 video produced and uploaded to YouTube`
+          : `Premium full video (MP4) generated - All FFmpeg bots active`,
       });
 
       if (data.youtubeUrl) {
@@ -271,24 +281,24 @@ export const EpisodeProductionPanel = () => {
                           <>
                             <Button
                               onClick={() => produceEpisode(episode.id, false)}
-                              disabled={isProducing}
+                              disabled={isProducing || !!producingEpisode}
                               className="flex-1"
                             >
                               {isProducing ? (
                                 <>
                                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                                  Producing...
+                                  Full Video Producing...
                                 </>
                               ) : (
                                 <>
                                   <PlayCircle className="mr-2 h-4 w-4" />
-                                  Produce Episode
+                                  Produce Full MP4 Video
                                 </>
                               )}
                             </Button>
                             <Button
                               onClick={() => produceEpisode(episode.id, true)}
-                              disabled={isProducing}
+                              disabled={isProducing || !!producingEpisode}
                               variant="default"
                               className="flex-1"
                             >
@@ -351,41 +361,66 @@ export const EpisodeProductionPanel = () => {
           </div>
         )}
 
-        <div className="mt-6 p-4 bg-muted/50 rounded-lg">
-          <h4 className="font-semibold text-sm mb-2">👭 Cast: Say Walahi Sisters</h4>
-          <div className="grid grid-cols-2 gap-2 mb-4">
-            <div className="text-xs">
-              <span className="font-medium">Lucky</span> - The Visionary Architect
-            </div>
-            <div className="text-xs">
-              <span className="font-medium">Luul</span> - The Cultural Anchor
-            </div>
-            <div className="text-xs">
-              <span className="font-medium">Samara</span> - The Strategist
-            </div>
-            <div className="text-xs">
-              <span className="font-medium">Ayaan</span> - The Systems Queen
-            </div>
-            <div className="text-xs">
-              <span className="font-medium">Hani</span> - The Oracle
-            </div>
-            <div className="text-xs">
-              <span className="font-medium">Zahra</span> - The Satirical Provocateur
-            </div>
-            <div className="text-xs">
-              <span className="font-medium">Nasra</span> - The Emotional Core
-            </div>
-            <div className="text-xs">
-              <span className="font-medium">Amal</span> - The Chaos Console
-            </div>
-          </div>
+        <div className="mt-6 p-4 bg-gradient-to-r from-purple-500/10 to-pink-500/10 border border-purple-500/20 rounded-lg">
+          <h4 className="font-bold text-sm mb-3 flex items-center gap-2">
+            <span className="text-xl">🎬</span>
+            VH1/NETFLIX PREMIUM PRODUCTION PIPELINE
+          </h4>
           
-          <h4 className="font-semibold text-sm mb-2 mt-4">🎥 Production Pipeline:</h4>
-          <div className="text-xs text-muted-foreground space-y-1">
-            <p>1. God Mode Reality TV Production (Script with Say Walahi Sisters, Music, Scenes, Voiceovers, Images)</p>
-            <p>2. FFmpeg God-Level Video Compilation (Scene Composer, Frame Optimizer, Color Grader, Quality Enhancer, Effects, Audio Sync & Master)</p>
-            <p>3. High-Quality MP4 Video Generation (BET/VH1 Production Quality)</p>
-            <p>4. YouTube Upload (Optional - One-Click Publishing)</p>
+          <div className="space-y-3">
+            <div className="bg-black/20 p-3 rounded">
+              <h5 className="font-semibold text-xs mb-2 text-purple-400">👭 Cast: Say Walahi Sisters</h5>
+              <div className="grid grid-cols-2 gap-1.5">
+                <div className="text-xs">• <span className="font-medium">Lucky</span> - Visionary Architect</div>
+                <div className="text-xs">• <span className="font-medium">Luul</span> - Cultural Anchor</div>
+                <div className="text-xs">• <span className="font-medium">Samara</span> - The Strategist</div>
+                <div className="text-xs">• <span className="font-medium">Ayaan</span> - Systems Queen</div>
+                <div className="text-xs">• <span className="font-medium">Hani</span> - The Oracle</div>
+                <div className="text-xs">• <span className="font-medium">Zahra</span> - Satirical Provocateur</div>
+                <div className="text-xs">• <span className="font-medium">Nasra</span> - Emotional Core</div>
+                <div className="text-xs">• <span className="font-medium">Amal</span> - Chaos Console</div>
+              </div>
+            </div>
+
+            <div className="bg-black/20 p-3 rounded">
+              <h5 className="font-semibold text-xs mb-2 text-pink-400">🎵 Music: Suno AI by DJ LuckLuck</h5>
+              <p className="text-xs text-muted-foreground">Custom VH1 Reality TV / Urban Hip-Hop theme generated for each episode</p>
+            </div>
+
+            <div className="bg-black/20 p-3 rounded">
+              <h5 className="font-semibold text-xs mb-2 text-blue-400">🎬 Director Oversight: ACTIVE</h5>
+              <p className="text-xs text-muted-foreground">Expert director oversees VH1/Netflix premium quality standards</p>
+            </div>
+
+            <div className="bg-black/20 p-3 rounded">
+              <h5 className="font-semibold text-xs mb-2 text-green-400">⚡ FFmpeg God-Level Bots: ALL ACTIVE</h5>
+              <div className="space-y-1 text-xs text-muted-foreground">
+                <p>✅ Scene Composer Bot - Orchestrates scene flow & transitions</p>
+                <p>✅ Frame Optimizer Bot - 1080p HD optimization</p>
+                <p>✅ Color Grader Bot - VH1/BET premium color grading</p>
+                <p>✅ Video Quality Enhancer Bot - Broadcast-grade quality</p>
+                <p>✅ Effects Bot - Motion graphics & animations</p>
+                <p>✅ Audio Sync Bot - Perfect audio-video synchronization</p>
+                <p>✅ Audio Master Bot - Professional audio mastering</p>
+              </div>
+            </div>
+
+            <div className="bg-black/20 p-3 rounded">
+              <h5 className="font-semibold text-xs mb-2 text-orange-400">📺 Output: FULL MP4 VIDEO</h5>
+              <p className="text-xs text-muted-foreground">Complete video file (NOT manifest) - Ready for YouTube, Netflix, VH1</p>
+            </div>
+
+            <div className="bg-gradient-to-r from-yellow-500/20 to-orange-500/20 p-3 rounded border border-yellow-500/30">
+              <h5 className="font-bold text-xs mb-2">⚡ PRODUCTION WORKFLOW</h5>
+              <div className="space-y-1 text-xs">
+                <p>1️⃣ God Mode Production (Script + Scenes + Voiceovers + Images)</p>
+                <p>2️⃣ Suno Music Generation (DJ LuckLuck Theme)</p>
+                <p>3️⃣ Director Workflow Oversight</p>
+                <p>4️⃣ FFmpeg Full Video Compilation (All 7 Bots)</p>
+                <p>5️⃣ High-Quality MP4 Generation (VH1/Netflix Grade)</p>
+                <p>6️⃣ YouTube Upload (Optional)</p>
+              </div>
+            </div>
           </div>
         </div>
       </CardContent>
