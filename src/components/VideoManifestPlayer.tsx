@@ -7,13 +7,23 @@ interface VideoFrame {
   index: number;
 }
 
+interface VideoScene {
+  sceneNumber: number;
+  imageUrl: string;
+  duration: number;
+  sceneType?: string;
+  enhancedSettings?: any;
+}
+
 interface VideoManifest {
-  type: string;
+  type?: string;
   episodeId: string;
-  frames: VideoFrame[];
+  frames?: VideoFrame[];
+  scenes?: VideoScene[];
   totalDuration: number;
-  metadata: any;
-  format: string;
+  metadata?: any;
+  format?: string;
+  version?: string;
 }
 
 interface VideoManifestPlayerProps {
@@ -57,20 +67,33 @@ export const VideoManifestPlayer = ({ manifestUrl, className = '', controls = tr
           return;
         }
         
-        if (!data.frames || !Array.isArray(data.frames)) {
+        // Support both v1 (frames) and v2 (scenes) manifest formats
+        let frames: VideoFrame[] = [];
+        
+        if (data.scenes && Array.isArray(data.scenes)) {
+          // V2 format: Convert scenes to frames
+          frames = data.scenes.map((scene: VideoScene, index: number) => ({
+            url: scene.imageUrl,
+            duration: scene.duration,
+            index: index
+          }));
+        } else if (data.frames && Array.isArray(data.frames)) {
+          // V1 format: Use frames directly
+          frames = data.frames;
+        } else {
           setError('Video not generated yet');
           setLoading(false);
           return;
         }
         
-        if (data.frames.length === 0) {
+        if (frames.length === 0) {
           setError('Video not generated yet');
           setLoading(false);
           return;
         }
         
         // Validate each frame has required fields
-        const invalidFrames = data.frames.filter((frame: any, index: number) => 
+        const invalidFrames = frames.filter((frame: any) => 
           !frame || !frame.url || typeof frame.duration !== 'number'
         );
         
@@ -78,7 +101,13 @@ export const VideoManifestPlayer = ({ manifestUrl, className = '', controls = tr
           console.warn('Some frames have invalid data:', invalidFrames);
         }
         
-        setManifest(data);
+        // Normalize the manifest format
+        const normalizedManifest: VideoManifest = {
+          ...data,
+          frames: frames
+        };
+        
+        setManifest(normalizedManifest);
         setCurrentFrameIndex(0); // Reset to first frame
         
       } catch (err) {

@@ -1,11 +1,25 @@
 # Application Audit & Fix Summary
 
 **Date:** 2025-10-26
-**Status:** ✅ Fixed - All Issues Resolved
+**Status:** ✅ Fixed - All Critical Issues Resolved
 
 ## Critical Issues Identified
 
-### 1. Edge Function Connectivity Issues ❌→✅
+### 1. Video Manifest Format Mismatch ❌→✅
+**Problem:** VideoManifestPlayer couldn't display videos - API returns v2 format with "scenes" but player expected v1 format with "frames"
+**Root Cause:** 
+- API evolved to use "scenes" array with "imageUrl" field
+- Player only supported legacy "frames" array with "url" field
+- No backward/forward compatibility between formats
+
+**Fixes Applied:**
+- ✅ Added support for both v1 (frames) and v2 (scenes) manifest formats
+- ✅ Automatic format detection and normalization
+- ✅ Converts v2 scenes to normalized frames internally
+- ✅ Updated TypeScript interfaces to support both formats
+- ✅ Graceful handling of missing data
+
+### 2. Edge Function Connectivity Issues ❌→✅
 **Problem:** Multiple "FunctionsFetchError: Failed to send a request to the Edge Function" errors
 **Root Cause:** 
 - Network connectivity issues between client and edge functions
@@ -19,7 +33,7 @@
 - ✅ Added extended error duration (10 seconds) for important errors
 - ✅ Automatic episode status updates on failure
 
-### 2. Authentication JWT Token Issues ❌→✅
+### 3. Authentication JWT Token Issues ❌→✅
 **Problem:** Auth logs showing "403: invalid claim: missing sub claim"
 **Root Cause:** JWT tokens missing required user claims during API calls
 
@@ -28,7 +42,7 @@
 - ✅ Clear "Authentication required" messages if session is invalid
 - ✅ Prompts user to log in again if token is expired
 
-### 3. Video Manifest Loading Failures ❌→✅
+### 4. Video Manifest Loading Failures ❌→✅
 **Problem:** "TypeError: Load failed" and console spam when loading video manifests
 **Root Cause:** 
 - Missing manifest validation
@@ -49,7 +63,7 @@
 - ✅ Clear error messages indicating specific validation failures
 - ✅ Graceful degradation with helpful UI feedback
 
-### 4. Video Player Frame Display Issues ❌→✅
+### 5. Video Player Frame Display Issues ❌→✅
 **Problem:** Session replay showed frame count "9 / 1" (current > total)
 **Root Cause:** Manifest data inconsistencies
 
@@ -59,7 +73,7 @@
 - ✅ Automatic reset to valid frame on error
 - ✅ Safety checks throughout playback logic
 
-### 5. Missing Error Recovery ❌→✅
+### 6. Missing Error Recovery ❌→✅
 **Problem:** No retry logic or graceful error handling
 **Root Cause:** Basic error handling without recovery strategies
 
@@ -88,10 +102,13 @@
    - Extended error message duration
 
 3. `src/components/VideoManifestPlayer.tsx`
+   - **Support for v1 & v2 manifest formats**
+   - Converts v2 scenes (imageUrl) to v1 frames (url)
    - Comprehensive manifest validation
    - Frame data validation
    - Better error states
    - Automatic recovery logic
+   - Design system colors
 
 4. `src/components/ErrorBoundary.tsx` ⭐ NEW
    - Global error boundary
@@ -113,15 +130,19 @@
 
 ### Before
 - ❌ Cryptic error messages ("Load failed")
+- ❌ Videos couldn't display due to format mismatch
 - ❌ Console spam for videos not generated yet
 - ❌ No indication if edge functions are deploying
 - ❌ Errors crash components
 - ❌ No guidance on what to do
 - ❌ Session expiry not detected
 - ❌ Hard-coded colors breaking dark mode
+- ❌ Only supported v1 manifest format
 
 ### After
 - ✅ Clear, actionable error messages
+- ✅ Videos display correctly with v2 API format
+- ✅ Backward compatible with v1 format
 - ✅ Silent handling of expected states (videos not generated)
 - ✅ "Edge functions may be deploying" guidance
 - ✅ Graceful error handling with recovery UI
@@ -129,6 +150,7 @@
 - ✅ Session expiry detected and user prompted
 - ✅ Extended error visibility (10s vs 5s default)
 - ✅ Design system colors for consistent theming
+- ✅ Automatic format detection and normalization
 
 ## Testing Recommendations
 
@@ -145,10 +167,12 @@
    - Test after logging back in
 
 3. **Manifest Loading:**
-   - Load episodes with video manifests
+   - Load episodes with video manifests (both v1 and v2 formats)
+   - Verify videos display correctly from API
    - Verify frame counting is accurate
    - Test playback controls
    - Verify error handling for missing manifests
+   - Check compatibility with both manifest formats
 
 4. **Error Boundary:**
    - Trigger a React error (modify code temporarily)
