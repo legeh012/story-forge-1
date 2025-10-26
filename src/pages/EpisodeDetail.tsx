@@ -11,6 +11,8 @@ import { Link } from "react-router-dom";
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from "@/hooks/use-toast";
 import { EpisodeVideoPlayer } from "@/components/EpisodeVideoPlayer";
+import { VideoManifestPlayer } from "@/components/VideoManifestPlayer";
+import { FFmpegVideoRenderer } from "@/components/FFmpegVideoRenderer";
 
 interface Episode {
   id: string;
@@ -22,6 +24,7 @@ interface Episode {
   status: string;
   video_status: string;
   video_url: string | null;
+  video_manifest_url?: string | null;
   created_at: string;
   updated_at: string;
 }
@@ -258,7 +261,24 @@ const EpisodeDetail = () => {
                   </div>
                 </div>
               </CardHeader>
-              <CardContent>
+              <CardContent className="space-y-4">
+                {episode.video_manifest_url && episode.video_status === 'manifest_ready' && (
+                  <FFmpegVideoRenderer
+                    manifestUrl={episode.video_manifest_url}
+                    episodeTitle={episode.title}
+                    onComplete={(videoUrl) => {
+                      console.log('Video rendered:', videoUrl);
+                    }}
+                  />
+                )}
+                
+                {episode.video_manifest_url && episode.video_status === 'completed' && (
+                  <VideoManifestPlayer 
+                    manifestUrl={episode.video_manifest_url}
+                    className="w-full rounded-lg shadow-2xl"
+                  />
+                )}
+                
                 {episode.video_url && (
                   <div className="mb-4 relative w-full" style={{ paddingTop: "56.25%" }}>
                     <iframe
@@ -269,8 +289,8 @@ const EpisodeDetail = () => {
                       allowFullScreen
                     />
                   </div>
-                 )}
-                 <div className="flex gap-2">
+                )}
+                <div className="flex gap-2">
                    {episode.video_url ? (
                      <>
                        <Button onClick={() => setIsPlayerOpen(true)}>

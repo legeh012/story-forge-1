@@ -146,4 +146,4 @@ verify_jwt = true
 verify_jwt = true
 
 [functions.import-characters]
-verify_jwt = true
+verify_jwt = false

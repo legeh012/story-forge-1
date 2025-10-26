@@ -1,18 +1,27 @@
-import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.75.0';
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.39.3';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
-interface GenerateRequest {
-  projectId: string;
+interface EpisodeRequest {
   prompt: string;
-  episodeNumber?: number;
+  projectId: string;
   duration?: number;
-  customCast?: any[];
-  episodeMetadata?: any;
+  style?: 'dramatic' | 'comedic' | 'tense' | 'romantic';
 }
+
+const sayWalahiCharacters = [
+  { name: 'Lucky', personality: 'charismatic leader, smooth talker', traits: 'confident, strategic' },
+  { name: 'Luul', personality: 'dramatic queen, loves attention', traits: 'bold, expressive' },
+  { name: 'Samara', personality: 'peace keeper, voice of reason', traits: 'diplomatic, caring' },
+  { name: 'Ayaan', personality: 'troublemaker, stirrer of drama', traits: 'mischievous, witty' },
+  { name: 'Hani', personality: 'loyal friend, protective', traits: 'fierce, honest' },
+  { name: 'Zahra', personality: 'gossip master, knows everything', traits: 'observant, social' },
+  { name: 'Nasra', personality: 'mysterious, reserved', traits: 'thoughtful, deep' },
+  { name: 'Amal', personality: 'comic relief, always joking', traits: 'funny, light-hearted' }
+];
 
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') {
@@ -20,197 +29,193 @@ Deno.serve(async (req) => {
   }
 
   try {
-    console.log('=== Episode Generation from Prompt Started ===');
-    
-    const authHeader = req.headers.get('Authorization')!;
-    const supabase = createClient(
-      Deno.env.get('SUPABASE_URL') ?? '',
-      Deno.env.get('SUPABASE_ANON_KEY') ?? '',
-      { global: { headers: { Authorization: authHeader } } }
-    );
+    const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
+    const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
+    const supabase = createClient(supabaseUrl, supabaseKey);
 
-    const { data: { user }, error: authError } = await supabase.auth.getUser();
-    if (authError || !user) {
-      throw new Error('Unauthorized');
-    }
+    const { prompt, projectId, duration = 30, style = 'dramatic' }: EpisodeRequest = await req.json();
 
-    const { projectId, prompt, episodeNumber, duration = 180, customCast, episodeMetadata }: GenerateRequest = await req.json();
+    console.log('Generating Say Walahi episode:', { prompt, projectId, duration, style });
 
-    if (!projectId || !prompt) {
-      throw new Error('Project ID and prompt are required');
-    }
+    // Generate episode script using AI
+    const aiGatewayUrl = 'https://ai.gateway.lovable.dev/v1/chat/completions';
+    const lovableApiKey = Deno.env.get('LOVABLE_API_KEY');
 
-    console.log(`Generating ${duration}s episode for project: ${projectId}`);
-    if (episodeMetadata) {
-      console.log(`📊 Custom metadata:`, episodeMetadata);
-    }
+    const scriptResponse = await fetch(aiGatewayUrl, {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${lovableApiKey}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        model: 'google/gemini-2.5-pro',
+        messages: [{
+          role: 'user',
+          content: `Generate a ${style} reality TV episode script for "Say Walahi" based on this prompt: "${prompt}"
 
-    // Get project details
-    const { data: project, error: projectError } = await supabase
-      .from('projects')
-      .select('*')
-      .eq('id', projectId)
-      .eq('user_id', user.id)
-      .single();
+Available characters:
+${sayWalahiCharacters.map(c => `- ${c.name}: ${c.personality} (${c.traits})`).join('\n')}
 
-    if (projectError || !project) {
-      throw new Error('Project not found');
-    }
+Create exactly ${Math.ceil(duration / 5)} scenes, each 5 seconds long.
+For each scene provide:
+1. Scene number
+2. Characters involved (2-4 characters)
+3. Location (luxury mansion, rooftop lounge, poolside, etc.)
+4. Action/dialogue (dramatic, reality TV style)
+5. Camera movement (zoom, pan, dramatic close-up)
+6. Visual description for image generation
 
-    // Use custom cast if provided, otherwise fetch from database
-    let characters = customCast;
-    if (!customCast || customCast.length === 0) {
-      const { data: dbCharacters } = await supabase
-        .from('characters')
-        .select('name, role, personality')
-        .eq('project_id', projectId);
-      characters = dbCharacters || [];
-    }
-    
-    console.log(`🎭 Using ${characters?.length || 0} characters (${customCast ? 'custom' : 'from database'})`);
+Format as JSON array with this structure:
+[{
+  "sceneNumber": 1,
+  "characters": ["Lucky", "Luul"],
+  "location": "string",
+  "dialogue": "string",
+  "action": "string",
+  "cameraMovement": "string",
+  "visualDescription": "detailed description for photorealistic image generation",
+  "duration": 5
+}]
 
-    // Use Turbo Script Bot for ultra-fast script generation with duration
-    console.log(`🚀 Activating TURBO Script Bot for ${duration}s video...`);
-    
-    const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
-    
-    const scriptBotResponse = await fetch(
-      `${Deno.env.get('SUPABASE_URL')}/functions/v1/turbo-script-bot`,
-      {
+Make it DRAMATIC and VIRAL-WORTHY! Think BET/VH1 reality show energy.`
+        }],
+        response_format: { type: 'json_object' }
+      })
+    });
+
+    const scriptData = await scriptResponse.json();
+    const scenes = JSON.parse(scriptData.choices[0].message.content).scenes;
+
+    console.log(`Generated ${scenes.length} scenes`);
+
+    // Generate images for each scene
+    const frames = [];
+    for (let i = 0; i < scenes.length; i++) {
+      const scene = scenes[i];
+      console.log(`Generating image for scene ${i + 1}/${scenes.length}`);
+
+      const imagePrompt = `PHOTOREALISTIC REALITY TV SCENE:
+${scene.visualDescription}
+
+Characters: ${scene.characters.join(', ')}
+Location: ${scene.location}
+Style: Ultra-realistic, Netflix-grade cinematography, dramatic lighting
+Camera: ${scene.cameraMovement}
+
+Requirements:
+- Photorealistic human features
+- Professional reality TV cinematography
+- Dramatic lighting and composition
+- 4K quality, cinematic color grading
+- Natural expressions and body language`;
+
+      const imageResponse = await fetch(aiGatewayUrl, {
         method: 'POST',
         headers: {
+          'Authorization': `Bearer ${lovableApiKey}`,
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${supabaseServiceKey}`
         },
         body: JSON.stringify({
-          projectContext: {
-            title: project.title,
-            genre: project.genre,
-            mood: project.mood,
-            description: project.description,
-            characters: characters?.map(c => ({
-              name: c.name,
-              role: c.role,
-              personality: c.personality
-            })) || []
-          },
-          episodeNumber: episodeNumber ?? 1,
-          duration: duration,
-          customPrompt: prompt
+          model: 'google/gemini-2.5-flash-image-preview',
+          messages: [{
+            role: 'user',
+            content: imagePrompt
+          }],
+          modalities: ['image', 'text']
         })
-      }
-    );
+      });
 
-    if (!scriptBotResponse.ok) {
-      const errorText = await scriptBotResponse.text();
-      throw new Error(`Turbo Script Bot failed: ${errorText}`);
+      const imageData = await imageResponse.json();
+      const imageBase64 = imageData.choices?.[0]?.message?.images?.[0]?.image_url?.url;
+
+      if (!imageBase64) {
+        throw new Error(`Failed to generate image for scene ${i + 1}`);
+      }
+
+      // Upload to storage
+      const imageBuffer = Uint8Array.from(atob(imageBase64.split(',')[1]), c => c.charCodeAt(0));
+      const imagePath = `episodes/${projectId}/scene_${i + 1}_${Date.now()}.png`;
+      
+      const { error: uploadError } = await supabase.storage
+        .from('episode-videos')
+        .upload(imagePath, imageBuffer, { contentType: 'image/png' });
+
+      if (uploadError) throw uploadError;
+
+      const { data: { publicUrl } } = supabase.storage
+        .from('episode-videos')
+        .getPublicUrl(imagePath);
+
+      frames.push({
+        sceneNumber: scene.sceneNumber,
+        image: publicUrl,
+        duration: scene.duration,
+        dialogue: scene.dialogue,
+        characters: scene.characters,
+        cameraMovement: scene.cameraMovement
+      });
     }
 
-    const scriptData = await scriptBotResponse.json();
-    const { script } = scriptData;
-    
-    console.log(`✅ TURBO Script generated for ${duration}s video`);
+    // Create video manifest
+    const manifest = {
+      episodeId: projectId,
+      totalDuration: duration,
+      frames: frames,
+      metadata: {
+        style: style,
+        prompt: prompt,
+        generatedAt: new Date().toISOString(),
+        charactersUsed: [...new Set(scenes.flatMap((s: any) => s.characters))]
+      }
+    };
 
-    // Determine episode number
-    const { count } = await supabase
-      .from('episodes')
-      .select('*', { count: 'exact', head: true })
-      .eq('project_id', projectId);
+    // Upload manifest
+    const manifestPath = `episodes/${projectId}/manifest_${Date.now()}.json`;
+    const { error: manifestError } = await supabase.storage
+      .from('episode-videos')
+      .upload(manifestPath, JSON.stringify(manifest, null, 2), { contentType: 'application/json' });
 
-    const nextEpisodeNumber = episodeNumber ?? (count || 0) + 1;
+    if (manifestError) throw manifestError;
 
-    // Create episode with generated content
-    const { data: newEpisode, error: episodeError } = await supabase
+    const { data: { publicUrl: manifestUrl } } = supabase.storage
+      .from('episode-videos')
+      .getPublicUrl(manifestPath);
+
+    // Create episode record
+    const { data: episode, error: episodeError } = await supabase
       .from('episodes')
       .insert({
         project_id: projectId,
-        user_id: user.id,
-        episode_number: nextEpisodeNumber,
-        season: 1,
-        title: script.title,
-        synopsis: script.synopsis,
-        content: JSON.stringify({
-          ...script,
-          customCast: customCast || [],
-          metadata: episodeMetadata || {}
-        }),
-        storyboard: script.storyboard,
-        status: 'draft',
-        video_status: 'not_started'
+        title: `Say Walahi: ${prompt.slice(0, 50)}`,
+        synopsis: prompt,
+        video_status: 'manifest_ready',
+        video_manifest_url: manifestUrl,
+        storyboard: scenes,
+        metadata: manifest.metadata
       })
       .select()
       .single();
 
-    if (episodeError) {
-      throw new Error(`Failed to create episode: ${episodeError.message}`);
-    }
+    if (episodeError) throw episodeError;
 
-    console.log(`Episode created: ${newEpisode.id}`);
+    console.log('Episode created:', episode.id);
 
-    // Orchestrate bots in parallel for ultra-fast production
-    console.log('🤖 Orchestrating AI bot team in PARALLEL mode...');
-    
-    const botPromises = [
-      // Activate bot orchestrator
-      fetch(`${Deno.env.get('SUPABASE_URL')}/functions/v1/bot-orchestrator`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${supabaseServiceKey}`
-        },
-        body: JSON.stringify({
-          campaignType: 'full_viral_campaign',
-          topic: script.title,
-          episodeId: newEpisode.id,
-          projectId: projectId
-        })
-      })
-    ];
-
-    await Promise.allSettled(botPromises);
-    console.log('✅ Bot orchestration activated');
-
-    // Start parallel video generation immediately
-    console.log('🎬 Starting PARALLEL video generation...');
-    
-    const videoGenPromise = fetch(`${Deno.env.get('SUPABASE_URL')}/functions/v1/generate-video`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${supabaseServiceKey}`
-      },
-      body: JSON.stringify({ episodeId: newEpisode.id })
+    return new Response(JSON.stringify({
+      success: true,
+      episode: episode,
+      manifestUrl: manifestUrl,
+      scenesGenerated: scenes.length
+    }), {
+      headers: { ...corsHeaders, 'Content-Type': 'application/json' }
     });
 
-    // Video generation is already triggered above - just return success
-    return new Response(
-      JSON.stringify({
-        success: true,
-        episode: {
-          id: newEpisode.id,
-          title: newEpisode.title,
-          synopsis: newEpisode.synopsis,
-          clipCount: script.storyboard.length
-        },
-        message: 'Episode generated successfully! Video generation in progress.'
-      }),
-      {
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-        status: 201,
-      }
-    );
-
-
   } catch (error) {
-    console.error('Episode generation error:', error);
-    const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
-    
-    return new Response(
-      JSON.stringify({ error: errorMessage }),
-      {
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-        status: 500,
-      }
-    );
+    console.error('Error generating episode:', error);
+    return new Response(JSON.stringify({ 
+      error: error.message 
+    }), {
+      status: 500,
+      headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+    });
   }
 });
