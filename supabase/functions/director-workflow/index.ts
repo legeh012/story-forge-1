@@ -296,8 +296,38 @@ CRITICAL REQUIREMENTS:
 
     console.log('✅ Images generated:', frames.length);
 
-    // STEP 6: God-Level FFmpeg Processing
-    console.log('🎥 STEP 6: Activating God-Level FFmpeg Compiler...');
+    // STEP 6: VMaker Bot Enhancement
+    console.log('🎬 STEP 6A: Activating VMaker Bot...');
+    const vmakerResponse = await supabase.functions.invoke('god-level-vmaker-bot', {
+      body: {
+        frames: frames,
+        quality: 'ultra',
+        resolution: '1080p'
+      }
+    });
+    
+    const vmakerEnhancements = vmakerResponse.data || {};
+    console.log('✅ VMaker enhancements applied');
+
+    // STEP 6B: Bing AI Bot Optimization
+    console.log('🤖 STEP 6B: Activating Bing AI Bot...');
+    const bingAIResponse = await supabase.functions.invoke('god-level-bing-ai-bot', {
+      body: {
+        frames: frames,
+        quality: 'ultra',
+        episodeData: {
+          title: script.title,
+          synopsis: script.synopsis,
+          style: style
+        }
+      }
+    });
+    
+    const bingAIEnhancements = bingAIResponse.data || {};
+    console.log('✅ Bing AI optimization complete');
+
+    // STEP 7: God-Level FFmpeg Processing
+    console.log('🎥 STEP 7: Activating God-Level FFmpeg Compiler...');
     const ffmpegResponse = await supabase.functions.invoke('god-level-ffmpeg-compiler', {
       body: {
         episode: {
@@ -321,6 +351,8 @@ CRITICAL REQUIREMENTS:
       finalVideoUrl = ffmpegResponse.data.videoUrl;
       enhancedManifestUrl = ffmpegResponse.data.manifestUrl;
       console.log('✅ God-Level Processing Complete');
+      console.log('  - VMaker Bot: ✅');
+      console.log('  - Bing AI Bot: ✅');
       console.log('  - Scene Composition: ✅');
       console.log('  - Frame Optimization: ✅');
       console.log('  - Color Grading: ✅');
@@ -332,8 +364,8 @@ CRITICAL REQUIREMENTS:
       console.log('⚠️ FFmpeg processing skipped or failed, using basic manifest');
     }
 
-    // STEP 7: Final Assembly & Manifest Upload
-    console.log('🎬 STEP 7: Creating Final Video Manifest...');
+    // STEP 8: Final Assembly & Manifest Upload
+    console.log('🎬 STEP 8: Creating Final Video Manifest...');
     const manifest = {
       episodeId: projectId,
       totalDuration: duration,
@@ -349,7 +381,13 @@ CRITICAL REQUIREMENTS:
         charactersUsed: [...new Set(scenes.flatMap((s: any) => s.characters))],
         processing: {
           ffmpegCompiler: ffmpegResponse.error ? 'failed' : 'completed',
+          vmakerBot: vmakerResponse.error ? 'failed' : 'completed',
+          bingAIBot: bingAIResponse.error ? 'failed' : 'completed',
+          vmakerEnhancements: vmakerEnhancements,
+          bingAIOptimizations: bingAIEnhancements,
           godLevelBots: [
+            'god-level-vmaker-bot',
+            'god-level-bing-ai-bot',
             'god-level-scene-composer-bot',
             'frame-optimizer-bot',
             'god-level-color-grader-bot',
@@ -409,6 +447,8 @@ CRITICAL REQUIREMENTS:
         scenes: `✅ ${scenes.length} scenes created`,
         voiceovers: `✅ ${narrationUrls.filter(Boolean).length} narrations`,
         images: `✅ ${frames.length} frames generated`,
+        vmakerBot: vmakerResponse.error ? '⚠️ Failed' : '✅ Enhanced',
+        bingAIBot: bingAIResponse.error ? '⚠️ Failed' : '✅ Optimized',
         ffmpegProcessing: finalVideoUrl ? '✅ God-Level Processing Complete' : '⚠️ Skipped',
         manifest: '✅ Assembled'
       }

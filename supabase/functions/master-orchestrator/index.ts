@@ -69,6 +69,8 @@ Deno.serve(async (req) => {
       // Video Generation Bots
       ultraVideoBot: { function: 'ultra-video-bot', priority: 9 },
       godLevelFFmpeg: { function: 'god-level-ffmpeg-compiler', priority: 10 },
+      godLevelVmaker: { function: 'god-level-vmaker-bot', priority: 10 },
+      godLevelBingAI: { function: 'god-level-bing-ai-bot', priority: 10 },
       realityTvGodMode: { function: 'reality-tv-god-mode', priority: 11 },
       
       // Optimization Bots
