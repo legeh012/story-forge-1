@@ -14,6 +14,7 @@ interface WorkflowStatus {
   scenes?: string;
   voiceovers?: string;
   images?: string;
+  ffmpegProcessing?: string;
   manifest?: string;
 }
 
@@ -200,7 +201,8 @@ export const DirectorPanel = () => {
           <p>3. Scene Orchestration creates visual descriptions</p>
           <p>4. Godlike Voice Bot narrates character dialogue</p>
           <p>5. AI Image Generator creates photorealistic frames</p>
-          <p>6. FFmpeg Renderer assembles the final video</p>
+          <p>6. God-Level FFmpeg Compiler processes video (Scene Composer, Frame Optimizer, Color Grader, Quality Enhancer, Effects, Audio Sync & Master)</p>
+          <p>7. Final video manifest assembly</p>
         </div>
       </CardContent>
     </Card>
