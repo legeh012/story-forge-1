@@ -11,6 +11,14 @@ interface CompilationRequest {
   frames: Array<{ url: string; duration: number; sceneType?: string }>;
   audioUrl?: string;
   quality?: 'ultra' | 'premium' | 'broadcast';
+  renderSettings?: {
+    frameRate: number;
+    resolution: string;
+    transitions: string[];
+    captionsFile?: string;
+    outputFormat: string;
+    audioInstructions: string;
+  };
 }
 
 Deno.serve(async (req) => {
@@ -26,13 +34,14 @@ Deno.serve(async (req) => {
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
     );
 
-    const { episodeId, userId, frames, audioUrl, quality = 'ultra' } = await req.json() as CompilationRequest;
+    const { episodeId, userId, frames, audioUrl, quality = 'ultra', renderSettings } = await req.json() as CompilationRequest;
 
     console.log(`🎬 GOD-LEVEL FFMPEG COMPILER ACTIVATED`);
     console.log(`📊 Episode: ${episodeId}`);
     console.log(`🎥 Frames: ${frames.length}`);
     console.log(`⚡ Quality: ${quality.toUpperCase()}`);
     console.log(`🎵 Audio: ${audioUrl ? 'Yes' : 'No'}`);
+    console.log(`📹 Render Settings:`, JSON.stringify(renderSettings, null, 2));
 
     // Phase 1: God-Level Scene Composer
     console.log('\n🎬 PHASE 1: God-Level Scene Composition');
@@ -88,12 +97,20 @@ Deno.serve(async (req) => {
 
     // Phase 4: Video Quality Enhancement Bot
     console.log('\n⚡ PHASE 4: Video Quality Enhancement');
+    const resolutionMap: Record<string, string> = {
+      '1080p': '1920x1080',
+      '720p': '1280x720',
+      '4k': '3840x2160'
+    };
+    const targetResolution = resolutionMap[renderSettings?.resolution || '1080p'] || '1920x1080';
+    const targetFPS = renderSettings?.frameRate || 24;
+    
     const { data: qualitySettings, error: qualityError } = await supabase.functions.invoke('video-quality-enhancer-bot', {
       body: {
         frames: optimizedFrames.frames,
         quality,
-        targetResolution: '1920x1080',
-        targetFPS: 30
+        targetResolution,
+        targetFPS
       }
     });
 
@@ -176,6 +193,14 @@ Deno.serve(async (req) => {
       created: new Date().toISOString(),
       totalDuration: frames.reduce((sum, f) => sum + f.duration, 0),
       frameCount: optimizedFrames.frames.length,
+      renderSettings: {
+        frameRate: renderSettings?.frameRate || 24,
+        resolution: renderSettings?.resolution || '1080p',
+        outputFormat: renderSettings?.outputFormat || 'mp4',
+        transitions: renderSettings?.transitions || ['fade', 'slide'],
+        captionsFile: renderSettings?.captionsFile || null,
+        audioInstructions: renderSettings?.audioInstructions || 'Background music with clear narration'
+      },
       scenes: optimizedFrames.frames.map((frame: any, index: number) => ({
         sceneNumber: index + 1,
         imageUrl: frame.url,
@@ -194,7 +219,8 @@ Deno.serve(async (req) => {
         resolution: qualitySettings.resolution,
         bitrate: qualitySettings.bitrate,
         fps: qualitySettings.fps,
-        crf: qualitySettings.crf
+        crf: qualitySettings.crf,
+        audioSource: audioUrl || 'Suno by @djluckluck'
       }
     };
 

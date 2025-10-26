@@ -25,13 +25,14 @@ Deno.serve(async (req) => {
 
     if (userError || !user) throw new Error('Unauthorized');
 
-    const { episode, userId, remixConfig } = await req.json();
+    const { episode, userId, remixConfig, settings } = await req.json();
 
     console.log('🎬 FFmpeg Video Engine - VH1/NETFLIX FULL VIDEO GENERATION');
     console.log('Episode:', episode);
     console.log('User ID:', userId);
     console.log('Quality:', remixConfig?.metadata?.quality || 'ultra');
     console.log('Style:', remixConfig?.metadata?.style || 'vh1-netflix-premium');
+    console.log('📹 Render Settings:', JSON.stringify(settings, null, 2));
 
     // Get episode data
     const { data: episodeData, error: episodeError } = await supabase
@@ -58,8 +59,16 @@ Deno.serve(async (req) => {
         episodeId: episode,
         userId: userId,
         frames: frames,
-        audioUrl: audioUrl,
-        quality: quality
+        audioUrl: settings?.audio_file || audioUrl,
+        quality: quality,
+        renderSettings: {
+          frameRate: settings?.frame_rate || 24,
+          resolution: settings?.resolution || '1080p',
+          transitions: settings?.transitions || ['fade', 'slide'],
+          captionsFile: settings?.captions_file,
+          outputFormat: settings?.output_format || 'mp4',
+          audioInstructions: settings?.audio_instructions || 'Use Suno by @djluckluck as background music with clear narration'
+        }
       }
     });
 
@@ -71,10 +80,20 @@ Deno.serve(async (req) => {
     console.log('✅ All FFmpeg bots completed successfully');
 
     // PHASE 2: Generate FULL MP4 VIDEO (Not just manifest)
+    const resolutionMap: Record<string, string> = {
+      '1080p': '1920x1080',
+      '720p': '1280x720',
+      '4k': '3840x2160'
+    };
+    const resolution = resolutionMap[settings?.resolution || '1080p'] || '1920x1080';
+    const frameRate = settings?.frame_rate || 24;
+    
     console.log('\n🎬 PHASE 2: GENERATING FULL MP4 VIDEO...');
-    console.log('Format: MP4 1080p HD');
+    console.log(`Format: MP4 ${settings?.resolution || '1080p'} HD`);
     console.log('Codec: H.264 with High Profile');
-    console.log('Audio: AAC 320kbps Stereo');
+    console.log(`Audio: ${settings?.audio_file || 'Suno by @djluckluck'} - AAC 320kbps Stereo`);
+    console.log(`Frame Rate: ${frameRate}fps`);
+    console.log(`Transitions: ${settings?.transitions?.join(', ') || 'fade, slide'}`);
     console.log('Quality: VH1/Netflix Premium');
 
     // Actual video processing with metadata
@@ -100,12 +119,14 @@ Deno.serve(async (req) => {
       
       // Video encoding specs
       videoSpecs: {
-        resolution: '1920x1080',
+        resolution: resolution,
         codec: 'H.264 High Profile',
         bitrate: '8000kbps',
-        fps: 30,
+        fps: frameRate,
         pixelFormat: 'yuv420p',
-        colorSpace: 'bt709'
+        colorSpace: 'bt709',
+        transitions: settings?.transitions || ['fade', 'slide'],
+        captionsFile: settings?.captions_file || null
       },
       
       // Audio encoding specs
@@ -113,7 +134,9 @@ Deno.serve(async (req) => {
         codec: 'AAC',
         bitrate: '320kbps',
         sampleRate: '48000Hz',
-        channels: 'Stereo'
+        channels: 'Stereo',
+        source: settings?.audio_file || 'Suno by @djluckluck',
+        instructions: settings?.audio_instructions || 'Background music with clear narration'
       },
       
       // Processing stats
