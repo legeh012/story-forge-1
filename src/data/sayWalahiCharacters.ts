@@ -142,5 +142,23 @@ export const sayWalahiCharacters = [
       rivalries: []
     },
     status: "active"
+  },
+  {
+    name: "Mayza",
+    role: "The Legacy - Lucky's Mini-Me",
+    traits: ["pure joy", "scene stealer", "next generation icon", "natural charm"],
+    drama_hooks: "Lucky's daughter brings pure joy and generational legacy to every scene. Her presence is the show's heartbeat and future",
+    appearance: {
+      skin_tone: "glowing caramel",
+      face: "bright smile, joyful energy, innocent charm",
+      hair: "natural curls in playful styles, ponytails and buns",
+      style: "adorable chic, colorful outfits, star earrings, next-gen fashion",
+      aura: "pure joy meets legacy in the making"
+    },
+    relationships: {
+      alliances: ["Lucky", "Luul", "Nasra"],
+      rivalries: []
+    },
+    status: "active"
   }
 ];
