@@ -165,21 +165,61 @@ export const MasterOrchestratorPanel = ({ episodeId, projectId }: MasterOrchestr
               <CardTitle className="text-sm">Production Results</CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="space-y-2">
-                <div className="text-sm">
-                  <span className="font-medium">Episode ID:</span> {results.episodeId}
-                </div>
-                <div className="text-sm">
-                  <span className="font-medium">Status:</span> {results.workflowStatus}
-                </div>
-                {results.manifestUrl && (
+              <div className="space-y-4">
+                <div className="space-y-2">
                   <div className="text-sm">
-                    <span className="font-medium">Video Manifest:</span>{' '}
-                    <a href={results.manifestUrl} target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">
-                      View
-                    </a>
+                    <span className="font-medium">Episode ID:</span> {results.episodeId}
+                  </div>
+                  <div className="text-sm">
+                    <span className="font-medium">Status:</span> {results.workflowStatus}
+                  </div>
+                  {results.manifestUrl && (
+                    <div className="text-sm">
+                      <span className="font-medium">Video Manifest:</span>{' '}
+                      <a href={results.manifestUrl} target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">
+                        View
+                      </a>
+                    </div>
+                  )}
+                  {results.videoUrl && (
+                    <div className="text-sm">
+                      <span className="font-medium">Video URL:</span>{' '}
+                      <a href={results.videoUrl} target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">
+                        Watch
+                      </a>
+                    </div>
+                  )}
+                </div>
+
+                {results.workflow && (
+                  <div className="border-t pt-3">
+                    <h4 className="font-semibold text-sm mb-2">Workflow Pipeline</h4>
+                    <div className="space-y-1">
+                      {Object.entries(results.workflow).map(([step, status]) => (
+                        <div key={step} className="flex items-center justify-between text-xs">
+                          <span className="capitalize">{step.replace(/([A-Z])/g, ' $1').trim()}</span>
+                          <Badge variant={status.toString().startsWith('✅') ? 'default' : 'secondary'} className="text-xs">
+                            {status as string}
+                          </Badge>
+                        </div>
+                      ))}
+                    </div>
                   </div>
                 )}
+
+                {results.episode?.metadata?.processing?.godLevelBots && (
+                  <div className="border-t pt-3">
+                    <h4 className="font-semibold text-sm mb-2">🎥 God-Level FFmpeg Bots</h4>
+                    <div className="grid grid-cols-2 gap-2">
+                      {results.episode.metadata.processing.godLevelBots.map((bot: string) => (
+                        <Badge key={bot} variant="outline" className="text-xs justify-start">
+                          {bot.replace(/-/g, ' ').replace(/bot/g, '').trim()}
+                        </Badge>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
                 <details className="mt-4">
                   <summary className="cursor-pointer text-sm font-medium hover:text-primary">
                     View Detailed Results
