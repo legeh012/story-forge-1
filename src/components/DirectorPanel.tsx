@@ -7,6 +7,7 @@ import { Badge } from './ui/badge';
 import { Film, Loader2, CheckCircle, PlayCircle } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
+import { triggerVideoGeneration, type VideoPayload } from '@/lib/videoWorkflow';
 
 interface CharacterPrompt {
   name: string;
@@ -53,71 +54,58 @@ export const DirectorPanel = () => {
   };
 
   const handlePrompt = async (characterPrompt: CharacterPrompt) => {
-    const videoPayload = {
+    if (!characterPrompt.episodeId) {
+      toast.error('Episode ID is required');
+      return;
+    }
+
+    const videoPayload: VideoPayload = {
       character: characterPrompt.name,
       mood: characterPrompt.mood,
       overlays: characterPrompt.overlays || [],
-      music: characterPrompt.musicTrack || 'Suno_djluckluck.mp3',
+      music: characterPrompt.musicTrack || 'djluckluck',
       episodeId: characterPrompt.episodeId,
     };
-    await triggerVideoGeneration(videoPayload);
-  };
 
-  const triggerVideoGeneration = async (payload: any) => {
     setIsProducing(true);
     setWorkflowStatus({});
     setEpisodeUrl(null);
 
     try {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) throw new Error('Not authenticated');
-
-      toast.info('🎬 Unified Processor initiating VH1/Netflix production...');
-      setWorkflowStatus({ processing: '⚡ Initializing all 9 phases...' });
-
-      // Call god-level-unified-processor
-      const { data, error } = await supabase.functions.invoke('god-level-unified-processor', {
-        body: {
-          episodeId: payload.episodeId,
-          userId: user.id,
-          frames: payload.overlays || [],
-          audioUrl: payload.music,
-          quality: 'ultra',
-          renderSettings: {
-            resolution: '1080p',
-            frameRate: 24,
-            transitions: ['fade', 'slide'],
-            audio_file: payload.music
-          }
-        }
+      toast.info('🎬 Starting complete video generation pipeline...');
+      
+      setWorkflowStatus({ 
+        step1: '🎨 Injecting overlays...',
+        step2: '🎵 Fetching Suno music track...',
+        step3: '⚡ Initializing god-level-unified-processor...'
       });
 
-      if (error) throw error;
+      // Call the complete video generation workflow
+      await triggerVideoGeneration(videoPayload);
 
-      if (data.success) {
-        setWorkflowStatus({
-          phase1: '✅ VMaker: Video stabilization & cinematic effects',
-          phase2: '✅ Bing AI: Neural upscaling & viral optimization',
-          phase3: '✅ Scene Composition: Cinema-grade assembly',
-          phase4: '✅ Frame Optimization: Maximum detail enhancement',
-          phase5: '✅ Color Grading: VH1/BET premium look',
-          phase6: '✅ Quality Enhancement: Broadcast-grade quality',
-          phase7: '✅ Visual Effects: Professional motion graphics',
-          phase8: '✅ Audio Sync: Frame-perfect synchronization',
-          phase9: '✅ Audio Mastering: Professional mastering'
-        });
-        
-        if (payload.episodeId) {
-          setEpisodeUrl(`/episodes/${payload.episodeId}`);
-        }
-        
-        toast.success('⚡ God-Level Production Complete!', {
-          description: 'All 9 phases completed - VH1/Netflix premium quality achieved'
-        });
-      }
+      setWorkflowStatus({
+        overlays: '✅ Overlays injected',
+        music: '✅ Suno track synced',
+        phase1: '✅ VMaker: Video stabilization & cinematic effects',
+        phase2: '✅ Bing AI: Neural upscaling & viral optimization',
+        phase3: '✅ Scene Composition: Cinema-grade assembly',
+        phase4: '✅ Frame Optimization: Maximum detail enhancement',
+        phase5: '✅ Color Grading: VH1/BET premium look',
+        phase6: '✅ Quality Enhancement: Broadcast-grade quality',
+        phase7: '✅ Visual Effects: Professional motion graphics',
+        phase8: '✅ Audio Sync: Frame-perfect synchronization',
+        phase9: '✅ Audio Mastering: Professional mastering',
+        vault: '✅ Exported to remix vault'
+      });
+      
+      setEpisodeUrl(`/episodes/${videoPayload.episodeId}`);
+      
+      toast.success('🎉 Complete Pipeline Finished!', {
+        description: 'Video generated and exported to vault - VH1/Netflix premium quality'
+      });
 
     } catch (error) {
-      console.error('Video generation error:', error);
+      console.error('Video generation pipeline error:', error);
       toast.error('Production failed: ' + (error instanceof Error ? error.message : 'Unknown error'));
     } finally {
       setIsProducing(false);
@@ -133,13 +121,18 @@ export const DirectorPanel = () => {
     const character = characters.find(c => c.id === selectedCharacter);
     
     if (selectedCharacter && character) {
-      // Use character-based prompt
+      // Use character-based prompt with complete workflow
+      if (!episodes[0]?.id) {
+        toast.error('Please create an episode first before generating video');
+        return;
+      }
+
       await handlePrompt({
         name: character.name,
         mood: style,
-        overlays: [],
-        musicTrack: 'Suno_djluckluck.mp3',
-        episodeId: episodes[0]?.id // Use first episode or create new one
+        overlays: ['premium_overlay', 'cinematic_bars', 'character_name'],
+        musicTrack: 'reality-tv-urban-hip-hop',
+        episodeId: episodes[0].id
       });
     } else {
       // Use traditional director workflow
@@ -324,17 +317,28 @@ export const DirectorPanel = () => {
         </div>
 
         <div className="text-xs text-muted-foreground space-y-1 bg-gradient-to-r from-purple-500/10 to-pink-500/10 p-3 rounded border border-purple-500/20">
-          <p className="font-semibold text-foreground mb-2">⚡ <strong>God-Level Unified Processor - 9 Phase Pipeline:</strong></p>
-          <p>1️⃣ VMaker Bot: Video stabilization, motion smoothing, cinematic effects</p>
-          <p>2️⃣ Bing AI Bot: Neural upscaling, content analysis, viral optimization</p>
-          <p>3️⃣ Scene Composer: Cinema-grade composition & transitions</p>
-          <p>4️⃣ Frame Optimizer: Maximum detail & artifact removal</p>
-          <p>5️⃣ Color Grader: VH1/BET premium color grading</p>
-          <p>6️⃣ Quality Enhancer: Broadcast-grade quality (1080p/4K)</p>
-          <p>7️⃣ Effects Bot: Professional motion graphics & overlays</p>
-          <p>8️⃣ Audio Sync: Frame-perfect audio-video synchronization</p>
-          <p>9️⃣ Audio Master: Professional mastering (320kbps AAC)</p>
-          <p className="text-primary font-semibold mt-2">✨ Output: VH1/Netflix Premium Quality MP4</p>
+          <p className="font-semibold text-foreground mb-2">⚡ <strong>Complete Video Generation Pipeline:</strong></p>
+          <div className="space-y-1.5">
+            <p className="text-blue-400">🎨 <strong>Overlay Injection:</strong> Premium overlays, cinematic bars, character names</p>
+            <p className="text-purple-400">🎵 <strong>Suno Music:</strong> Reality TV / Urban Hip-Hop soundtrack generation</p>
+            <p className="text-pink-400">⚡ <strong>God-Level Unified Processor (9 Phases):</strong></p>
+            <div className="pl-4 space-y-0.5">
+              <p>1️⃣ VMaker: Video stabilization & cinematic motion</p>
+              <p>2️⃣ Bing AI: Neural upscaling & viral optimization</p>
+              <p>3️⃣ Scene Composer: Cinema-grade transitions</p>
+              <p>4️⃣ Frame Optimizer: Maximum detail enhancement</p>
+              <p>5️⃣ Color Grader: VH1/BET premium color grading</p>
+              <p>6️⃣ Quality Enhancer: Broadcast-grade 1080p/4K</p>
+              <p>7️⃣ Effects Bot: Professional motion graphics</p>
+              <p>8️⃣ Audio Sync: Frame-perfect synchronization</p>
+              <p>9️⃣ Audio Master: Professional mastering (320kbps AAC)</p>
+            </div>
+            <p className="text-green-400">💾 <strong>Remix Vault:</strong> Auto-export with metadata preservation</p>
+          </div>
+          <p className="text-primary font-semibold mt-2">✨ Output: VH1/Netflix Premium Quality MP4 in Remix Vault</p>
+          <p className="text-xs text-muted-foreground/70 mt-2 italic">
+            Commands: /remix, /inject, /suno, /export
+          </p>
         </div>
       </CardContent>
     </Card>
