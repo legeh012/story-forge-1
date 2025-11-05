@@ -159,3 +159,6 @@ verify_jwt = true
 
 [functions.batch-video-renderer]
 verify_jwt = true
+
+[functions.god-level-unified-processor]
+verify_jwt = true
