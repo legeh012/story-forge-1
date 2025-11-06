@@ -8,6 +8,8 @@ import { Film, Loader2, CheckCircle, PlayCircle } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { triggerVideoGeneration, type VideoPayload } from '@/lib/videoWorkflow';
+import { VideoGenerationProgress } from './VideoGenerationProgress';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from './ui/dialog';
 
 interface CharacterPrompt {
   name: string;
@@ -31,6 +33,8 @@ export const DirectorPanel = () => {
   const [selectedCharacter, setSelectedCharacter] = useState<string>('');
   const [characters, setCharacters] = useState<any[]>([]);
   const [episodes, setEpisodes] = useState<any[]>([]);
+  const [showProgress, setShowProgress] = useState(false);
+  const [currentEpisodeId, setCurrentEpisodeId] = useState<string | null>(null);
 
   useEffect(() => {
     loadCharactersAndEpisodes();
@@ -70,6 +74,8 @@ export const DirectorPanel = () => {
     setIsProducing(true);
     setWorkflowStatus({});
     setEpisodeUrl(null);
+    setCurrentEpisodeId(videoPayload.episodeId);
+    setShowProgress(true);
 
     try {
       toast.info('🎬 Starting complete video generation pipeline...');
@@ -99,17 +105,21 @@ export const DirectorPanel = () => {
       });
       
       setEpisodeUrl(`/episodes/${videoPayload.episodeId}`);
-      
-      toast.success('🎉 Complete Pipeline Finished!', {
-        description: 'Video generated and exported to vault - VH1/Netflix premium quality'
-      });
 
     } catch (error) {
+      setShowProgress(false);
       console.error('Video generation pipeline error:', error);
       toast.error('Production failed: ' + (error instanceof Error ? error.message : 'Unknown error'));
-    } finally {
-      setIsProducing(false);
     }
+  };
+
+  const handleProgressComplete = (videoUrl: string) => {
+    setIsProducing(false);
+    setShowProgress(false);
+    toast.success('🎉 Complete Pipeline Finished!', {
+      description: 'Video generated and exported to vault - VH1/Netflix premium quality'
+    });
+    console.log('Video URL:', videoUrl);
   };
 
   const startProduction = async () => {
@@ -341,6 +351,20 @@ export const DirectorPanel = () => {
           </p>
         </div>
       </CardContent>
+
+      <Dialog open={showProgress} onOpenChange={setShowProgress}>
+        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Video Generation in Progress</DialogTitle>
+          </DialogHeader>
+          {currentEpisodeId && (
+            <VideoGenerationProgress 
+              episodeId={currentEpisodeId}
+              onComplete={handleProgressComplete}
+            />
+          )}
+        </DialogContent>
+      </Dialog>
     </Card>
   );
 };

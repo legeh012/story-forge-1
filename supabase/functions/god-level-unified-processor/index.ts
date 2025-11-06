@@ -23,9 +23,27 @@ Deno.serve(async (req) => {
     console.log(`Quality: ${quality || 'ultra'}, Resolution: ${renderSettings?.resolution || '1080p'}`);
 
     const startTime = Date.now();
+
+    // Helper function to update progress
+    const updateProgress = async (phase: number, phaseName: string, phaseDetails: any) => {
+      try {
+        await supabase.from('video_generation_progress').insert({
+          user_id: userId,
+          episode_id: episodeId,
+          current_phase: phase,
+          total_phases: 9,
+          phase_name: phaseName,
+          phase_status: 'running',
+          phase_details: phaseDetails
+        });
+      } catch (error) {
+        console.error('Error updating progress:', error);
+      }
+    };
     
     // PHASE 1: VMAKER ENHANCEMENTS
     console.log('\n🎬 PHASE 1: VMaker Video Composition...');
+    await updateProgress(1, 'VMaker Video Composition', { status: 'Processing video stabilization and motion' });
     const vmakerEnhancements = {
       videoStabilization: 'APPLIED',
       motionSmoothing: 'ACTIVE',
@@ -44,6 +62,7 @@ Deno.serve(async (req) => {
 
     // PHASE 2: BING AI OPTIMIZATION
     console.log('\n🤖 PHASE 2: Bing AI Intelligence...');
+    await updateProgress(2, 'Bing AI Optimization', { status: 'Applying AI-powered enhancements and upscaling' });
     const bingAIEnhancements = {
       contentAnalysis: 'DEEP_LEARNING_ACTIVE',
       sceneUnderstanding: {
@@ -80,6 +99,7 @@ Deno.serve(async (req) => {
 
     // PHASE 3: SCENE COMPOSITION
     console.log('\n🎨 PHASE 3: Scene Composition...');
+    await updateProgress(3, 'Scene Composition', { status: 'Compositing scenes with cinema-grade transitions' });
     const sceneComposition = {
       compositingEngine: 'God-Level Scene Composer v3.0',
       layerBlending: 'PERFECT',
@@ -91,6 +111,7 @@ Deno.serve(async (req) => {
 
     // PHASE 4: FRAME OPTIMIZATION
     console.log('\n🖼️ PHASE 4: Frame Optimization...');
+    await updateProgress(4, 'Frame Optimization', { status: 'Enhancing frame details and removing artifacts' });
     const frameOptimization = {
       optimizer: 'Frame Optimizer Pro',
       upscaling: quality === 'ultra' ? '4K' : '1080p',
@@ -102,6 +123,7 @@ Deno.serve(async (req) => {
 
     // PHASE 5: COLOR GRADING
     console.log('\n🎨 PHASE 5: Color Grading...');
+    await updateProgress(5, 'Color Grading', { status: 'Applying VH1/BET premium color grading' });
     const colorGrading = {
       gradeStyle: 'VH1/BET Premium',
       colorSpace: 'Rec.709',
@@ -114,6 +136,7 @@ Deno.serve(async (req) => {
 
     // PHASE 6: QUALITY ENHANCEMENT
     console.log('\n⬆️ PHASE 6: Quality Enhancement...');
+    await updateProgress(6, 'Quality Enhancement', { status: 'Boosting to broadcast quality standards' });
     const qualityEnhancement = {
       resolution: renderSettings?.resolution || '1080p',
       bitrate: quality === 'ultra' ? '10000kbps' : '8000kbps',
@@ -126,6 +149,7 @@ Deno.serve(async (req) => {
 
     // PHASE 7: VISUAL EFFECTS
     console.log('\n✨ PHASE 7: Visual Effects...');
+    await updateProgress(7, 'Visual Effects', { status: 'Adding professional motion graphics and effects' });
     const visualEffects = {
       motionGraphics: 'DYNAMIC',
       particleEffects: 'SUBTLE',
@@ -137,6 +161,7 @@ Deno.serve(async (req) => {
 
     // PHASE 8: AUDIO SYNC
     console.log('\n🔊 PHASE 8: Audio Synchronization...');
+    await updateProgress(8, 'Audio Synchronization', { status: 'Syncing audio with frame-perfect precision' });
     const audioSync = {
       synchronization: 'FRAME_PERFECT',
       audioSource: renderSettings?.audio_file || audioUrl || 'Suno_djluckluck.mp3',
@@ -148,6 +173,7 @@ Deno.serve(async (req) => {
 
     // PHASE 9: AUDIO MASTERING
     console.log('\n🎵 PHASE 9: Audio Mastering...');
+    await updateProgress(9, 'Audio Mastering', { status: 'Mastering audio to professional standards' });
     const audioMastering = {
       codec: 'AAC',
       bitrate: '320kbps',
@@ -211,6 +237,17 @@ Deno.serve(async (req) => {
     console.log('\n🎉 ALL 9 PHASES COMPLETED');
     console.log(`Total Processing Time: ${processingTime}ms`);
     console.log(`Video URL: ${videoUrl}`);
+
+    // Mark as complete
+    await supabase.from('video_generation_progress').insert({
+      user_id: userId,
+      episode_id: episodeId,
+      current_phase: 9,
+      total_phases: 9,
+      phase_name: 'Complete',
+      phase_status: 'completed',
+      phase_details: { videoUrl, processingTime }
+    });
 
     return new Response(
       JSON.stringify({

@@ -1300,6 +1300,48 @@ export type Database = {
         }
         Relationships: []
       }
+      video_generation_progress: {
+        Row: {
+          created_at: string | null
+          current_phase: number
+          episode_id: string
+          id: string
+          phase_details: Json | null
+          phase_name: string
+          phase_status: string
+          processing_metadata: Json | null
+          total_phases: number
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          current_phase?: number
+          episode_id: string
+          id?: string
+          phase_details?: Json | null
+          phase_name: string
+          phase_status?: string
+          processing_metadata?: Json | null
+          total_phases?: number
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          current_phase?: number
+          episode_id?: string
+          id?: string
+          phase_details?: Json | null
+          phase_name?: string
+          phase_status?: string
+          processing_metadata?: Json | null
+          total_phases?: number
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       viral_bots: {
         Row: {
           bot_type: Database["public"]["Enums"]["bot_type"]
