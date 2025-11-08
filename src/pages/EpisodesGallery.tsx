@@ -5,7 +5,7 @@ import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/com
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Play, Film, Clock, Sparkles } from "lucide-react";
+import { Play, Film, Clock, Sparkles, Loader2 } from "lucide-react";
 import { supabase } from '@/integrations/supabase/client';
 import { VideoManifestPlayer } from '@/components/VideoManifestPlayer';
 import { BatchVideoRenderer } from '@/components/BatchVideoRenderer';
@@ -32,6 +32,7 @@ const EpisodesGallery = () => {
   const [season1Trailer, setSeason1Trailer] = useState<string | null>(null);
   const [season2Trailer, setSeason2Trailer] = useState<string | null>(null);
   const [generatingTrailer, setGeneratingTrailer] = useState<number | null>(null);
+  const [testingEpisode, setTestingEpisode] = useState(false);
 
   useEffect(() => {
     const checkAuth = async () => {
@@ -97,6 +98,80 @@ const EpisodesGallery = () => {
       }
     } catch (error) {
       console.error('Error checking trailers:', error);
+    }
+  };
+
+  const testEpisodeOne = async () => {
+    setTestingEpisode(true);
+    try {
+      const { data: { session }, error: authError } = await supabase.auth.getSession();
+      
+      if (authError || !session) {
+        throw new Error('Authentication required. Please log in again.');
+      }
+
+      toast({
+        title: '🎬 Testing Episode 1',
+        description: 'Generating with complete 9-phase unified processor...',
+      });
+
+      // Get or create the Khat and Karma project
+      let { data: project, error: projectError } = await supabase
+        .from('projects')
+        .select('id')
+        .eq('title', 'Khat and Karma')
+        .single();
+
+      if (projectError || !project) {
+        const { data: newProject, error: createError } = await supabase
+          .from('projects')
+          .insert({
+            title: 'Khat and Karma',
+            description: 'Reality TV series following African diaspora living their best lives',
+            genre: 'reality_tv',
+            user_id: session.user.id
+          })
+          .select()
+          .single();
+
+        if (createError) throw createError;
+        project = newProject;
+      }
+
+      // Invoke reality-tv-god-mode for Episode 1
+      const { data, error } = await supabase.functions.invoke('reality-tv-god-mode', {
+        body: {
+          projectId: project.id,
+          episodeNumber: 1,
+          testMode: true,
+          renderSettings: {
+            format: 'mp4',
+            quality: '1080p',
+            frameRate: 24
+          }
+        }
+      });
+
+      if (error) throw error;
+
+      if (data?.success) {
+        toast({
+          title: '✅ Episode 1 Generated!',
+          description: 'Video rendering complete with 9-phase processing',
+        });
+        
+        // Refresh episodes
+        fetchEpisodes(session.user.id);
+      }
+    } catch (error) {
+      console.error('Episode test error:', error);
+      toast({
+        title: 'Test Failed',
+        description: error instanceof Error ? error.message : 'Failed to generate episode',
+        variant: 'destructive',
+      });
+    } finally {
+      setTestingEpisode(false);
     }
   };
 
@@ -249,6 +324,42 @@ const EpisodesGallery = () => {
               Khat and Karma - Premium Reality TV Series
             </p>
           </div>
+
+          {/* Test Episode 1 */}
+          <Card className="mb-8 border-primary/50 bg-gradient-to-r from-primary/10 to-accent/10">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Sparkles className="h-5 w-5" />
+                Test Episode Generation
+              </CardTitle>
+              <CardDescription>
+                Test the complete 9-phase video generation pipeline with Episode 1
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <Button
+                onClick={testEpisodeOne}
+                disabled={testingEpisode}
+                size="lg"
+                className="w-full sm:w-auto"
+              >
+                {testingEpisode ? (
+                  <>
+                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                    Testing Episode 1...
+                  </>
+                ) : (
+                  <>
+                    <Play className="w-4 h-4 mr-2" />
+                    Test Episode 1
+                  </>
+                )}
+              </Button>
+              <p className="text-xs text-muted-foreground mt-3">
+                Complete pipeline: VMaker → Bing AI → Scene Composer → Frame Optimizer → Color Grader → Quality Enhancer → Effects → Audio Sync → Audio Master
+              </p>
+            </CardContent>
+          </Card>
 
           {/* Batch Video Renderer */}
           <div className="mb-8">
