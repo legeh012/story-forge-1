@@ -356,7 +356,7 @@ const EpisodesGallery = () => {
                 )}
               </Button>
               <p className="text-xs text-muted-foreground mt-3">
-                Complete pipeline: VMaker → Bing AI → Scene Composer → Frame Optimizer → Color Grader → Quality Enhancer → Effects → Audio Sync → Audio Master
+                <strong>Complete pipeline:</strong> VMaker → Bing AI → Scene Composer → Frame Optimizer → Color Grader → Quality Enhancer → Effects → Audio Sync → Audio Master → Media Drive → Playback
               </p>
             </CardContent>
           </Card>

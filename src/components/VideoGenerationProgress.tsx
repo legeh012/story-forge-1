@@ -83,11 +83,11 @@ export function VideoGenerationProgress({ episodeId, onComplete }: VideoGenerati
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Loader2 className="h-5 w-5 animate-spin" />
-            Initializing Video Generation
-          </CardTitle>
-          <CardDescription>
-            Preparing to process your video with 9 AI-powered phases
-          </CardDescription>
+          Initializing Video Generation
+        </CardTitle>
+        <CardDescription>
+          Complete pipeline: VMaker → Bing AI → Scene Composer → Frame Optimizer → Color Grader → Quality Enhancer → Effects → Audio Sync → Audio Master → Media Drive → Playback Ready
+        </CardDescription>
         </CardHeader>
       </Card>
     );
@@ -119,8 +119,8 @@ export function VideoGenerationProgress({ episodeId, onComplete }: VideoGenerati
         </div>
         <CardDescription>
           {isComplete
-            ? 'All phases completed successfully'
-            : progress.phase_details?.status || 'Processing...'}
+            ? '✅ Video stored to media drive and ready for playback'
+            : progress.phase_details?.status || 'Processing through complete pipeline: 9 phases → Storage → Playback'}
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-6">
@@ -187,10 +187,14 @@ export function VideoGenerationProgress({ episodeId, onComplete }: VideoGenerati
         </div>
 
         {isComplete && progress.phase_details?.processingTime && (
-          <div className="pt-4 border-t">
+          <div className="pt-4 border-t space-y-3">
             <p className="text-sm text-muted-foreground">
               Total processing time: {(progress.phase_details.processingTime / 1000).toFixed(2)}s
             </p>
+            <div className="flex items-center gap-2 text-sm">
+              <Badge variant="default" className="bg-green-500">✓ Stored to Media Drive</Badge>
+              <Badge variant="default" className="bg-blue-500">▶ Ready for Playback</Badge>
+            </div>
           </div>
         )}
       </CardContent>

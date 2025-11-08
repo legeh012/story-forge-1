@@ -108,6 +108,14 @@ export const EpisodeWorkflowPipeline = ({
         if (scenesGenerated) return 'pending';
         return 'pending';
       
+      case 'storage':
+        if (videoUrl && videoStatus === 'completed') return 'completed';
+        if (videoStatus === 'rendering') return 'in_progress';
+        return 'pending';
+      
+      case 'playback':
+        return videoUrl && videoStatus === 'completed' ? 'completed' : 'pending';
+      
       case 'download':
         return videoUrl ? 'completed' : 'pending';
       
@@ -122,39 +130,51 @@ export const EpisodeWorkflowPipeline = ({
   const stages: WorkflowStage[] = [
     {
       id: 'script',
-      label: 'Script Generation',
+      label: 'Script',
       icon: <FileText className="h-5 w-5" />,
       status: getStageStatus('script'),
       action: onGenerateScript,
-      actionLabel: 'Generate Script'
+      actionLabel: 'Generate'
     },
     {
       id: 'voice',
-      label: 'Voice AI / Actor',
+      label: 'Voice/Audio',
       icon: <Mic className="h-5 w-5" />,
       status: getStageStatus('voice'),
       action: onGenerateVoice,
-      actionLabel: 'Generate Voice'
+      actionLabel: 'Generate'
     },
     {
       id: 'scenes',
-      label: 'Scene Generation',
+      label: 'Scenes',
       icon: <Image className="h-5 w-5" />,
       status: getStageStatus('scenes'),
       action: onGenerateScenes,
-      actionLabel: 'Generate Scenes'
+      actionLabel: 'Generate'
     },
     {
       id: 'render',
-      label: 'Video Rendering',
-      icon: <Video className="h-5 w-5" />,
+      label: '9-Phase',
+      icon: <Sparkles className="h-5 w-5" />,
       status: getStageStatus('render'),
       action: onStartRender,
-      actionLabel: 'Start Render'
+      actionLabel: 'Process'
+    },
+    {
+      id: 'storage',
+      label: 'Media Drive',
+      icon: <Video className="h-5 w-5" />,
+      status: getStageStatus('storage')
+    },
+    {
+      id: 'playback',
+      label: 'Playback',
+      icon: <Play className="h-5 w-5" />,
+      status: getStageStatus('playback')
     },
     {
       id: 'download',
-      label: 'Download / Play',
+      label: 'Download',
       icon: <Download className="h-5 w-5" />,
       status: getStageStatus('download'),
       action: onDownload,
@@ -231,12 +251,12 @@ export const EpisodeWorkflowPipeline = ({
           />
           
           {/* Stages */}
-          <div className="relative grid grid-cols-6 gap-2" style={{ zIndex: 1 }}>
+          <div className="relative grid grid-cols-8 gap-1" style={{ zIndex: 1 }}>
             {stages.map((stage, index) => (
               <div key={stage.id} className="flex flex-col items-center">
                 {/* Stage Circle */}
                 <div className={`
-                  relative w-20 h-20 rounded-full border-2 flex items-center justify-center
+                  relative w-16 h-16 rounded-full border-2 flex items-center justify-center
                   transition-all duration-300 bg-background
                   ${getStatusColor(stage.status)}
                 `}>
