@@ -1,10 +1,13 @@
+import { useState, useEffect } from 'react';
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { 
   FileText, Mic, Image, Video, Download, Share2, 
-  CheckCircle2, Clock, AlertCircle, Loader2, Play
+  CheckCircle2, Clock, AlertCircle, Loader2, Play, Sparkles
 } from "lucide-react";
+import { supabase } from '@/integrations/supabase/client';
+import { Progress } from "@/components/ui/progress";
 
 interface WorkflowStage {
   id: string;
@@ -48,6 +51,39 @@ export const EpisodeWorkflowPipeline = ({
   onDownload,
   onPublish
 }: EpisodeWorkflowPipelineProps) => {
+  const [liveProgress, setLiveProgress] = useState<any>(null);
+  const [showUnifiedProgress, setShowUnifiedProgress] = useState(false);
+
+  // Subscribe to real-time progress updates
+  useEffect(() => {
+    if (!episodeId) return;
+
+    const channel = supabase
+      .channel(`video-progress-${episodeId}`)
+      .on(
+        'postgres_changes',
+        {
+          event: 'INSERT',
+          schema: 'public',
+          table: 'video_generation_progress',
+          filter: `episode_id=eq.${episodeId}`
+        },
+        (payload) => {
+          console.log('📊 Progress update:', payload);
+          setLiveProgress(payload.new);
+          
+          // Show unified processor progress when it starts
+          if (payload.new.phase_name && payload.new.phase_name.includes('Phase')) {
+            setShowUnifiedProgress(true);
+          }
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [episodeId]);
 
   const getStageStatus = (stage: string): 'pending' | 'in_progress' | 'completed' | 'error' => {
     switch (stage) {
@@ -166,6 +202,25 @@ export const EpisodeWorkflowPipeline = ({
         <div className="mb-6">
           <h3 className="text-lg font-semibold">{episodeTitle}</h3>
           <p className="text-sm text-muted-foreground">Production Pipeline</p>
+          
+          {/* Live Processing Status */}
+          {liveProgress && (
+            <div className="mt-3 p-3 bg-primary/10 rounded-lg border border-primary/20">
+              <div className="flex items-center gap-2 mb-2">
+                <Sparkles className="h-4 w-4 text-primary animate-pulse" />
+                <span className="text-sm font-medium text-primary">
+                  Live Processing: {liveProgress.phase_name}
+                </span>
+              </div>
+              <Progress 
+                value={(liveProgress.current_phase / liveProgress.total_phases) * 100} 
+                className="h-2"
+              />
+              <p className="text-xs text-muted-foreground mt-2">
+                Phase {liveProgress.current_phase} of {liveProgress.total_phases} - {liveProgress.phase_status}
+              </p>
+            </div>
+          )}
         </div>
 
         {/* Pipeline Visualization */}
@@ -255,6 +310,40 @@ export const EpisodeWorkflowPipeline = ({
             />
           </div>
         </div>
+
+        {/* 9-Phase Unified Processing Status */}
+        {showUnifiedProgress && liveProgress && (
+          <div className="mt-6 p-4 bg-gradient-to-r from-purple-500/10 to-pink-500/10 rounded-lg border border-purple-500/20">
+            <div className="flex items-center gap-2 mb-3">
+              <Sparkles className="h-5 w-5 text-purple-400" />
+              <h4 className="font-semibold text-foreground">God-Level Unified Processor</h4>
+            </div>
+            <div className="space-y-2 text-xs">
+              <div className="grid grid-cols-2 gap-2">
+                {[1, 2, 3, 4, 5, 6, 7, 8, 9].map(phase => (
+                  <div 
+                    key={phase}
+                    className={`flex items-center gap-2 p-2 rounded ${
+                      phase < liveProgress.current_phase 
+                        ? 'bg-green-500/20 text-green-400' 
+                        : phase === liveProgress.current_phase
+                        ? 'bg-blue-500/20 text-blue-400 animate-pulse'
+                        : 'bg-muted/50 text-muted-foreground'
+                    }`}
+                  >
+                    {phase < liveProgress.current_phase && <CheckCircle2 className="h-3 w-3" />}
+                    {phase === liveProgress.current_phase && <Loader2 className="h-3 w-3 animate-spin" />}
+                    {phase > liveProgress.current_phase && <Clock className="h-3 w-3" />}
+                    <span>Phase {phase}</span>
+                  </div>
+                ))}
+              </div>
+              <p className="text-muted-foreground mt-2">
+                {liveProgress.phase_details?.status || 'Processing...'}
+              </p>
+            </div>
+          </div>
+        )}
       </CardContent>
     </Card>
   );

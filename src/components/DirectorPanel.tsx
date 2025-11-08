@@ -145,7 +145,7 @@ export const DirectorPanel = () => {
         episodeId: episodes[0].id
       });
     } else {
-      // Use traditional director workflow
+      // Use traditional director workflow with integrated progress
       setIsProducing(true);
       setWorkflowStatus({});
       setEpisodeUrl(null);
@@ -166,7 +166,11 @@ export const DirectorPanel = () => {
 
         const projectId = projects[0].id;
 
-        toast.info('🎬 Director is orchestrating production...');
+        toast.info('🎬 Director workflow starting - full production pipeline...');
+
+        setWorkflowStatus({ 
+          status: '🎬 Activating director workflow...',
+        });
 
         const { data, error } = await supabase.functions.invoke('director-workflow', {
           body: {
@@ -181,10 +185,16 @@ export const DirectorPanel = () => {
 
         if (data.success) {
           setWorkflowStatus(data.workflow);
-          setEpisodeUrl(`/episodes/${data.episode.id}`);
+          setEpisodeUrl(`/episodes/${data.episodeId}`);
+          setCurrentEpisodeId(data.episodeId);
+          
+          // If video was generated, show progress dialog
+          if (data.videoUrl) {
+            setShowProgress(true);
+          }
           
           toast.success('🎉 Production complete!', {
-            description: 'Your episode is ready to render'
+            description: data.videoUrl ? 'Full video generated with 9-phase processing' : 'Episode manifest ready for rendering'
           });
         } else {
           throw new Error('Production failed');
