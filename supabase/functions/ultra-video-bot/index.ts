@@ -37,14 +37,14 @@ Deno.serve(async (req) => {
 
     console.log('🔥 GEN-3 ALPHA TURBO: God-level generation initiated for episode', episodeId);
 
-    // Step 1: PREMIUM BET/VH1 REALITY TV Scene Analysis
-    const sceneAnalysisPrompt = `You are a PREMIUM REALITY TV SHOWRUNNER for BET and VH1 (Love & Hip Hop, Basketball Wives, Real Housewives of Atlanta level). Create EXPLOSIVE, DRAMATIC, MUST-SEE TV.
+    // Step 1: PREMIUM REALITY TV Scene Analysis
+    const sceneAnalysisPrompt = `You are a PREMIUM REALITY TV SHOWRUNNER. Create EXPLOSIVE, DRAMATIC, MUST-SEE TV.
 
 Episode: "${episode.title}"
 Synopsis: ${episode.synopsis}
 Script: ${episode.script}
 
-🔥 PREMIUM BET/VH1 PRODUCTION STANDARDS:
+🔥 PREMIUM PRODUCTION STANDARDS:
 - LUXURY SETTINGS: Upscale restaurants, rooftop lounges, penthouses, designer boutiques
 - DESIGNER FASHION: Every character in statement pieces (Gucci, Versace, Balenciaga visible)
 - FLAWLESS GLAM: HD camera-ready makeup, perfect hair (wigs, braids, natural styles)
@@ -103,7 +103,7 @@ Return JSON with EXACTLY this structure:
       body: JSON.stringify({
         model: 'google/gemini-2.5-flash',
         messages: [
-          { role: 'system', content: 'You are a PREMIUM BET/VH1 REALITY TV SHOWRUNNER creating EXPLOSIVE, DRAMATIC content. You understand luxury reality TV production (Love & Hip Hop, Basketball Wives, Real Housewives of Atlanta). Every scene must be photorealistic with perfect human anatomy, designer fashion, luxury settings, and DRAMATIC confrontations.' },
+          { role: 'system', content: 'You are a PREMIUM REALITY TV SHOWRUNNER creating EXPLOSIVE, DRAMATIC content. You understand luxury reality TV production. Every scene must be photorealistic with perfect human anatomy, designer fashion, luxury settings, and DRAMATIC confrontations.' },
           { role: 'user', content: sceneAnalysisPrompt }
         ],
         response_format: { type: 'json_object' }
@@ -298,11 +298,11 @@ ABSOLUTELY FORBIDDEN FOR REALITY TV PHOTOREALISM:
       }))
     };
 
-    console.log(`📊 PREMIUM BET/VH1 Reality TV Generation Stats:
+    console.log(`📊 PREMIUM Reality TV Generation Stats:
     - Total Frames: ${generatedFrames.length}
-    - Avg Quality: ${avgQuality.toFixed(1)}/100 (Premium BET/VH1 production value)
+    - Avg Quality: ${avgQuality.toFixed(1)}/100 (Premium production value)
     - Type: Luxury Reality TV with explosive drama
-    - Model: PREMIUM BET/VH1 PHOTOREALISTIC`);
+    - Model: PREMIUM PHOTOREALISTIC`);
 
     // OPTIMIZED: Upload frames in parallel batches (10 at a time to avoid rate limits)
     const batchSize = 10;

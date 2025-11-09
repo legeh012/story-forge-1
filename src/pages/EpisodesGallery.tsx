@@ -5,7 +5,7 @@ import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/com
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Play, Film, Clock, Sparkles, Loader2 } from "lucide-react";
+import { Play, Film, Clock, Sparkles, Loader2, Video } from "lucide-react";
 import { supabase } from '@/integrations/supabase/client';
 import { VideoManifestPlayer } from '@/components/VideoManifestPlayer';
 import { BatchVideoRenderer } from '@/components/BatchVideoRenderer';
@@ -33,6 +33,7 @@ const EpisodesGallery = () => {
   const [season2Trailer, setSeason2Trailer] = useState<string | null>(null);
   const [generatingTrailer, setGeneratingTrailer] = useState<number | null>(null);
   const [testingEpisode, setTestingEpisode] = useState(false);
+  const [generatingAll, setGeneratingAll] = useState(false);
 
   useEffect(() => {
     const checkAuth = async () => {
@@ -172,6 +173,102 @@ const EpisodesGallery = () => {
       });
     } finally {
       setTestingEpisode(false);
+    }
+  };
+
+  const generateAllEpisodes = async () => {
+    setGeneratingAll(true);
+    
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error('Not authenticated');
+
+      // Get or create project
+      let { data: project } = await supabase
+        .from('projects')
+        .select('*')
+        .eq('title', 'Khat and Karma')
+        .maybeSingle();
+
+      if (!project) {
+        const { data: newProject, error: projectError } = await supabase
+          .from('projects')
+          .insert({
+            title: 'Khat and Karma',
+            description: 'Premium reality TV drama',
+            genre: 'reality-tv',
+            user_id: user.id
+          })
+          .select()
+          .single();
+
+        if (projectError) throw projectError;
+        project = newProject;
+      }
+
+      const episodes = [
+        { number: 1, title: "Secrets Uncovered", synopsis: "Luul discovers the truth about Filsan's past, leading to a heated confrontation." },
+        { number: 2, title: "Broken Trust", synopsis: "Aisha's loyalty is questioned when old secrets resurface at a glamorous party." },
+        { number: 3, title: "The Ultimatum", synopsis: "Hani faces a life-changing decision that could tear the group apart." },
+        { number: 4, title: "Point of No Return", synopsis: "Friendships are tested as alliances shift during a luxury weekend getaway." },
+        { number: 5, title: "Unfinished Business", synopsis: "Past conflicts resurface, forcing everyone to face the consequences of their actions." }
+      ];
+
+      toast({
+        title: `Generating ${episodes.length} episodes...`,
+        description: 'Starting complete 9-phase pipeline for all episodes',
+      });
+
+      for (const ep of episodes) {
+        const { data: episode, error: episodeError } = await supabase
+          .from('episodes')
+          .insert({
+            project_id: project.id,
+            user_id: user.id,
+            episode_number: ep.number,
+            title: ep.title,
+            synopsis: ep.synopsis,
+            script: `Episode ${ep.number}: ${ep.title}\n\n${ep.synopsis}`,
+            status: 'published',
+            video_status: 'generating'
+          })
+          .select()
+          .single();
+
+        if (episodeError) throw episodeError;
+
+        toast({
+          title: `Generating Episode ${ep.number}: ${ep.title}`,
+          description: '9-phase unified processor activated',
+        });
+
+        const { error: functionError } = await supabase.functions.invoke('reality-tv-god-mode', {
+          body: { episodeId: episode.id }
+        });
+
+        if (functionError) {
+          console.error(`Error generating episode ${ep.number}:`, functionError);
+          toast({
+            title: `Failed to generate Episode ${ep.number}`,
+            description: functionError.message,
+            variant: 'destructive',
+          });
+        }
+      }
+
+      toast({
+        title: 'All episodes queued for generation!',
+        description: 'Videos will be ready shortly',
+      });
+    } catch (error) {
+      console.error('Error generating all episodes:', error);
+      toast({
+        title: 'Failed to generate episodes',
+        description: error instanceof Error ? error.message : 'Unknown error',
+        variant: 'destructive',
+      });
+    } finally {
+      setGeneratingAll(false);
     }
   };
 
@@ -325,39 +422,71 @@ const EpisodesGallery = () => {
             </p>
           </div>
 
-          {/* Test Episode 1 */}
+          {/* Generate Episodes */}
           <Card className="mb-8 border-primary/50 bg-gradient-to-r from-primary/10 to-accent/10">
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <Sparkles className="h-5 w-5" />
-                Test Episode Generation
+                Episode Generation
               </CardTitle>
               <CardDescription>
-                Test the complete 9-phase video generation pipeline with Episode 1
+                Generate episodes with the complete 9-phase video pipeline
               </CardDescription>
             </CardHeader>
-            <CardContent>
-              <Button
-                onClick={testEpisodeOne}
-                disabled={testingEpisode}
-                size="lg"
-                className="w-full sm:w-auto"
-              >
-                {testingEpisode ? (
-                  <>
-                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                    Testing Episode 1...
-                  </>
-                ) : (
-                  <>
-                    <Play className="w-4 h-4 mr-2" />
-                    Test Episode 1
-                  </>
-                )}
-              </Button>
-              <p className="text-xs text-muted-foreground mt-3">
-                <strong>Complete pipeline:</strong> VMaker → Bing AI → Scene Composer → Frame Optimizer → Color Grader → Quality Enhancer → Effects → Audio Sync → Audio Master → Media Drive → Playback
-              </p>
+            <CardContent className="space-y-4">
+              <div className="space-y-2">
+                <h4 className="text-sm font-semibold">Pipeline Phases:</h4>
+                <div className="grid grid-cols-3 gap-2 text-xs">
+                  <Badge variant="outline">1. VMaker</Badge>
+                  <Badge variant="outline">2. Bing AI</Badge>
+                  <Badge variant="outline">3. Scene Composer</Badge>
+                  <Badge variant="outline">4. Frame Optimizer</Badge>
+                  <Badge variant="outline">5. Color Grader</Badge>
+                  <Badge variant="outline">6. Quality Enhancer</Badge>
+                  <Badge variant="outline">7. Effects</Badge>
+                  <Badge variant="outline">8. Audio Sync</Badge>
+                  <Badge variant="outline">9. Audio Master</Badge>
+                </div>
+              </div>
+              
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <Button 
+                  onClick={testEpisodeOne}
+                  disabled={testingEpisode || generatingAll}
+                  variant="outline"
+                  size="lg"
+                >
+                  {testingEpisode ? (
+                    <>
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      Testing...
+                    </>
+                  ) : (
+                    <>
+                      <Play className="mr-2 h-4 w-4" />
+                      Test Episode 1
+                    </>
+                  )}
+                </Button>
+                
+                <Button 
+                  onClick={generateAllEpisodes}
+                  disabled={generatingAll || testingEpisode}
+                  size="lg"
+                >
+                  {generatingAll ? (
+                    <>
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      Generating All...
+                    </>
+                  ) : (
+                    <>
+                      <Video className="mr-2 h-4 w-4" />
+                      Generate All Episodes
+                    </>
+                  )}
+                </Button>
+              </div>
             </CardContent>
           </Card>
 
