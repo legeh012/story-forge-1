@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from 'react';
-import { MessageCircle, X, Send, Loader2, Code2, Sparkles, Terminal } from 'lucide-react';
+import { MessageCircle, X, Send, Loader2, Mic, Upload, Paperclip, Bot, Sparkles } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Card } from '@/components/ui/card';
@@ -12,6 +12,8 @@ interface Message {
   content: string;
   action?: string;
   timestamp?: string;
+  attachments?: string[];
+  delegatedBots?: string[];
 }
 
 export const AICopilot = () => {
@@ -19,7 +21,11 @@ export const AICopilot = () => {
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [isRecording, setIsRecording] = useState(false);
+  const [uploadedFiles, setUploadedFiles] = useState<File[]>([]);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const { toast } = useToast();
 
   const scrollToBottom = () => {
@@ -30,33 +36,99 @@ export const AICopilot = () => {
     scrollToBottom();
   }, [messages]);
 
+  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = Array.from(e.target.files || []);
+    if (files.length === 0) return;
+
+    const validFiles = files.filter(file => file.size <= 20 * 1024 * 1024); // 20MB limit
+    if (validFiles.length !== files.length) {
+      toast({
+        title: 'File too large',
+        description: 'Some files exceed 20MB limit',
+        variant: 'destructive',
+      });
+    }
+
+    setUploadedFiles(prev => [...prev, ...validFiles]);
+    toast({
+      title: 'Files attached',
+      description: `${validFiles.length} file(s) ready to upload`,
+    });
+  };
+
+  const startVoiceRecording = async () => {
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      const mediaRecorder = new MediaRecorder(stream);
+      const audioChunks: Blob[] = [];
+
+      mediaRecorder.ondataavailable = (event) => {
+        audioChunks.push(event.data);
+      };
+
+      mediaRecorder.onstop = async () => {
+        const audioBlob = new Blob(audioChunks, { type: 'audio/webm' });
+        const file = new File([audioBlob], `voice-${Date.now()}.webm`, { type: 'audio/webm' });
+        setUploadedFiles(prev => [...prev, file]);
+        stream.getTracks().forEach(track => track.stop());
+        toast({
+          title: 'Voice recorded',
+          description: 'Voice command captured and ready to send',
+        });
+      };
+
+      mediaRecorder.start();
+      mediaRecorderRef.current = mediaRecorder;
+      setIsRecording(true);
+    } catch (error) {
+      toast({
+        title: 'Microphone access denied',
+        description: 'Please allow microphone access to use voice commands',
+        variant: 'destructive',
+      });
+    }
+  };
+
+  const stopVoiceRecording = () => {
+    if (mediaRecorderRef.current && isRecording) {
+      mediaRecorderRef.current.stop();
+      setIsRecording(false);
+    }
+  };
+
   const sendMessage = async () => {
-    if (!input.trim() || isLoading) return;
+    if ((!input.trim() && uploadedFiles.length === 0) || isLoading) return;
 
     const userMessage = input.trim();
     const timestamp = new Date().toISOString();
+    const attachments: string[] = [];
+
+    // Upload files to storage
+    for (const file of uploadedFiles) {
+      const filePath = `uploads/${Date.now()}-${file.name}`;
+      const { error: uploadError } = await supabase.storage
+        .from('media_assets')
+        .upload(filePath, file);
+      
+      if (!uploadError) {
+        const { data: { publicUrl } } = supabase.storage
+          .from('media_assets')
+          .getPublicUrl(filePath);
+        attachments.push(publicUrl);
+      }
+    }
+
     setInput('');
-    setMessages(prev => [...prev, { role: 'user', content: userMessage, timestamp }]);
+    setUploadedFiles([]);
+    setMessages(prev => [...prev, { 
+      role: 'user', 
+      content: userMessage || '(files attached)', 
+      timestamp,
+      attachments 
+    }]);
     setIsLoading(true);
 
     try {
-      // Intelligent action detection
-      let action: 'diagnose' | 'fix' | 'orchestrate' | 'generate_project' | 'code_review' | undefined;
-      const lowerInput = userMessage.toLowerCase();
-      
-      if (lowerInput.includes('fix') || lowerInput.includes('repair') || lowerInput.includes('solve') || lowerInput.includes('debug')) {
-        action = 'fix';
-      } else if (lowerInput.includes('review') || lowerInput.includes('analyze') || lowerInput.includes('check code')) {
-        action = 'code_review';
-      } else if (lowerInput.includes('orchestrate') || lowerInput.includes('coordinate') || lowerInput.includes('run bots')) {
-        action = 'orchestrate';
-      } else if (lowerInput.includes('generate project') || lowerInput.includes('create project') || lowerInput.includes('new project')) {
-        action = 'generate_project';
-      } else {
-        action = 'diagnose';
-      }
-
-      // Enhanced context gathering
       const context = {
         currentPage: window.location.pathname,
         userAgent: navigator.userAgent,
@@ -64,31 +136,32 @@ export const AICopilot = () => {
         screenSize: { width: window.innerWidth, height: window.innerHeight }
       };
 
-      const { data, error } = await supabase.functions.invoke('ai-engineer', {
+      const { data, error } = await supabase.functions.invoke('ai-copilot', {
         body: { 
           message: userMessage,
-          action,
+          attachments,
           context,
-          conversationHistory: messages.slice(-10) // Last 10 messages for context
+          conversationHistory: messages.slice(-10)
         }
       });
 
       if (error) throw error;
 
-      const assistantMessage = data.response || 'Task completed!';
       setMessages(prev => [...prev, { 
         role: 'assistant', 
-        content: assistantMessage,
-        action,
+        content: data.response || 'Task completed!',
+        delegatedBots: data.delegatedBots,
         timestamp: new Date().toISOString()
       }]);
 
       toast({
-        title: '✨ AI Code Space',
-        description: `${action.replace('_', ' ').charAt(0).toUpperCase() + action.slice(1).replace('_', ' ')} completed`
+        title: '🎬 AI God-Mode Orchestrator',
+        description: data.delegatedBots?.length 
+          ? `Delegated to ${data.delegatedBots.length} specialized bots`
+          : 'Task completed'
       });
     } catch (error) {
-      console.error('AI Engineer error:', error);
+      console.error('AI Orchestrator error:', error);
       toast({
         title: 'Error',
         description: 'Failed to process your request. Please try again.',
@@ -119,8 +192,8 @@ export const AICopilot = () => {
         size="icon"
       >
         <div className="relative">
-          <Sparkles className="h-7 w-7 text-primary-foreground" />
-          <Code2 className="h-4 w-4 text-primary-foreground absolute -bottom-1 -right-1" />
+          <Bot className="h-7 w-7 text-primary-foreground" />
+          <Sparkles className="h-4 w-4 text-primary-foreground absolute -bottom-1 -right-1" />
         </div>
       </Button>
     );
@@ -132,12 +205,15 @@ export const AICopilot = () => {
       <div className="flex items-center justify-between p-4 border-b border-border bg-gradient-to-r from-primary/10 via-accent/10 to-primary/10">
         <div className="flex items-center gap-3">
           <div className="relative">
-            <Terminal className="h-6 w-6 text-primary" />
+            <Bot className="h-6 w-6 text-primary" />
             <Sparkles className="h-3 w-3 text-accent absolute -top-1 -right-1" />
           </div>
           <div>
-            <h3 className="font-bold text-lg">AI Code Space</h3>
-            <p className="text-xs text-muted-foreground">Natural language debugging & development</p>
+            <h3 className="font-bold text-lg flex items-center gap-2">
+              AI God-Mode Orchestrator
+              <Sparkles className="h-4 w-4 text-yellow-500" />
+            </h3>
+            <p className="text-xs text-muted-foreground">App Builder • TV Director • Bot Conductor</p>
           </div>
         </div>
         <Button
@@ -153,31 +229,34 @@ export const AICopilot = () => {
       {/* Messages */}
       <div className="flex-1 overflow-y-auto p-4 space-y-4 bg-gradient-to-b from-background/50 to-background">
         {messages.length === 0 && (
-          <div className="text-center text-muted-foreground text-sm mt-8 space-y-4">
-            <div className="mb-4">
-              <Code2 className="h-12 w-12 mx-auto text-primary mb-2" />
-              <p className="text-base font-bold text-foreground">AI Code Space Ready</p>
+          <div className="text-center text-muted-foreground text-sm mt-8 space-y-6">
+            <div className="flex justify-center">
+              <div className="relative">
+                <div className="absolute inset-0 bg-primary/30 blur-2xl rounded-full animate-pulse"></div>
+                <Bot className="h-16 w-16 text-primary relative" />
+              </div>
             </div>
-            <p className="text-xs text-muted-foreground px-4">
-              I understand natural language and can help you with your entire codebase
-            </p>
-            <div className="grid grid-cols-2 gap-2 max-w-md mx-auto mt-4">
-              <Badge variant="outline" className="justify-start p-2 text-xs">
-                <Sparkles className="h-3 w-3 mr-1" /> Debug issues
-              </Badge>
-              <Badge variant="outline" className="justify-start p-2 text-xs">
-                <Code2 className="h-3 w-3 mr-1" /> Review code
-              </Badge>
-              <Badge variant="outline" className="justify-start p-2 text-xs">
-                <Terminal className="h-3 w-3 mr-1" /> Fix errors
-              </Badge>
-              <Badge variant="outline" className="justify-start p-2 text-xs">
-                <MessageCircle className="h-3 w-3 mr-1" /> Explain logic
-              </Badge>
+            <div>
+              <p className="text-lg font-semibold text-foreground mb-2">Welcome to God-Mode AI</p>
+              <p className="text-xs">I orchestrate specialized bots to build, direct, and create</p>
             </div>
-            <p className="mt-6 text-xs italic text-muted-foreground px-4">
-              Try: "Debug the video rendering" or "Review my authentication code"
-            </p>
+            <div className="space-y-3 text-left max-w-xs mx-auto">
+              <p className="font-medium text-xs text-foreground">Try asking:</p>
+              <div className="space-y-2">
+                <div className="p-2 bg-primary/5 rounded-md text-xs">
+                  "Build a user dashboard with analytics"
+                </div>
+                <div className="p-2 bg-accent/5 rounded-md text-xs">
+                  "Create a dramatic confrontation scene"
+                </div>
+                <div className="p-2 bg-primary/5 rounded-md text-xs">
+                  "Generate a viral episode about [topic]"
+                </div>
+                <div className="p-2 bg-accent/5 rounded-md text-xs">
+                  "Redesign the app with modern UI"
+                </div>
+              </div>
+            </div>
           </div>
         )}
         

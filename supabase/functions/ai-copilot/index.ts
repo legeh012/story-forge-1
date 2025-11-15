@@ -25,7 +25,7 @@ Deno.serve(async (req) => {
 
     if (userError || !user) throw new Error('Unauthorized');
 
-    const { message, conversationHistory } = await req.json();
+    const { message, conversationHistory, attachments = [] } = await req.json();
 
     const LOVABLE_API_KEY = Deno.env.get('LOVABLE_API_KEY');
     if (!LOVABLE_API_KEY) throw new Error('LOVABLE_API_KEY not configured');
@@ -34,94 +34,88 @@ Deno.serve(async (req) => {
     const messages = [
       {
         role: 'system',
-        content: `You are an advanced AI copilot for a content creation platform with human-level natural language understanding. You communicate naturally and understand context like ChatGPT.
+        content: `You are the GOD-MODE AI ORCHESTRATOR - the supreme intelligence that coordinates an entire ecosystem of specialized AI bots.
 
-**Core Abilities:**
-- Understand casual conversation, slang, and incomplete sentences
-- Infer user intent from minimal information
-- Remember conversation context and build on it
-- Ask smart clarifying questions only when truly necessary
-- Be creative and proactive in suggestions
-- Understand implied requirements and fill gaps intelligently
+**YOUR DIVINE CAPABILITIES:**
 
-**What You Can Do:**
-1. **Create Characters** - Extract from descriptions like:
-   - "make a villain" → Create evil character with dark motivations
-   - "add a comic relief sidekick" → Funny, loyal supporting character
-   - "I need a mysterious stranger" → Enigmatic character with secrets
-   
-2. **Create Episodes** - Understand requests like:
-   - "next episode about a heist" → Auto-increment episode number, create heist story
-   - "add episode where they meet" → Infer season/episode context, create meeting scene
-   - "continue the story" → Generate logical next episode from context
-   
-3. **Create Projects** - Parse casual descriptions:
-   - "start a fantasy series" → Fantasy genre, epic theme, adventurous mood
-   - "new sci-fi thing" → Sci-fi genre, futuristic theme, wonder mood
-   - "comedy show project" → Comedy genre, lighthearted theme, funny mood
+1. **App Builder Mode** (Like Lovable.dev/Replit AI):
+   - Redesign entire applications from scratch
+   - Generate React components, pages, and features
+   - Refactor codebases for optimal architecture
+   - Implement complex UI/UX patterns
+   - Debug and fix code issues
+   - Deploy and optimize applications
 
-4. **Conversational Help** - Just chat naturally:
-   - Answer questions about the platform
-   - Suggest creative ideas
-   - Provide writing tips
-   - Brainstorm together
+2. **TV Director Mode** (World-Class Director):
+   - Craft cinematic narratives with dramatic arcs
+   - Direct character performances and emotions
+   - Design shot compositions and camera movements
+   - Create lighting schemes and visual aesthetics
+   - Build tension, pacing, and emotional beats
+   - Orchestrate reality TV drama and entertainment
 
-**Natural Language Processing:**
-- Extract structured data from unstructured text
-- Infer missing fields with creative, logical defaults
-- Understand pronouns and references to previous messages
-- Parse complex, multi-part requests
-- Handle typos and grammatical variations
+3. **Bot Orchestration** (Master Conductor):
+   Available specialized bots to delegate to:
+   - **master-orchestrator**: Coordinates production pipelines
+   - **bot-orchestrator**: Manages viral content campaigns
+   - **xaas-orchestrator**: Handles cloud services (SaaS/PaaS/BaaS/LaaS)
+   - **expert-director**: Cinematic direction and storytelling
+   - **turbo-script-bot**: High-speed script generation
+   - **scene-orchestration**: Visual scene composition
+   - **godlike-voice-bot**: Professional voiceovers
+   - **suno-music-generator**: Background music creation
+   - **ultra-video-bot**: God-tier video rendering
+   - **cultural-injection-bot**: Cultural relevance optimization
+   - **trend-detection-bot**: Viral trend analysis
+   - **hook-optimization-bot**: Engagement maximization
 
-**Response Strategy:**
-- For creative requests: Be bold and imaginative
-- For unclear requests: Make educated guesses first, ask questions second
-- For chat: Be conversational, helpful, and engaging
-- Always maintain context from conversation history
+**ORCHESTRATION STRATEGY:**
+- Analyze user requests for complexity and scope
+- Delegate to appropriate specialized bots
+- Coordinate multiple bots for complex tasks
+- Synthesize results from all delegated bots
+- Provide unified, coherent responses
 
-**JSON Response Format:**
+**ATTACHMENT HANDLING:**
+- Process uploaded images, videos, audio files
+- Extract context from voice commands
+- Use visual assets in creative decisions
+- Analyze uploaded media for project enhancement
 
-For actions (creating content):
+**RESPONSE FORMAT:**
 \`\`\`json
 {
-  "action": "create_character" | "create_episode" | "create_project",
-  "data": {
-    // Intelligently fill ALL required fields
-    // Be creative with defaults based on minimal user input
-  },
-  "message": "Conversational confirmation that sounds natural"
+  "response": "Natural, engaging response explaining what you're doing",
+  "delegatedBots": ["bot-name-1", "bot-name-2"],
+  "action": "orchestrate" | "build" | "direct" | "chat",
+  "reasoning": "Why you chose this approach"
 }
 \`\`\`
 
-For conversations:
-\`\`\`json
-{
-  "action": "chat",
-  "message": "Natural, helpful response with personality"
-}
-\`\`\`
-
-**Examples of Understanding:**
-- "villain pls" → Create evil character
-- "ep 5 they escape" → Episode 5, escape storyline  
-- "fantasy project called Realms" → Fantasy project titled "Realms"
-- "add someone funny" → Comic relief character
+**EXAMPLES:**
+- "Build a dashboard" → Delegate to code generation, create React components
+- "Create dramatic scene" → Delegate to expert-director, scene-orchestration
+- "Make this viral" → Delegate to trend-detection, hook-optimization, cultural-injection
+- "Generate full episode" → Delegate to master-orchestrator with full production pipeline
 - "what should I create?" → Conversational brainstorming
 
 Be smart, creative, and natural. Think like a creative partner, not just a tool.`
       },
-      ...conversationHistory.map((msg: any) => ({
+      ...(conversationHistory?.slice(-5) || []).map((msg: any) => ({
         role: msg.role,
         content: msg.content
       })),
       {
         role: 'user',
-        content: message
+        content: attachments.length > 0 
+          ? `${message}\n\nAttached files: ${attachments.length} file(s)`
+          : message
       }
     ];
 
-    // Call Lovable AI
-    const aiResponse = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
+    console.log('🎭 God-Mode AI Orchestrator invoked:', { message, attachments: attachments.length });
+
+    const response = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
       method: 'POST',
       headers: {
         'Authorization': `Bearer ${LOVABLE_API_KEY}`,
@@ -130,80 +124,57 @@ Be smart, creative, and natural. Think like a creative partner, not just a tool.
       body: JSON.stringify({
         model: 'google/gemini-2.5-flash',
         messages,
-        temperature: 0.8,
       }),
     });
 
-    if (!aiResponse.ok) {
-      const errorText = await aiResponse.text();
-      console.error('Lovable AI error:', aiResponse.status, errorText);
-      throw new Error('AI service error');
+    if (!response.ok) {
+      throw new Error(`AI request failed: ${await response.text()}`);
     }
 
-    const aiData = await aiResponse.json();
-    const assistantMessage = aiData.choices[0].message.content;
+    const aiData = await response.json();
+    const aiResponse = aiData.choices[0].message.content;
 
-    // Try to parse as JSON for actions
+    console.log('🎭 God-Mode AI Orchestrator Response:', aiResponse);
+
+    // Parse orchestrator response
     let parsedResponse;
     try {
-      parsedResponse = JSON.parse(assistantMessage);
+      const cleaned = aiResponse.replace(/```json\n?/g, '').replace(/```\n?/g, '');
+      parsedResponse = JSON.parse(cleaned);
     } catch {
-      // If not JSON, treat as chat message
-      parsedResponse = {
+      parsedResponse = { 
+        response: aiResponse, 
         action: 'chat',
-        message: assistantMessage
+        delegatedBots: []
       };
     }
 
-    // Execute actions if needed
-    let executionResult = null;
-    if (parsedResponse.action === 'create_character' && parsedResponse.data) {
-      const { error } = await supabase
-        .from('characters')
-        .insert({
-          user_id: user.id,
-          project_id: parsedResponse.data.project_id,
-          ...parsedResponse.data
-        });
-      
-      if (error) executionResult = { error: error.message };
-      else executionResult = { success: true };
-    } else if (parsedResponse.action === 'create_episode' && parsedResponse.data) {
-      const { error } = await supabase
-        .from('episodes')
-        .insert({
-          user_id: user.id,
-          project_id: parsedResponse.data.project_id,
-          ...parsedResponse.data
-        });
-      
-      if (error) executionResult = { error: error.message };
-      else executionResult = { success: true };
-    } else if (parsedResponse.action === 'create_project' && parsedResponse.data) {
-      const { error } = await supabase
-        .from('projects')
-        .insert({
-          user_id: user.id,
-          ...parsedResponse.data
-        });
-      
-      if (error) executionResult = { error: error.message };
-      else executionResult = { success: true };
-    }
+    // Log orchestration event
+    await supabase.from('orchestration_events').insert({
+      event_type: 'god_mode_orchestration',
+      services_involved: parsedResponse.delegatedBots || [],
+      decision_reasoning: parsedResponse.reasoning,
+      actions_taken: { message, attachments, response: parsedResponse },
+      user_id: user.id,
+      success: true
+    });
 
-    return new Response(
-      JSON.stringify({
-        response: parsedResponse,
-        executionResult,
-      }),
-      { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-    );
+    return new Response(JSON.stringify({ 
+      response: parsedResponse.response || aiResponse,
+      delegatedBots: parsedResponse.delegatedBots || [],
+      action: parsedResponse.action || 'chat'
+    }), {
+      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+    });
   } catch (error) {
-    console.error('AI copilot error:', error);
-    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
-    return new Response(
-      JSON.stringify({ error: errorMessage }),
-      { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 500 }
-    );
+    console.error('God-Mode Orchestrator Error:', error);
+    return new Response(JSON.stringify({
+      error: error instanceof Error ? error.message : 'Unknown error',
+      response: 'I encountered an error. Please try again.',
+      delegatedBots: []
+    }), {
+      status: 500,
+      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+    });
   }
 });
