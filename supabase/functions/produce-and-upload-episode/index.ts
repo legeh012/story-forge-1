@@ -273,6 +273,15 @@ Deno.serve(async (req) => {
     if (uploadToYouTube && videoUrl) {
       console.log('📺 STEP 5: Uploading to YouTube...');
       
+      // Update status to uploading
+      await supabase
+        .from('episodes')
+        .update({ 
+          video_status: 'uploading',
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', episodeId);
+      
       try {
         const { data: youtubeResult, error: youtubeError } = await supabase.functions.invoke('youtube-uploader', {
           body: {

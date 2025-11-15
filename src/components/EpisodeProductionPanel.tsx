@@ -55,7 +55,7 @@ export const EpisodeProductionPanel = () => {
     if (!episode) return;
 
     // Prevent multiple episodes from processing simultaneously
-    if (producingEpisode) {
+    if (producingEpisode || uploadingToYouTube) {
       toast({
         title: '⚠️ Production In Progress',
         description: 'Please wait for the current episode to finish before starting another.',
@@ -65,11 +65,14 @@ export const EpisodeProductionPanel = () => {
     }
 
     setProducingEpisode(episodeId);
+    if (uploadToYouTube) {
+      setUploadingToYouTube(episodeId);
+    }
     setProgress({ ...progress, [episodeId]: 0 });
 
     toast({
-      title: '🎬 VH1/Netflix Production Started',
-      description: `Episode ${episode.episode_number}: ${episode.title} - Full Video Generation Active`,
+      title: uploadToYouTube ? '🎬 Production & Upload Started' : '🎬 VH1/Netflix Production Started',
+      description: `Episode ${episode.episode_number}: ${episode.title}${uploadToYouTube ? ' - Will auto-upload to YouTube' : ''}`,
     });
 
     try {
@@ -80,7 +83,7 @@ export const EpisodeProductionPanel = () => {
         throw new Error('Authentication required. Please log in again.');
       }
 
-      // Start polling for progress
+      // Start polling for progress with enhanced status tracking
       const pollInterval = setInterval(async () => {
         const { data: updatedEpisode } = await supabase
           .from('episodes')
@@ -91,12 +94,17 @@ export const EpisodeProductionPanel = () => {
         if (updatedEpisode?.video_status === 'processing') {
           setProgress(prev => ({
             ...prev,
-            [episodeId]: Math.min((prev[episodeId] || 0) + 10, 90)
+            [episodeId]: Math.min((prev[episodeId] || 0) + 8, 70)
           }));
         } else if (updatedEpisode?.video_status === 'rendering') {
           setProgress(prev => ({
             ...prev,
-            [episodeId]: 95
+            [episodeId]: 80
+          }));
+        } else if (updatedEpisode?.video_status === 'uploading') {
+          setProgress(prev => ({
+            ...prev,
+            [episodeId]: 90
           }));
         }
       }, 3000);
@@ -127,16 +135,19 @@ export const EpisodeProductionPanel = () => {
       // Reload episodes to get updated data
       await loadEpisodes();
 
-      toast({
-        title: '🎉 VH1/Netflix Production Complete!',
-        description: data.youtubeUrl 
-          ? `Full MP4 video produced and uploaded to YouTube`
-          : `Premium full video (MP4) generated - All FFmpeg bots active`,
-      });
-
-      if (data.youtubeUrl) {
+      if (uploadToYouTube && data.youtubeUrl) {
+        toast({
+          title: '🎉 Production & Upload Complete!',
+          description: `Episode ${episode.episode_number} is now live on YouTube!`,
+        });
+        
         // Open YouTube video in new tab
         window.open(data.youtubeUrl, '_blank');
+      } else {
+        toast({
+          title: '🎉 VH1/Netflix Production Complete!',
+          description: `Premium full video (MP4) generated - All FFmpeg bots active`,
+        });
       }
 
     } catch (error) {
@@ -163,6 +174,7 @@ export const EpisodeProductionPanel = () => {
       await loadEpisodes();
     } finally {
       setProducingEpisode(null);
+      setUploadingToYouTube(null);
       setProgress(prev => {
         const newProgress = { ...prev };
         delete newProgress[episodeId];
@@ -227,6 +239,7 @@ export const EpisodeProductionPanel = () => {
       'not_started': { label: 'Not Started', variant: 'outline' },
       'processing': { label: 'Processing', variant: 'secondary' },
       'rendering': { label: 'Rendering Video', variant: 'secondary' },
+      'uploading': { label: 'Uploading to YouTube', variant: 'secondary' },
       'completed': { label: 'Completed', variant: 'default' },
       'failed': { label: 'Failed', variant: 'destructive' }
     };
@@ -329,14 +342,14 @@ export const EpisodeProductionPanel = () => {
                             </Button>
                             <Button
                               onClick={() => produceEpisode(episode.id, true)}
-                              disabled={isProducing || !!producingEpisode}
+                              disabled={isProducing || !!producingEpisode || isUploading}
                               variant="default"
                               className="flex-1"
                             >
-                              {isProducing ? (
+                              {isProducing && isUploading ? (
                                 <>
                                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                                  Producing & Uploading...
+                                  {episodeProgress > 85 ? 'Uploading to YouTube...' : 'Producing Video...'}
                                 </>
                               ) : (
                                 <>
