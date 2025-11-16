@@ -16,6 +16,7 @@ import EpisodesGallery from "./pages/EpisodesGallery";
 import EpisodeDetail from "./pages/EpisodeDetail";
 import Workflow from "./pages/Workflow";
 import Auth from "./pages/Auth";
+import ResetPassword from "./pages/ResetPassword";
 import CreateProject from "./pages/CreateProject";
 import MediaLibrary from "./pages/MediaLibrary";
 import Analytics from "./pages/Analytics";
@@ -56,6 +57,7 @@ const App = () => {
             <Routes>
               <Route path="/" element={<Index />} />
               <Route path="/auth" element={<Auth />} />
+              <Route path="/reset-password" element={<ResetPassword />} />
               <Route path="/install" element={<ProtectedRoute><Install /></ProtectedRoute>} />
               <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
               <Route path="/characters" element={<ProtectedRoute><Characters /></ProtectedRoute>} />
