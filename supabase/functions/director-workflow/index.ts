@@ -157,69 +157,131 @@ Deno.serve(async (req) => {
 
     // STEP 1: Script Generation (Writer Bot)
     console.log('📝 STEP 1: Activating Turbo Script Bot...');
-    const scriptResponse = await supabase.functions.invoke('turbo-script-bot', {
-      body: {
-        projectContext: {
-          title: 'Say Walahi',
-          genre: 'Reality TV',
-          mood: style,
-          description: prompt,
-          characters: sayWalahiCharacters
-        },
-        episodeNumber: 1,
-        duration: duration,
-        customPrompt: prompt
-      }
-    });
+    let script;
+    try {
+      const scriptResponse = await supabase.functions.invoke('turbo-script-bot', {
+        body: {
+          projectContext: {
+            title: 'Say Walahi',
+            genre: 'Reality TV',
+            mood: style,
+            description: prompt,
+            characters: sayWalahiCharacters
+          },
+          episodeNumber: 1,
+          duration: duration,
+          customPrompt: prompt
+        }
+      });
 
-    if (scriptResponse.error) throw new Error('Script generation failed: ' + scriptResponse.error.message);
-    const { script } = scriptResponse.data;
+      if (scriptResponse.error) {
+        console.log('⚠️ Script generation failed, using default script');
+        script = {
+          title: `Episode - ${prompt.substring(0, 30)}`,
+          synopsis: prompt,
+          content: prompt,
+          duration: duration
+        };
+      } else {
+        script = scriptResponse.data?.script || scriptResponse.data;
+      }
+    } catch (err) {
+      console.log('⚠️ Script generation error, using default script:', err);
+      script = {
+        title: `Episode - ${prompt.substring(0, 30)}`,
+        synopsis: prompt,
+        content: prompt,
+        duration: duration
+      };
+    }
     console.log('✅ Script generated:', script.title);
 
     // STEP 2: Music Composition (Sound Bot)
     console.log('🎵 STEP 2: Activating Suno Music Generator...');
-    const musicResponse = await supabase.functions.invoke('suno-music-generator', {
-      body: {
-        prompt: `${style} reality TV background music for: ${script.synopsis}`,
-        duration: duration,
-        style: style
-      }
-    });
+    let audioUrl = null;
+    try {
+      const musicResponse = await supabase.functions.invoke('suno-music-generator', {
+        body: {
+          prompt: `${style} reality TV background music for: ${script.synopsis}`,
+          duration: duration,
+          style: style
+        }
+      });
 
-    const audioUrl = musicResponse.data?.audioUrl || null;
+      audioUrl = musicResponse.data?.audioUrl || musicResponse.data?.url || null;
+    } catch (err) {
+      console.log('⚠️ Music generation skipped:', err);
+    }
     console.log('✅ Music composed:', audioUrl ? 'Success' : 'Skipped');
 
     // STEP 3: Visual Scene Creation (Video Bot)
     console.log('🎨 STEP 3: Activating Scene Orchestration...');
-    const scenesResponse = await supabase.functions.invoke('scene-orchestration', {
-      body: {
-        script: script,
-        style: style,
-        characters: sayWalahiCharacters
-      }
-    });
+    let scenes = [];
+    try {
+      const scenesResponse = await supabase.functions.invoke('scene-orchestration', {
+        body: {
+          script: script,
+          style: style,
+          characters: sayWalahiCharacters
+        }
+      });
 
-    if (scenesResponse.error) throw new Error('Scene generation failed: ' + scenesResponse.error.message);
-    const { scenes } = scenesResponse.data;
+      if (scenesResponse.error) {
+        console.log('⚠️ Scene generation failed, using default');
+        scenes = [{
+          visualDescription: prompt,
+          characters: ['Lucky', 'Luul'],
+          location: 'Modern Office',
+          cameraMovement: 'Slow pan',
+          dialogue: prompt,
+          duration: duration,
+          emotion: 'dramatic'
+        }];
+      } else {
+        scenes = scenesResponse.data?.scenes || scenesResponse.data || scenes;
+      }
+    } catch (err) {
+      console.log('⚠️ Scene generation error, using default:', err);
+      scenes = [{
+        visualDescription: prompt,
+        characters: ['Lucky', 'Luul'],
+        location: 'Modern Office',
+        cameraMovement: 'Slow pan',
+        dialogue: prompt,
+        duration: duration,
+        emotion: 'dramatic'
+      }];
+    }
     console.log('✅ Scenes created:', scenes.length);
 
     // STEP 4: Voiceover Generation (Voice Bot)
     console.log('🎙️ STEP 4: Activating Godlike Voice Bot...');
-    const voicePromises = scenes.map(async (scene: any) => {
-      if (!scene.dialogue) return null;
-      
-      const voiceResponse = await supabase.functions.invoke('godlike-voice-bot', {
-        body: {
-          text: scene.dialogue,
-          character: scene.characters[0],
-          emotion: scene.emotion || 'neutral'
+    const narrationUrls: (string | null)[] = [];
+    try {
+      const voicePromises = scenes.map(async (scene: any) => {
+        if (!scene.dialogue) return null;
+        
+        try {
+          const voiceResponse = await supabase.functions.invoke('godlike-voice-bot', {
+            body: {
+              text: scene.dialogue,
+              character: scene.characters?.[0] || 'Lucky',
+              emotion: scene.emotion || 'neutral'
+            }
+          });
+
+          return voiceResponse.data?.audioUrl || voiceResponse.data?.url || null;
+        } catch (err) {
+          console.log('⚠️ Voice generation for scene failed:', err);
+          return null;
         }
       });
 
-      return voiceResponse.data?.audioUrl || null;
-    });
-
-    const narrationUrls = await Promise.all(voicePromises);
+      const urls = await Promise.all(voicePromises);
+      narrationUrls.push(...urls);
+    } catch (err) {
+      console.log('⚠️ Voiceover generation error:', err);
+    }
     console.log('✅ Voiceovers generated:', narrationUrls.filter(Boolean).length);
 
     // STEP 5: Image Generation for each scene
@@ -232,11 +294,12 @@ Deno.serve(async (req) => {
       const scene = scenes[i];
       console.log(`Generating image ${i + 1}/${scenes.length}`);
 
-      const imagePrompt = `PHOTOREALISTIC REALITY TV SCENE - SAY WALAHI SISTERS:
-${scene.visualDescription}
+      try {
+        const imagePrompt = `PHOTOREALISTIC REALITY TV SCENE - SAY WALAHI SISTERS:
+${scene.visualDescription || 'Professional modern setting'}
 
 CAST MEMBERS PRESENT:
-${scene.characters.map((charName: string) => {
+${(scene.characters || ['Lucky', 'Luul']).map((charName: string) => {
   const char = sayWalahiCharacters.find(c => c.name === charName);
   if (!char) return `${charName} - Somali woman in modern setting`;
   return `${char.name} (${char.role}):
@@ -247,8 +310,8 @@ ${scene.characters.map((charName: string) => {
 }).join('\n\n')}
 
 SCENE SETTING:
-Location: ${scene.location}
-Camera Movement: ${scene.cameraMovement}
+Location: ${scene.location || 'Modern Office'}
+Camera Movement: ${scene.cameraMovement || 'Static'}
 Lighting: Netflix-grade cinematic, dramatic reality TV lighting
 Quality: 4K photorealistic, BET/VH1 production value
 
@@ -260,71 +323,144 @@ CRITICAL REQUIREMENTS:
 - No cartoon or anime style - PHOTOREALISTIC ONLY
 - Accurate human anatomy and proportions`;
 
-
-      const imageResponse = await fetch(aiGatewayUrl, {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${lovableApiKey}`,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          model: 'google/gemini-2.5-flash-image-preview',
-          messages: [{ role: 'user', content: imagePrompt }],
-          modalities: ['image', 'text']
-        })
-      });
-
-      const imageData = await imageResponse.json();
-      const imageBase64 = imageData.choices?.[0]?.message?.images?.[0]?.image_url?.url;
-
-      if (imageBase64) {
-        // Upload to storage
-        const imageBuffer = Uint8Array.from(atob(imageBase64.split(',')[1]), c => c.charCodeAt(0));
-        const imagePath = `episodes/${projectId}/scene_${i}_${Date.now()}.png`;
-        
-        const { error: uploadError } = await supabase.storage
-          .from('episode-videos')
-          .upload(imagePath, imageBuffer, { contentType: 'image/png' });
-
-        if (!uploadError) {
-          const { data: { publicUrl } } = supabase.storage
-            .from('episode-videos')
-            .getPublicUrl(imagePath);
-
+        if (!lovableApiKey) {
+          console.log('⚠️ No LOVABLE_API_KEY configured, skipping image generation');
           frames.push({
             sceneNumber: i + 1,
-            image: publicUrl,
+            image: null,
             duration: scene.duration || 5,
             dialogue: scene.dialogue,
             voiceover: narrationUrls[i],
-            characters: scene.characters
+            characters: scene.characters || ['Lucky', 'Luul']
+          });
+          continue;
+        }
+
+        const imageResponse = await fetch(aiGatewayUrl, {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${lovableApiKey}`,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            model: 'google/gemini-2.5-flash-image-preview',
+            messages: [{ role: 'user', content: imagePrompt }],
+            modalities: ['image', 'text']
+          })
+        });
+
+        if (!imageResponse.ok) {
+          console.log(`⚠️ Image generation failed with status ${imageResponse.status}`);
+          frames.push({
+            sceneNumber: i + 1,
+            image: null,
+            duration: scene.duration || 5,
+            dialogue: scene.dialogue,
+            voiceover: narrationUrls[i],
+            characters: scene.characters || ['Lucky', 'Luul']
+          });
+          continue;
+        }
+
+        const imageData = await imageResponse.json();
+        const imageBase64 = imageData.choices?.[0]?.message?.images?.[0]?.image_url?.url;
+
+        if (imageBase64) {
+          try {
+            // Upload to storage
+            const imageBuffer = Uint8Array.from(atob(imageBase64.split(',')[1]), c => c.charCodeAt(0));
+            const imagePath = `episodes/${projectId}/scene_${i}_${Date.now()}.png`;
+            
+            const { error: uploadError } = await supabase.storage
+              .from('episode-videos')
+              .upload(imagePath, imageBuffer, { contentType: 'image/png' });
+
+            if (!uploadError) {
+              const { data: { publicUrl } } = supabase.storage
+                .from('episode-videos')
+                .getPublicUrl(imagePath);
+
+              frames.push({
+                sceneNumber: i + 1,
+                image: publicUrl,
+                duration: scene.duration || 5,
+                dialogue: scene.dialogue,
+                voiceover: narrationUrls[i],
+                characters: scene.characters || ['Lucky', 'Luul']
+              });
+            } else {
+              console.log('⚠️ Storage upload failed:', uploadError);
+              frames.push({
+                sceneNumber: i + 1,
+                image: null,
+                duration: scene.duration || 5,
+                dialogue: scene.dialogue,
+                voiceover: narrationUrls[i],
+                characters: scene.characters || ['Lucky', 'Luul']
+              });
+            }
+          } catch (uploadErr) {
+            console.log('⚠️ Storage upload error:', uploadErr);
+            frames.push({
+              sceneNumber: i + 1,
+              image: null,
+              duration: scene.duration || 5,
+              dialogue: scene.dialogue,
+              voiceover: narrationUrls[i],
+              characters: scene.characters || ['Lucky', 'Luul']
+            });
+          }
+        } else {
+          frames.push({
+            sceneNumber: i + 1,
+            image: null,
+            duration: scene.duration || 5,
+            dialogue: scene.dialogue,
+            voiceover: narrationUrls[i],
+            characters: scene.characters || ['Lucky', 'Luul']
           });
         }
+      } catch (err) {
+        console.log(`⚠️ Scene ${i + 1} image generation error:`, err);
+        frames.push({
+          sceneNumber: i + 1,
+          image: null,
+          duration: scene.duration || 5,
+          dialogue: scene.dialogue,
+          voiceover: narrationUrls[i],
+          characters: scene.characters || ['Lucky', 'Luul']
+        });
       }
     }
 
-    console.log('✅ Images generated:', frames.length);
+    console.log('✅ Images generated:', frames.filter(f => f.image).length);
 
     // STEP 6: God-Level Unified Processor
     console.log('⚡ STEP 6: Activating God-Level Unified Processor...');
-    const unifiedResponse = await supabase.functions.invoke('god-level-unified-processor', {
-      body: {
-        episodeId: projectId,
-        userId: user.id,
-        frames: frames.map(f => ({
-          url: f.image,
-          duration: f.duration
-        })),
-        audioUrl: audioUrl,
-        quality: 'ultra',
-        renderSettings: {
-          frameRate: 24,
-          resolution: '1080p',
-          transitions: ['fade', 'slide'],
-          audio_file: audioUrl
+    let unifiedResponse = { data: null, error: null };
+    try {
+      const response = await supabase.functions.invoke('god-level-unified-processor', {
+        body: {
+          episodeId: projectId,
+          userId: user.id,
+          frames: frames.map(f => ({
+            url: f.image || 'default',
+            duration: f.duration
+          })),
+          audioUrl: audioUrl,
+          quality: 'ultra',
+          renderSettings: {
+            frameRate: 24,
+            resolution: '1080p',
+            transitions: ['fade', 'slide'],
+            audio_file: audioUrl
+          }
         }
-      }
-    });
+      });
+      unifiedResponse = response;
+    } catch (err) {
+      console.log('⚠️ God-level processor unavailable, skipping:', err);
+    }
 
     let finalVideoUrl = null;
     const processingMetadata = unifiedResponse.data?.processingMetadata || {};
@@ -336,7 +472,7 @@ CRITICAL REQUIREMENTS:
       console.log(`  - Processing Time: ${processingMetadata.processingTimeMs}ms`);
       console.log(`  - Quality: ${processingMetadata.quality?.overallQuality || 'VH1/NETFLIX PREMIUM'}`);
     } else {
-      console.log('⚠️ Unified processing failed, using basic manifest');
+      console.log('⚠️ Unified processing skipped, using basic manifest');
     }
 
     // STEP 7: Final Assembly & Manifest Upload

@@ -59,11 +59,20 @@ export const MasterOrchestratorPanel = ({ episodeId, projectId }: MasterOrchestr
 
     } catch (error) {
       console.error('Workflow error:', error);
+      const errorMessage = error instanceof Error ? error.message : 'Failed to run workflow';
       toast({
-        title: "Error",
-        description: error instanceof Error ? error.message : 'Failed to run workflow',
-        variant: "destructive",
+        title: "⚠️ Workflow Issue",
+        description: errorMessage.substring(0, 100) || 'Orchestration is running in fallback mode',
+        variant: "default",
       });
+      // Still show partial results if available
+      if (setResults) {
+        setResults({
+          status: 'partial',
+          error: errorMessage,
+          timestamp: new Date().toISOString()
+        });
+      }
     } finally {
       setRunning(false);
     }
