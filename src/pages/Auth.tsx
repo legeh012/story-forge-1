@@ -24,6 +24,10 @@ const loginSchema = z.object({
   password: z.string().nonempty({ message: "Password is required" })
 });
 
+const resetPasswordSchema = z.object({
+  email: z.string().trim().email({ message: "Invalid email address" }).max(255)
+});
+
 const Auth = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -31,6 +35,7 @@ const Auth = () => {
   const [username, setUsername] = useState("");
   const [loading, setLoading] = useState(false);
   const [show2FA, setShow2FA] = useState(false);
+  const [showResetPassword, setShowResetPassword] = useState(false);
   const navigate = useNavigate();
   const { toast } = useToast();
 
@@ -158,6 +163,43 @@ const Auth = () => {
     }
   };
 
+  const handleResetPassword = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setLoading(true);
+
+    try {
+      const validatedData = resetPasswordSchema.parse({ email });
+      
+      const { error } = await supabase.auth.resetPasswordForEmail(validatedData.email, {
+        redirectTo: `${window.location.origin}/reset-password`,
+      });
+
+      if (error) throw error;
+
+      toast({
+        title: "Password reset email sent!",
+        description: "Check your email for the reset link",
+      });
+      setShowResetPassword(false);
+    } catch (error: any) {
+      if (error instanceof z.ZodError) {
+        toast({
+          title: "Validation Error",
+          description: error.errors[0].message,
+          variant: "destructive",
+        });
+      } else {
+        toast({
+          title: "Reset failed",
+          description: error.message || "Please try again",
+          variant: "destructive",
+        });
+      }
+    } finally {
+      setLoading(false);
+    }
+  };
+
   // If 2FA is being set up, show that instead
   if (show2FA) {
     return (
@@ -167,6 +209,65 @@ const Auth = () => {
           onVerified={() => navigate("/dashboard")}
           onSkip={() => navigate("/dashboard")}
         />
+      </div>
+    );
+  }
+
+  // If password reset is being requested, show that view
+  if (showResetPassword) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center p-4">
+        <div className="absolute inset-0 bg-gradient-to-b from-primary/10 via-transparent to-transparent pointer-events-none" />
+        <div className="absolute top-20 left-1/4 w-96 h-96 bg-primary/20 rounded-full blur-3xl animate-float" />
+        <div className="absolute bottom-20 right-1/4 w-96 h-96 bg-accent/20 rounded-full blur-3xl animate-float" style={{ animationDelay: '1s' }} />
+        
+        <Card className="w-full max-w-md p-8 bg-card border-border relative z-10">
+          <div className="flex items-center justify-center gap-2 mb-8">
+            <div className="p-2 rounded-xl bg-gradient-to-br from-primary to-accent">
+              <Mail className="h-6 w-6 text-primary-foreground" />
+            </div>
+            <h1 className="text-3xl font-bold bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
+              Reset Password
+            </h1>
+          </div>
+
+          <p className="text-center text-muted-foreground mb-6">
+            Enter your email address and we'll send you a link to reset your password
+          </p>
+
+          <form onSubmit={handleResetPassword} className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="reset-email">Email</Label>
+              <Input
+                id="reset-email"
+                type="email"
+                placeholder="you@example.com"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                className="bg-background border-border"
+                required
+                maxLength={255}
+              />
+            </div>
+
+            <Button
+              type="submit"
+              className="w-full bg-gradient-to-r from-primary to-accent hover:opacity-90 transition-opacity"
+              disabled={loading}
+            >
+              {loading ? "Sending..." : "Send Reset Link"}
+            </Button>
+
+            <Button
+              type="button"
+              variant="ghost"
+              className="w-full"
+              onClick={() => setShowResetPassword(false)}
+            >
+              Back to Sign In
+            </Button>
+          </form>
+        </Card>
       </div>
     );
   }
@@ -288,6 +389,17 @@ const Auth = () => {
                 <Mail className="mr-2 h-4 w-4" />
                 {loading ? "Signing in..." : "Sign in with Email"}
               </Button>
+
+              <div className="text-center mt-2">
+                <Button
+                  type="button"
+                  variant="link"
+                  className="text-sm text-muted-foreground hover:text-primary"
+                  onClick={() => setShowResetPassword(true)}
+                >
+                  Forgot your password?
+                </Button>
+              </div>
             </form>
           </TabsContent>
 
