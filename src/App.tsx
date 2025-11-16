@@ -4,7 +4,7 @@ import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
-import { AICopilot } from "@/components/AICopilot";
+import { GodLevelBot } from "@/components/GodLevelBot";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 import BotpressChat from "@/components/BotpressChat";
@@ -77,7 +77,7 @@ const App = () => {
               {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
               <Route path="*" element={<NotFound />} />
             </Routes>
-            <AICopilot />
+            <GodLevelBot />
           </BrowserRouter>
         </ErrorBoundary>
       </TooltipProvider>
