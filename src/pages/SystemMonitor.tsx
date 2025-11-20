@@ -1,6 +1,5 @@
 import Navigation from '@/components/Navigation';
 import { SystemHealthMonitor } from '@/components/SystemHealthMonitor';
-import { CacheManager_Component } from '@/components/CacheManagerPanel';
 import SEOHead from '@/components/SEOHead';
 import { Button } from '@/components/ui/button';
 import { useSelfHealing } from '@/hooks/useSelfHealing';
@@ -58,10 +57,6 @@ const SystemMonitor = () => {
           
           <div className="space-y-6">
             <SystemHealthMonitor />
-            <div className="mt-8 pt-8 border-t border-border">
-              <h2 className="text-2xl font-bold mb-4">Cache Management</h2>
-              <CacheManager_Component />
-            </div>
           </div>
         </main>
       </div>

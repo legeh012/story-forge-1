@@ -4,8 +4,6 @@ import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
-import { GodLevelBot } from "@/components/GodLevelBot";
-import { ProtectedRoute } from "@/components/ProtectedRoute";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 import BotpressChat from "@/components/BotpressChat";
 import Index from "./pages/Index";
@@ -58,26 +56,25 @@ const App = () => {
               <Route path="/" element={<Index />} />
               <Route path="/auth" element={<Auth />} />
               <Route path="/reset-password" element={<ResetPassword />} />
-              <Route path="/install" element={<ProtectedRoute><Install /></ProtectedRoute>} />
-              <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
-              <Route path="/characters" element={<ProtectedRoute><Characters /></ProtectedRoute>} />
-              <Route path="/episodes" element={<ProtectedRoute><Episodes /></ProtectedRoute>} />
-              <Route path="/episodes-gallery" element={<ProtectedRoute><EpisodesGallery /></ProtectedRoute>} />
-              <Route path="/episodes/:id" element={<ProtectedRoute><EpisodeDetail /></ProtectedRoute>} />
-              <Route path="/workflow" element={<ProtectedRoute><Workflow /></ProtectedRoute>} />
-              <Route path="/create" element={<ProtectedRoute><CreateProject /></ProtectedRoute>} />
-              <Route path="/media" element={<ProtectedRoute><MediaLibrary /></ProtectedRoute>} />
-              <Route path="/analytics" element={<ProtectedRoute><Analytics /></ProtectedRoute>} />
-              <Route path="/system-monitor" element={<ProtectedRoute><SystemMonitor /></ProtectedRoute>} />
-              <Route path="/viral-bots" element={<ProtectedRoute><ViralBots /></ProtectedRoute>} />
-              <Route path="/video-generation" element={<ProtectedRoute><VideoGeneration /></ProtectedRoute>} />
-              <Route path="/remix-studio" element={<ProtectedRoute><RemixStudio /></ProtectedRoute>} />
-              <Route path="/cloud-services" element={<ProtectedRoute><CloudServices /></ProtectedRoute>} />
-              <Route path="/dev-tools" element={<ProtectedRoute><DevTools /></ProtectedRoute>} />
+              <Route path="/install" element={<Install />} />
+              <Route path="/dashboard" element={<Dashboard />} />
+              <Route path="/characters" element={<Characters />} />
+              <Route path="/episodes" element={<Episodes />} />
+              <Route path="/episodes-gallery" element={<EpisodesGallery />} />
+              <Route path="/episodes/:id" element={<EpisodeDetail />} />
+              <Route path="/workflow" element={<Workflow />} />
+              <Route path="/create" element={<CreateProject />} />
+              <Route path="/media" element={<MediaLibrary />} />
+              <Route path="/analytics" element={<Analytics />} />
+              <Route path="/system-monitor" element={<SystemMonitor />} />
+              <Route path="/viral-bots" element={<ViralBots />} />
+              <Route path="/video-generation" element={<VideoGeneration />} />
+              <Route path="/remix-studio" element={<RemixStudio />} />
+              <Route path="/cloud-services" element={<CloudServices />} />
+              <Route path="/dev-tools" element={<DevTools />} />
               {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
               <Route path="*" element={<NotFound />} />
             </Routes>
-            <GodLevelBot />
           </BrowserRouter>
         </ErrorBoundary>
       </TooltipProvider>
