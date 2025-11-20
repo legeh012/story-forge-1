@@ -6,7 +6,6 @@ import { Card } from '@/components/ui/card';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/components/ui/use-toast';
 import { Badge } from '@/components/ui/badge';
-import { LocalAIFallback } from '@/utils/localAIFallback';
 
 interface Message {
   role: 'user' | 'assistant';
@@ -273,44 +272,29 @@ export const AICopilot = () => {
     } catch (error) {
       console.error('AI Orchestrator error:', error);
       
-      // Use fallback AI if service is down
-      if (LocalAIFallback.isServiceDown(error)) {
-        console.log('🔄 Service unavailable, using local fallback AI');
-        const fallbackResponse = LocalAIFallback.generateResponse(userMessage);
-        
-        setMessages(prev => [...prev, { 
-          role: 'assistant', 
-          content: fallbackResponse.response,
-          delegatedBots: fallbackResponse.delegatedBots,
-          timestamp: new Date().toISOString(),
-          action: fallbackResponse.action
-        }]);
-
-        toast({
-          title: '⚡ Local AI Mode',
-          description: 'Using fallback AI - connecting to orchestration service when available'
-        });
-      } else {
-        // Provide helpful response for other errors
-        let helpfulResponse = '';
-        if (error instanceof Error) {
-          if (error.message.includes('Unauthorized') || error.message.includes('auth')) {
-            helpfulResponse = `I'm currently unable to connect to the orchestration service. This might be a temporary issue. Please make sure you're logged in and try again. If the problem persists, you can still use me to chat, provide feedback, or ask for general information!`;
-          } else if (error.message.includes('function')) {
-            helpfulResponse = `I encountered a service connectivity issue. Here's what I can still help with:\n• Answer questions about the app\n• Provide general guidance\n• Store your requests for later\n\nPlease try again in a moment, or feel free to describe what you'd like to do!`;
-          } else {
-            helpfulResponse = `I experienced a temporary issue processing your request. This sometimes happens due to network connectivity. Let me try to help you in a different way:\n\nWhat would you like to accomplish? I can:\n• Provide guidance and information\n• Answer questions about features\n• Help you troubleshoot\n\nFeel free to rephrase or provide more details!`;
-          }
+      let helpfulResponse = '';
+      if (error instanceof Error) {
+        if (error.message.includes('Unauthorized') || error.message.includes('auth')) {
+          helpfulResponse = `I'm currently unable to connect to the orchestration service. This might be a temporary issue. Please make sure you're logged in and try again. If the problem persists, you can still use me to chat, provide feedback, or ask for general information!`;
+        } else if (error.message.includes('function')) {
+          helpfulResponse = `I encountered a service connectivity issue. Here's what I can still help with:\n• Answer questions about the app\n• Provide general guidance\n• Store your requests for later\n\nPlease try again in a moment, or feel free to describe what you'd like to do!`;
         } else {
-          helpfulResponse = `I'm having trouble connecting right now, but I'm here to help! Could you tell me more about what you're trying to do? I'll do my best to assist or remember your request for when the service is back online.`;
+          helpfulResponse = `I experienced a temporary issue processing your request. This sometimes happens due to network connectivity. Let me try to help you in a different way:\n\nWhat would you like to accomplish? I can:\n• Provide guidance and information\n• Answer questions about features\n• Help you troubleshoot\n\nFeel free to rephrase or provide more details!`;
         }
-
-        setMessages(prev => [...prev, { 
-          role: 'assistant', 
-          content: helpfulResponse,
-          timestamp: new Date().toISOString()
-        }]);
+      } else {
+        helpfulResponse = `I'm having trouble connecting right now, but I'm here to help! Could you tell me more about what you're trying to do? I'll do my best to assist or remember your request for when the service is back online.`;
       }
+
+      setMessages(prev => [...prev, { 
+        role: 'assistant', 
+        content: helpfulResponse,
+        timestamp: new Date().toISOString()
+      }]);
+
+      toast({
+        title: '⚠️ Connection Issue',
+        description: 'AI orchestrator temporarily unavailable'
+      });
     } finally {
       setIsLoading(false);
     }

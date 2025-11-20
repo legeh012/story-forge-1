@@ -216,7 +216,7 @@ Deno.serve(async (req) => {
 
     // STEP 3: Visual Scene Creation (Video Bot)
     console.log('🎨 STEP 3: Activating Scene Orchestration...');
-    let scenes = [];
+    let scenes: any[] = [];
     try {
       const scenesResponse = await supabase.functions.invoke('scene-orchestration', {
         body: {
@@ -437,7 +437,7 @@ CRITICAL REQUIREMENTS:
 
     // STEP 6: God-Level Unified Processor
     console.log('⚡ STEP 6: Activating God-Level Unified Processor...');
-    let unifiedResponse = { data: null, error: null };
+    let unifiedResponse: { data: any; error: any } = { data: null, error: null };
     try {
       const response = await supabase.functions.invoke('god-level-unified-processor', {
         body: {
