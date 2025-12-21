@@ -60,6 +60,22 @@ This project is built with:
 - shadcn-ui
 - Tailwind CSS
 
+## API & Backend Services
+
+This project uses multiple APIs and services:
+
+- **Supabase** - Backend, Database, Authentication, Edge Functions
+- **Lovable AI** - Image generation and AI processing
+- **OpenAI** - Advanced AI capabilities
+- **Twilio** - SMS verification and 2FA
+- **Suno** - Music generation (manual integration)
+- **Artlist** - Stock media (manual integration)
+
+**📖 For detailed API information, see:**
+- **[YOUR_API_INFO.md](./YOUR_API_INFO.md)** - Quick reference to your API configuration
+- **[API_DOCUMENTATION.md](./API_DOCUMENTATION.md)** - Complete API documentation
+- **[.env.example](./.env.example)** - Environment variables template
+
 ## How can I deploy this project?
 
 Simply open [Lovable](https://lovable.dev/projects/20bfd2da-a425-458f-990b-26226e51ac14) and click on Share -> Publish.
