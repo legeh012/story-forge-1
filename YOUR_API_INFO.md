@@ -1,5 +1,7 @@
 # Your API Configuration - Quick Reference
 
+> **🔒 Security Note:** The Supabase project ID and anon/publishable key shown in this document are already committed to your repository in the `.env` file. These are safe to expose in frontend code as they have row-level security. Only the Service Role Key must be kept secret and is never shown here.
+
 ## 🔑 Your Active APIs
 
 This document provides a quick reference to all the APIs currently configured in your Story Forge project.

@@ -1,5 +1,7 @@
 # API Documentation for Story Forge
 
+> **🔒 Security Note:** This document contains your Supabase project ID and anon/publishable key, which are already in your `.env` file in the repository. These are safe to expose in frontend code. The Service Role Key and other sensitive API keys are never shown in this documentation.
+
 This document provides a comprehensive overview of all APIs and services used in the Story Forge application.
 
 ## Table of Contents

@@ -1,5 +1,7 @@
 # What's My API? - Quick Answer
 
+> **📌 Note:** The Supabase project ID and anon/publishable key shown below are already in your `.env` file in the repository and are safe to expose in frontend code. Only the Service Role Key must be kept secret.
+
 ## Your Current API Setup
 
 ### ✅ **Active & Working**
