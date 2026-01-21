@@ -1342,6 +1342,51 @@ export type Database = {
         }
         Relationships: []
       }
+      videos: {
+        Row: {
+          aspect_ratio: string | null
+          category: string | null
+          created_at: string
+          description: string | null
+          duration: number | null
+          file_size: number | null
+          id: string
+          thumbnail_url: string | null
+          title: string
+          updated_at: string
+          user_id: string | null
+          video_url: string
+        }
+        Insert: {
+          aspect_ratio?: string | null
+          category?: string | null
+          created_at?: string
+          description?: string | null
+          duration?: number | null
+          file_size?: number | null
+          id?: string
+          thumbnail_url?: string | null
+          title: string
+          updated_at?: string
+          user_id?: string | null
+          video_url: string
+        }
+        Update: {
+          aspect_ratio?: string | null
+          category?: string | null
+          created_at?: string
+          description?: string | null
+          duration?: number | null
+          file_size?: number | null
+          id?: string
+          thumbnail_url?: string | null
+          title?: string
+          updated_at?: string
+          user_id?: string | null
+          video_url?: string
+        }
+        Relationships: []
+      }
       viral_bots: {
         Row: {
           bot_type: Database["public"]["Enums"]["bot_type"]
