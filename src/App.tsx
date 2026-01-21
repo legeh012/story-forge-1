@@ -26,6 +26,7 @@ import VideoGeneration from "./pages/VideoGeneration";
 import RemixStudio from "./pages/RemixStudio";
 import CloudServices from "./pages/CloudServices";
 import DevTools from "./pages/DevTools";
+import VideoGallery from "./pages/VideoGallery";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient({
@@ -77,6 +78,7 @@ const AnimatedRoutes = () => {
           <Route path="/remix-studio" element={<RemixStudio />} />
           <Route path="/cloud-services" element={<CloudServices />} />
           <Route path="/dev-tools" element={<DevTools />} />
+          <Route path="/video-gallery" element={<VideoGallery />} />
           <Route path="*" element={<NotFound />} />
         </Routes>
       </motion.div>
