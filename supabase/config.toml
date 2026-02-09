@@ -1,56 +1,55 @@
 project_id = "akmeovotnnqbxotlerie"
 
 [functions.cleanup-old-episodes]
-verify_jwt = true
-
+verify_jwt = false
 
 [functions.god-level-ffmpeg-compiler]
-verify_jwt = true
+verify_jwt = false
 
 [functions.god-level-scene-composer-bot]
-verify_jwt = true
+verify_jwt = false
 
 [functions.god-level-color-grader-bot]
-verify_jwt = true
+verify_jwt = false
 
 [functions.god-level-audio-master-bot]
-verify_jwt = true
+verify_jwt = false
 
 [functions.god-level-effects-bot]
-verify_jwt = true
+verify_jwt = false
 
 [functions.frame-optimizer-bot]
-verify_jwt = true
+verify_jwt = false
 
 [functions.video-quality-enhancer-bot]
-verify_jwt = true
+verify_jwt = false
 
 [functions.audio-sync-bot]
-verify_jwt = true
+verify_jwt = false
 
 [functions.reality-tv-god-mode]
-verify_jwt = true
+verify_jwt = false
 
 [functions.import-from-photos]
-verify_jwt = true
+verify_jwt = false
 
 [functions.godlike-voice-bot]
-verify_jwt = true
+verify_jwt = false
 
 [functions.audio-mixer-bot]
-verify_jwt = true
+verify_jwt = false
 
 [functions.sound-effects-bot]
-verify_jwt = true
+verify_jwt = false
 
 [functions.performance-optimizer-bot]
-verify_jwt = true
+verify_jwt = false
 
 [functions.ultra-video-bot]
 verify_jwt = false
 
 [functions.self-healing]
-verify_jwt = true
+verify_jwt = false
 
 [functions.trend-detection-bot]
 verify_jwt = false
@@ -59,7 +58,7 @@ verify_jwt = false
 verify_jwt = false
 
 [functions.remix-bot]
-verify_jwt = true
+verify_jwt = false
 
 [functions.cultural-injection-bot]
 verify_jwt = false
@@ -71,16 +70,16 @@ verify_jwt = false
 verify_jwt = false
 
 [functions.cross-platform-poster]
-verify_jwt = true
+verify_jwt = false
 
 [functions.bot-orchestrator]
 verify_jwt = false
 
 [functions.ai-copilot]
-verify_jwt = true
+verify_jwt = false
 
 [functions.render-episode-video]
-verify_jwt = true
+verify_jwt = false
 
 [functions.expert-director]
 verify_jwt = false
@@ -89,22 +88,22 @@ verify_jwt = false
 verify_jwt = false
 
 [functions.ai-engineer]
-verify_jwt = true
+verify_jwt = false
 
 [functions.ai-character-designer]
-verify_jwt = true
+verify_jwt = false
 
 [functions.import-characters]
-verify_jwt = true
+verify_jwt = false
 
 [functions.generate-video]
-verify_jwt = true
+verify_jwt = false
 
 [functions.generate-episode-from-prompt]
-verify_jwt = true
+verify_jwt = false
 
 [functions.episode-producer]
-verify_jwt = true
+verify_jwt = false
 
 [functions.scene-orchestration]
 verify_jwt = false
@@ -116,16 +115,16 @@ verify_jwt = false
 verify_jwt = false
 
 [functions.confessional-logic-bot]
-verify_jwt = true
+verify_jwt = false
 
 [functions.suno-audio-sync-bot]
-verify_jwt = true
+verify_jwt = false
 
 [functions.ffmpeg-video-engine]
-verify_jwt = true
+verify_jwt = false
 
 [functions.generate-remix-video]
-verify_jwt = true
+verify_jwt = false
 
 [functions.botpress-webhook]
 verify_jwt = false
@@ -137,28 +136,55 @@ verify_jwt = false
 verify_jwt = false
 
 [functions.artlist-advanced-bot]
-verify_jwt = true
+verify_jwt = false
 
 [functions.suno-music-generator]
-verify_jwt = true
+verify_jwt = false
 
 [functions.master-orchestrator]
-verify_jwt = true
-
-[functions.import-characters]
 verify_jwt = false
 
 [functions.director-workflow]
-verify_jwt = true
+verify_jwt = false
 
 [functions.youtube-uploader]
-verify_jwt = true
+verify_jwt = false
 
 [functions.produce-and-upload-episode]
-verify_jwt = true
+verify_jwt = false
 
 [functions.batch-video-renderer]
-verify_jwt = true
+verify_jwt = false
 
 [functions.god-level-unified-processor]
-verify_jwt = true
+verify_jwt = false
+
+[functions.infinite-creation-engine]
+verify_jwt = false
+
+[functions.ai-response-cache]
+verify_jwt = false
+
+[functions.cinematic-video-generator]
+verify_jwt = false
+
+[functions.god-level-vmaker-bot]
+verify_jwt = false
+
+[functions.god-level-bing-ai-bot]
+verify_jwt = false
+
+[functions.baas-bot]
+verify_jwt = false
+
+[functions.laas-bot]
+verify_jwt = false
+
+[functions.saas-bot]
+verify_jwt = false
+
+[functions.xaas-orchestrator]
+verify_jwt = false
+
+[functions.generate-season-trailer]
+verify_jwt = false
