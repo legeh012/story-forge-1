@@ -126,7 +126,29 @@ const VideoGeneration = () => {
     setGeneratingScenes(true);
 
     try {
-      // Call the ultra-video-bot to generate scenes
+      // Try Infinite Creation Engine first (2075-grade)
+      console.log('🚀 Attempting Infinite Creation Engine...');
+      const { data: engineData, error: engineError } = await supabase.functions.invoke('infinite-creation-engine', {
+        body: {
+          episodeId: episode.id,
+          prompt: episode.script || episode.synopsis || episode.title,
+          characters: [],
+          mood: 'dramatic',
+          style: 'photorealistic-reality-tv',
+          action: 'generate'
+        }
+      });
+
+      if (!engineError && engineData?.videoUrl) {
+        toast({
+          title: "🚀 Infinite Creation Engine Complete!",
+          description: "2075-grade photorealistic video generated",
+        });
+        await fetchEpisode();
+        return;
+      }
+
+      // Fallback to ultra-video-bot
       const { data, error } = await supabase.functions.invoke('ultra-video-bot', {
         body: {
           episodeId: episode.id,
@@ -141,7 +163,6 @@ const VideoGeneration = () => {
         description: "Ultra-realistic scenes created with GODLIKE quality",
       });
 
-      // Fetch updated episode data
       await fetchEpisode();
 
     } catch (error) {
