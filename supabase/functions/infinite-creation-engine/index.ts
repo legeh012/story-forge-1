@@ -30,7 +30,6 @@ Deno.serve(async (req) => {
       : action === 'gallery' ? '/api/gallery'
       : '/api/generate';
 
-    // Build the request to the Infinite Creation Engine
     const enginePayload = {
       prompt: prompt || `Reality TV scene: ${characters?.join(', ') || 'Say Walahi Sisters'} - ${mood || 'dramatic confrontation'}`,
       style: style || 'photorealistic-reality-tv',
@@ -50,27 +49,41 @@ Deno.serve(async (req) => {
 
     console.log(`📡 Calling Infinite Creation Engine: ${INFINITE_ENGINE_URL}${endpoint}`);
 
-    const engineResponse = await fetch(`${INFINITE_ENGINE_URL}${endpoint}`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(enginePayload)
-    });
+    let engineData: any = null;
+    let videoUrl: string | null = null;
+    let engineReachable = false;
 
-    let engineData: any;
-    const contentType = engineResponse.headers.get('content-type') || '';
+    try {
+      const controller = new AbortController();
+      const timeout = setTimeout(() => controller.abort(), 15000); // 15s timeout
 
-    if (contentType.includes('application/json')) {
-      engineData = await engineResponse.json();
-    } else {
-      const text = await engineResponse.text();
-      engineData = { raw: text, status: engineResponse.status };
+      const engineResponse = await fetch(`${INFINITE_ENGINE_URL}${endpoint}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(enginePayload),
+        signal: controller.signal,
+      });
+
+      clearTimeout(timeout);
+
+      const contentType = engineResponse.headers.get('content-type') || '';
+
+      if (engineResponse.ok && contentType.includes('application/json')) {
+        engineData = await engineResponse.json();
+        videoUrl = engineData?.videoUrl || engineData?.video_url || engineData?.url || null;
+        engineReachable = true;
+        console.log(`✅ Infinite Creation Engine responded: ${engineResponse.status}`);
+      } else {
+        const text = await engineResponse.text();
+        console.log(`⚠️ Engine returned ${engineResponse.status}: ${text.substring(0, 200)}`);
+        engineData = { status: engineResponse.status, message: 'Engine returned non-success response' };
+      }
+    } catch (fetchError) {
+      console.log(`⚠️ Infinite Creation Engine unreachable: ${fetchError instanceof Error ? fetchError.message : 'Unknown'}`);
+      engineData = { status: 'unreachable', message: 'Engine is currently offline' };
     }
 
-    console.log(`✅ Infinite Creation Engine responded: ${engineResponse.status}`);
-
     // If we got a video URL back, update the episode
-    const videoUrl = engineData?.videoUrl || engineData?.video_url || engineData?.url;
-
     if (episodeId && videoUrl) {
       console.log(`🎬 Updating episode ${episodeId} with generated video`);
 
@@ -82,32 +95,6 @@ Deno.serve(async (req) => {
           video_render_completed_at: new Date().toISOString()
         })
         .eq('id', episodeId);
-
-      // Also save to media assets
-      const authHeader = req.headers.get('Authorization');
-      let userId: string | null = null;
-
-      if (authHeader) {
-        const token = authHeader.replace('Bearer ', '');
-        const { data: claims } = await supabase.auth.getClaims(token);
-        userId = claims?.claims?.sub as string || null;
-      }
-
-      if (userId) {
-        await supabase.from('media_assets').insert({
-          user_id: userId,
-          episode_id: episodeId,
-          asset_type: 'video',
-          asset_url: videoUrl,
-          metadata: {
-            source: 'infinite-creation-engine',
-            prompt,
-            style,
-            generatedAt: new Date().toISOString(),
-            processingTimeMs: Date.now() - startTime
-          }
-        });
-      }
     }
 
     // Log execution stats
@@ -116,12 +103,12 @@ Deno.serve(async (req) => {
         bot_type: 'ultra_video',
         episode_id: episodeId,
         execution_time_ms: Date.now() - startTime,
-        quality_score: 0.99,
+        quality_score: engineReachable ? 0.99 : 0.5,
         metadata: {
           engine: 'infinite-creation-engine',
           action,
           videoGenerated: !!videoUrl,
-          engineStatus: engineResponse.status
+          engineReachable,
         }
       });
     }
@@ -129,11 +116,14 @@ Deno.serve(async (req) => {
     return new Response(
       JSON.stringify({
         success: true,
+        engineReachable,
         engine: 'infinite-creation-engine',
         data: engineData,
         videoUrl,
         processingTimeMs: Date.now() - startTime,
-        message: '🚀 Infinite Creation Engine: 2075-grade video generation complete'
+        message: engineReachable 
+          ? '🚀 Infinite Creation Engine: 2075-grade video generation complete'
+          : '⚠️ Engine offline — fallback to bot army recommended'
       }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
@@ -144,8 +134,10 @@ Deno.serve(async (req) => {
 
     return new Response(
       JSON.stringify({ 
+        success: false,
         error: errorMessage,
         engine: 'infinite-creation-engine',
+        engineReachable: false,
         fallback: 'System will retry with unified processor'
       }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 500 }

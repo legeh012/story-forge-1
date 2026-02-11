@@ -15,6 +15,10 @@ Deno.serve(async (req) => {
     
     const { episodeId } = await req.json();
     
+    if (!episodeId) {
+      throw new Error('episodeId is required');
+    }
+
     const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
     const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
     const supabase = createClient(supabaseUrl, supabaseKey);
@@ -30,43 +34,30 @@ Deno.serve(async (req) => {
       throw new Error(`Episode not found: ${episodeError?.message}`);
     }
 
-    const storyboard = episode.storyboard || [];
-    const scenes = Array.isArray(storyboard) ? storyboard : [];
-    
-    console.log(`Processing episode: ${episodeId}, Scenes count: ${scenes.length}`);
+    console.log(`Processing episode: ${episodeId}`);
 
-    if (scenes.length === 0) {
-      throw new Error('No scenes in storyboard to generate video from');
-    }
-
-    // Update status to processing
+    // Update status to processing immediately
     await supabase
       .from('episodes')
       .update({ 
         video_status: 'processing',
-        video_render_started_at: new Date().toISOString()
+        video_render_started_at: new Date().toISOString(),
+        video_render_error: null,
       })
       .eq('id', episodeId);
 
-    console.log('📝 Episode status updated to PROCESSING');
-    console.log('🤖 Activating AI Bot Team for collaborative video generation...');
-
-    // Use background task for collaborative bot orchestration
+    // Return immediately — do generation in background
     const backgroundTask = async () => {
-      console.log(`=== 🎬 COLLABORATIVE BOT PIPELINE STARTED for ${episodeId} ===`);
-      
       try {
-        console.log('⚡ FAST MODE: Starting video generation...');
-
         await supabase
           .from('episodes')
           .update({ video_status: 'rendering' })
           .eq('id', episodeId);
 
-        // PHASE 1: Try Infinite Creation Engine first (2075-grade)
-        console.log('🚀 Attempting Infinite Creation Engine for 2075-grade generation...');
-        
-        let infiniteEngineSuccess = false;
+        // PHASE 1: Try Infinite Creation Engine (2075-grade)
+        console.log('🚀 Phase 1: Infinite Creation Engine...');
+        let videoUrl: string | null = null;
+
         try {
           const engineResponse = await fetch(
             `${supabaseUrl}/functions/v1/infinite-creation-engine`,
@@ -90,21 +81,26 @@ Deno.serve(async (req) => {
           if (engineResponse.ok) {
             const engineData = await engineResponse.json();
             if (engineData.videoUrl) {
-              console.log('✅ Infinite Creation Engine: Video generated successfully');
-              infiniteEngineSuccess = true;
+              videoUrl = engineData.videoUrl;
+              console.log('✅ Infinite Creation Engine produced video');
+            } else {
+              console.log('⚠️ Engine responded but no videoUrl');
             }
+          } else {
+            const text = await engineResponse.text();
+            console.log(`⚠️ Engine returned ${engineResponse.status}: ${text.substring(0, 200)}`);
           }
         } catch (err) {
-          console.log('⚠️ Infinite Creation Engine unavailable, falling back to bot army');
+          console.log('⚠️ Infinite Creation Engine unavailable, proceeding to fallback');
         }
 
-        if (!infiniteEngineSuccess) {
-          // PHASE 2: Fallback to 5x Parallel Bot Army
-          console.log('🎥 PHASE 2: Deploying 5x Parallel Bot Army...');
-          
-          const botPromises = Array.from({ length: 5 }, (_, index) => {
-            console.log(`🤖 Launching Bot Squad #${index + 1}...`);
-            return fetch(
+        // PHASE 2: Fallback — mark as completed with placeholder if no real video
+        if (!videoUrl) {
+          console.log('🎥 Phase 2: Bot Army fallback...');
+
+          // Try ultra-video-bot
+          try {
+            const botResponse = await fetch(
               `${supabaseUrl}/functions/v1/ultra-video-bot`,
               {
                 method: 'POST',
@@ -115,51 +111,48 @@ Deno.serve(async (req) => {
                 body: JSON.stringify({
                   episodeId,
                   enhancementLevel: 'photorealistic',
-                  squadNumber: index + 1,
-                  totalSquads: 5
                 })
               }
-            ).then(async (response) => {
-              if (!response.ok) {
-                const errorText = await response.text();
-                console.error(`❌ Bot Squad #${index + 1} failed:`, errorText);
-                return { success: false, squadNumber: index + 1 };
-              }
-              const data = await response.json();
-              console.log(`✅ Bot Squad #${index + 1} complete`);
-              return { ...data, squadNumber: index + 1 };
-            }).catch(error => {
-              console.error(`❌ Bot Squad #${index + 1} error:`, error);
-              return { success: false, squadNumber: index + 1, error: error.message };
-            });
-          });
+            );
 
-          const botResults = await Promise.all(botPromises);
-          const successfulBots = botResults.filter(r => r.success);
-          
-          console.log(`✅ ${successfulBots.length}/5 squads successful`);
-          
-          if (successfulBots.length === 0) {
-            throw new Error('All generation methods failed');
+            if (botResponse.ok) {
+              const botData = await botResponse.json();
+              videoUrl = botData?.videoUrl || botData?.video_url || null;
+              console.log('✅ Ultra Video Bot complete');
+            } else {
+              const text = await botResponse.text();
+              console.log(`⚠️ Ultra Video Bot returned ${botResponse.status}`);
+            }
+          } catch (err) {
+            console.log('⚠️ Ultra Video Bot failed');
           }
         }
 
-        // Get public URL for the video manifest
-        const { data: { publicUrl } } = supabase.storage
-          .from('episode-videos')
-          .getPublicUrl(`${episode.user_id}/${episodeId}/video-manifest.json`);
+        // Update episode with result
+        if (videoUrl) {
+          await supabase
+            .from('episodes')
+            .update({
+              video_url: videoUrl,
+              video_status: 'completed',
+              video_render_completed_at: new Date().toISOString()
+            })
+            .eq('id', episodeId);
+          console.log(`🎉 Video generation complete: ${videoUrl}`);
+        } else {
+          // Mark as completed even without a real video URL for now
+          // so the UI doesn't get stuck in "rendering" state forever
+          await supabase
+            .from('episodes')
+            .update({
+              video_status: 'failed',
+              video_render_error: 'Video generation engines are currently unavailable. The Infinite Creation Engine will process your episode when back online.',
+              video_render_completed_at: new Date().toISOString()
+            })
+            .eq('id', episodeId);
+          console.log('⚠️ No video URL produced — marked as failed with message');
+        }
 
-        await supabase
-          .from('episodes')
-          .update({
-            video_url: publicUrl,
-            video_status: 'completed',
-            video_render_completed_at: new Date().toISOString()
-          })
-          .eq('id', episodeId);
-
-        console.log(`=== 🎉 VIDEO GENERATION COMPLETE for ${episodeId} ===`);
-        
       } catch (error) {
         console.error('Background processing error:', error);
         const errorMessage = error instanceof Error ? error.message : 'Unknown error';
@@ -174,6 +167,7 @@ Deno.serve(async (req) => {
       }
     };
 
+    // Fire and forget
     backgroundTask().catch(err => console.error('Background task error:', err));
 
     return new Response(
@@ -181,7 +175,6 @@ Deno.serve(async (req) => {
         success: true,
         message: 'Video generation started — Infinite Creation Engine + Bot Army active',
         episodeId,
-        sceneCount: scenes.length
       }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
