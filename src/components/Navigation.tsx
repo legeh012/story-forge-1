@@ -1,14 +1,14 @@
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTrigger, SheetHeader, SheetTitle } from "@/components/ui/sheet";
-import { Sparkles, FolderOpen, TrendingUp, Activity, Bot, Menu, X, Video, Cloud } from "lucide-react";
+import { Sparkles, FolderOpen, TrendingUp, Activity, Bot, Menu, X, Video, Cloud, Clapperboard } from "lucide-react";
 import { useState } from "react";
 
 const Navigation = () => {
   const [isOpen, setIsOpen] = useState(false);
 
   const navLinks = [
-    { to: "/create", label: "Create", icon: null },
+    { to: "/produce", label: "Produce", icon: Clapperboard },
     { to: "/episodes-gallery", label: "Episodes", icon: Video },
     { to: "/media", label: "Media", icon: FolderOpen },
     { to: "/video-generation", label: "Video Studio", icon: Video },

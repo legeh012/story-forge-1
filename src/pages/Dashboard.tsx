@@ -9,6 +9,7 @@ import { Link } from "react-router-dom";
 import { SystemHealthMonitor } from "@/components/SystemHealthMonitor";
 import { OnboardingGuide } from "@/components/OnboardingGuide";
 import { EpisodeRegenerator } from "@/components/EpisodeRegenerator";
+import { ProductionEngineStatus } from "@/components/ProductionEngineStatus";
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from "@/hooks/use-toast";
 import { useSmartErrorRecovery } from "@/hooks/useSmartErrorRecovery";
@@ -318,8 +319,9 @@ const Dashboard = () => {
           </div>
         </div>
 
-        {/* Episode Regenerator */}
-        <div className="mb-8">
+        {/* Production Engine Status + Episode Regenerator */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+          <ProductionEngineStatus />
           <EpisodeRegenerator />
         </div>
 

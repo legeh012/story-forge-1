@@ -188,3 +188,6 @@ verify_jwt = false
 
 [functions.generate-season-trailer]
 verify_jwt = false
+
+[functions.prompt-to-production]
+verify_jwt = false
