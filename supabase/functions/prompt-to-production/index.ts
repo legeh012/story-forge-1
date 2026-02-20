@@ -25,11 +25,14 @@ Deno.serve(async (req) => {
     }
 
     const token = authHeader.replace('Bearer ', '');
-    const { data: claims, error: claimsError } = await supabase.auth.getClaims(token);
-    if (claimsError || !claims?.claims) {
+    const userSupabase = createClient(supabaseUrl, Deno.env.get('SUPABASE_ANON_KEY')!, {
+      global: { headers: { Authorization: authHeader } }
+    });
+    const { data: { user }, error: userError } = await userSupabase.auth.getUser(token);
+    if (userError || !user) {
       return new Response(JSON.stringify({ error: 'Unauthorized' }), { status: 401, headers: corsHeaders });
     }
-    const userId = claims.claims.sub as string;
+    const userId = user.id;
 
     const { prompt, seasonCount = 1, episodesPerSeason = 6 } = await req.json();
 
@@ -102,7 +105,7 @@ Rules:
 - Every episode ends on a cliffhanger or emotional peak
 - Locations should be vivid and filmable`;
 
-    const aiResponse = await fetch('https://api.lovable.dev/v1/chat/completions', {
+    const aiResponse = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
       method: 'POST',
       headers: {
         'Authorization': `Bearer ${LOVABLE_API_KEY}`,
@@ -126,14 +129,26 @@ Rules:
     const aiData = await aiResponse.json();
     const rawContent = aiData.choices?.[0]?.message?.content || '';
 
-    // Parse JSON from response (handle markdown code blocks)
+    // Parse JSON from response (handle markdown code blocks or raw JSON)
     let production: any;
     try {
-      const jsonMatch = rawContent.match(/```(?:json)?\s*([\s\S]*?)```/) || [null, rawContent];
-      production = JSON.parse(jsonMatch[1].trim());
+      // Try to extract JSON from markdown code block first
+      const codeBlockMatch = rawContent.match(/```(?:json)?\s*([\s\S]*?)```/);
+      if (codeBlockMatch) {
+        production = JSON.parse(codeBlockMatch[1].trim());
+      } else {
+        // Try to find raw JSON object (find first { and last })
+        const firstBrace = rawContent.indexOf('{');
+        const lastBrace = rawContent.lastIndexOf('}');
+        if (firstBrace !== -1 && lastBrace !== -1) {
+          production = JSON.parse(rawContent.slice(firstBrace, lastBrace + 1));
+        } else {
+          production = JSON.parse(rawContent.trim());
+        }
+      }
     } catch (parseErr) {
-      console.error('Failed to parse AI response:', rawContent.substring(0, 500));
-      throw new Error('AI produced invalid JSON. Please try again.');
+      console.error('Failed to parse AI response:', rawContent.substring(0, 1000));
+      throw new Error(`AI produced invalid JSON. Raw: ${rawContent.substring(0, 200)}`);
     }
 
     console.log(`✅ AI generated: "${production.show?.title}" with ${production.cast?.length} cast, ${production.season?.episodes?.length} episodes`);
