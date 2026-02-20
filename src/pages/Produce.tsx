@@ -6,9 +6,11 @@ import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
 import { Slider } from '@/components/ui/slider';
+import { Progress } from '@/components/ui/progress';
 import {
   Clapperboard, Sparkles, Users, MapPin, Film,
   Loader2, ArrowRight, ChevronDown, ChevronUp,
+  Video, CheckCircle2, XCircle, Clock,
 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
@@ -23,6 +25,12 @@ interface ProductionResult {
   seasonArc: string;
 }
 
+type EpisodeRenderStatus = 'idle' | 'queued' | 'rendering' | 'done' | 'failed';
+
+interface EpisodeVideoStatus {
+  [episodeId: string]: EpisodeRenderStatus;
+}
+
 const Produce = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
@@ -32,6 +40,8 @@ const Produce = () => {
   const [phase, setPhase] = useState('');
   const [result, setResult] = useState<ProductionResult | null>(null);
   const [expandedEpisode, setExpandedEpisode] = useState<number | null>(null);
+  const [videoStatuses, setVideoStatuses] = useState<EpisodeVideoStatus>({});
+  const [generatingVideos, setGeneratingVideos] = useState(false);
 
   const phases = [
     'Analyzing concept...',
@@ -86,6 +96,57 @@ const Produce = () => {
       setGenerating(false);
     }
   };
+
+  const handleGenerateAllVideos = async () => {
+    if (!result?.episodes?.length) return;
+    setGeneratingVideos(true);
+
+    // Mark all episodes as queued immediately
+    const initialStatuses: EpisodeVideoStatus = {};
+    result.episodes.forEach(ep => { initialStatuses[ep.id] = 'queued'; });
+    setVideoStatuses(initialStatuses);
+
+    toast({ title: '🎬 Batch rendering started', description: `Firing up ${result.episodes.length} episodes simultaneously...` });
+
+    // Fire all render requests in parallel
+    const renderPromises = result.episodes.map(async (ep) => {
+      setVideoStatuses(prev => ({ ...prev, [ep.id]: 'rendering' }));
+      try {
+        const { error } = await supabase.functions.invoke('generate-video', {
+          body: { episodeId: ep.id },
+        });
+        if (error) throw error;
+        setVideoStatuses(prev => ({ ...prev, [ep.id]: 'done' }));
+        return { id: ep.id, success: true };
+      } catch (err) {
+        setVideoStatuses(prev => ({ ...prev, [ep.id]: 'failed' }));
+        return { id: ep.id, success: false };
+      }
+    });
+
+    const results = await Promise.allSettled(renderPromises);
+    const succeeded = results.filter(r => r.status === 'fulfilled' && (r.value as any)?.success).length;
+
+    setGeneratingVideos(false);
+    toast({
+      title: succeeded === result.episodes.length ? '✅ All videos queued!' : `⚡ ${succeeded}/${result.episodes.length} episodes queued`,
+      description: 'Episodes are rendering in the background. Check each episode for status.',
+    });
+  };
+
+  const renderStatusIcon = (status: EpisodeRenderStatus) => {
+    if (status === 'queued') return <Clock className="h-4 w-4 text-muted-foreground animate-pulse" />;
+    if (status === 'rendering') return <Loader2 className="h-4 w-4 text-primary animate-spin" />;
+    if (status === 'done') return <CheckCircle2 className="h-4 w-4 text-green-500" />;
+    if (status === 'failed') return <XCircle className="h-4 w-4 text-destructive" />;
+    return null;
+  };
+
+  const videoStatusCount = Object.values(videoStatuses);
+  const doneCount = videoStatusCount.filter(s => s === 'done').length;
+  const renderProgress = result?.episodes?.length
+    ? Math.round((doneCount / result.episodes.length) * 100)
+    : 0;
 
   const roleColors: Record<string, string> = {
     protagonist: 'bg-primary',
@@ -211,15 +272,47 @@ const Produce = () => {
                       Season Arc: {result.seasonArc}
                     </p>
                   )}
-                  <div className="mt-6 flex gap-3">
+                  <div className="mt-6 flex flex-wrap gap-3">
                     <Button onClick={() => navigate(`/episodes?projectId=${result.project?.id}`)}>
                       <Film className="h-4 w-4 mr-2" />
                       Open Episodes
                     </Button>
-                    <Button variant="outline" onClick={() => { setResult(null); setPrompt(''); }}>
+                    <Button
+                      onClick={handleGenerateAllVideos}
+                      disabled={generatingVideos}
+                      className="bg-gradient-to-r from-accent to-primary hover:opacity-90"
+                    >
+                      {generatingVideos ? (
+                        <><Loader2 className="h-4 w-4 mr-2 animate-spin" />Queuing Videos...</>
+                      ) : (
+                        <><Video className="h-4 w-4 mr-2" />Generate All Videos</>
+                      )}
+                    </Button>
+                    <Button variant="outline" onClick={() => { setResult(null); setPrompt(''); setVideoStatuses({}); }}>
                       New Production
                     </Button>
                   </div>
+
+                  {/* Batch render progress */}
+                  <AnimatePresence>
+                    {Object.keys(videoStatuses).length > 0 && (
+                      <motion.div
+                        initial={{ opacity: 0, height: 0 }}
+                        animate={{ opacity: 1, height: 'auto' }}
+                        exit={{ opacity: 0, height: 0 }}
+                        className="mt-4 pt-4 border-t border-border/30"
+                      >
+                        <div className="flex items-center justify-between mb-2 text-sm">
+                          <span className="text-muted-foreground font-medium">Batch render progress</span>
+                          <span className="font-bold">{doneCount}/{result.episodes.length} episodes queued</span>
+                        </div>
+                        <Progress value={renderProgress} className="h-2" />
+                        <p className="text-xs text-muted-foreground mt-2">
+                          Episodes are rendering in the background — check the Episodes page for live status.
+                        </p>
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
                 </CardContent>
               </Card>
 
@@ -300,6 +393,12 @@ const Produce = () => {
                           </div>
                           <div className="flex items-center gap-3">
                             <Badge variant="outline">{storyboard.length} scenes</Badge>
+                            {videoStatuses[ep.id] && (
+                              <span className="flex items-center gap-1 text-xs">
+                                {renderStatusIcon(videoStatuses[ep.id])}
+                                <span className="text-muted-foreground capitalize">{videoStatuses[ep.id]}</span>
+                              </span>
+                            )}
                             {isExpanded ? <ChevronUp className="h-5 w-5" /> : <ChevronDown className="h-5 w-5" />}
                           </div>
                         </button>
