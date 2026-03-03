@@ -1,7 +1,7 @@
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTrigger, SheetHeader, SheetTitle } from "@/components/ui/sheet";
-import { Sparkles, FolderOpen, TrendingUp, Activity, Bot, Menu, X, Video, Cloud, Clapperboard } from "lucide-react";
+import { Sparkles, FolderOpen, TrendingUp, Activity, Bot, Menu, X, Video, Cloud, Clapperboard, Code } from "lucide-react";
 import { useState } from "react";
 
 const Navigation = () => {
@@ -17,6 +17,7 @@ const Navigation = () => {
     { to: "/analytics", label: "Analytics", icon: TrendingUp },
     { to: "/system-monitor", label: "Monitor", icon: Activity },
     { to: "/viral-bots", label: "Viral Bots", icon: Bot },
+    { to: "/developers", label: "Developers", icon: Code },
     { to: "/dev-tools", label: "Dev Tools", icon: null },
     { to: "/workflow", label: "Workflow", icon: null },
     { to: "/dashboard", label: "Dashboard", icon: null },
