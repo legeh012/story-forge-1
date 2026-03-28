@@ -78,30 +78,19 @@ export const DirectorPanel = () => {
     setShowProgress(true);
 
     try {
-      toast.info('🎬 Starting complete video generation pipeline...');
+      toast.info('🎬 Starting video generation pipeline...');
       
       setWorkflowStatus({ 
-        step1: '🎨 Injecting overlays...',
-        step2: '🎵 Fetching Suno music track...',
-        step3: '⚡ Initializing god-level-unified-processor...'
+        step1: '🎨 Preparing scenes...',
+        step2: '🎵 Generating AI scene images...',
       });
 
-      // Call the complete video generation workflow
       await triggerVideoGeneration(videoPayload);
 
       setWorkflowStatus({
-        overlays: '✅ Overlays injected',
-        music: '✅ Suno track synced',
-        phase1: '✅ VMaker: Video stabilization & cinematic effects',
-        phase2: '✅ Bing AI: Neural upscaling & viral optimization',
-        phase3: '✅ Scene Composition: Cinema-grade assembly',
-        phase4: '✅ Frame Optimization: Maximum detail enhancement',
-        phase5: '✅ Color Grading: VH1/BET premium look',
-        phase6: '✅ Quality Enhancement: Broadcast-grade quality',
-        phase7: '✅ Visual Effects: Professional motion graphics',
-        phase8: '✅ Audio Sync: Frame-perfect synchronization',
-        phase9: '✅ Audio Mastering: Professional mastering',
-        vault: '✅ Exported to remix vault'
+        scenes: '✅ AI scene images generated',
+        manifest: '✅ Video manifest created',
+        ready: '✅ Ready for client-side MP4 compilation',
       });
       
       setEpisodeUrl(`/episodes/${videoPayload.episodeId}`);
