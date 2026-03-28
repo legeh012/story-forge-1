@@ -105,8 +105,8 @@ export const DirectorPanel = () => {
   const handleProgressComplete = (videoUrl: string) => {
     setIsProducing(false);
     setShowProgress(false);
-    toast.success('🎉 Complete Pipeline Finished!', {
-      description: 'Video generated and exported to vault - VH1/Netflix premium quality'
+    toast.success('🎉 Video Generation Complete!', {
+      description: 'AI scenes generated — compile to MP4 in the video player'
     });
     console.log('Video URL:', videoUrl);
   };
