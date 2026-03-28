@@ -1,7 +1,9 @@
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
-import { Share2, ExternalLink, Video } from 'lucide-react';
+import { Share2, ExternalLink, Video, Film } from 'lucide-react';
 import { toast } from 'sonner';
+import { FFmpegVideoRenderer } from './FFmpegVideoRenderer';
+import { VideoManifestPlayer } from './VideoManifestPlayer';
 
 interface EpisodeVideoPlayerProps {
   isOpen: boolean;
@@ -13,29 +15,29 @@ interface EpisodeVideoPlayerProps {
   autoPlay?: boolean;
 }
 
-// Check if URL is a YouTube channel
-const isYouTubeChannel = (url: string): boolean => {
-  return url.includes('/channel/') || url.includes('/c/') || url.includes('/@');
+const isYouTubeUrl = (url: string): boolean => {
+  return url.includes('youtube.com') || url.includes('youtu.be');
 };
 
-// Extract YouTube video ID from various YouTube URL formats
+const isManifestUrl = (url: string): boolean => {
+  return url.includes('manifest') || url.includes('metadata.json') || url.endsWith('.json');
+};
+
+const isDirectVideo = (url: string): boolean => {
+  return url.endsWith('.mp4') || url.endsWith('.webm') || url.endsWith('.mov');
+};
+
 const extractYouTubeId = (url: string): string | null => {
-  if (!url || isYouTubeChannel(url)) return null;
-  
   const patterns = [
-    /(?:youtube\.com\/watch\?v=)([^&\s?]+)/,           // youtube.com/watch?v=VIDEO_ID
-    /(?:youtu\.be\/)([^&\s?]+)/,                       // youtu.be/VIDEO_ID
-    /(?:youtube\.com\/embed\/)([^&\s?]+)/,             // youtube.com/embed/VIDEO_ID
-    /(?:youtube\.com\/v\/)([^&\s?]+)/,                 // youtube.com/v/VIDEO_ID
-    /(?:youtube\.com\/shorts\/)([^&\s?]+)/,            // youtube.com/shorts/VIDEO_ID
-    /^([a-zA-Z0-9_-]{11})$/                            // Direct video ID (11 chars)
+    /(?:youtube\.com\/watch\?v=)([^&\s?]+)/,
+    /(?:youtu\.be\/)([^&\s?]+)/,
+    /(?:youtube\.com\/embed\/)([^&\s?]+)/,
+    /(?:youtube\.com\/shorts\/)([^&\s?]+)/,
   ];
-  
   for (const pattern of patterns) {
     const match = url.match(pattern);
-    if (match && match[1]) return match[1];
+    if (match?.[1]) return match[1];
   }
-  
   return null;
 };
 
@@ -46,86 +48,60 @@ export function EpisodeVideoPlayer({
   episodeTitle = 'Episode',
   episodeNumber,
   season,
-  autoPlay = false
+  autoPlay = false,
 }: EpisodeVideoPlayerProps) {
   if (!videoUrl) return null;
 
-  const episodeInfo = season && episodeNumber 
-    ? `S${season}E${episodeNumber} - ${episodeTitle}` 
+  const episodeInfo = season && episodeNumber
+    ? `S${season}E${episodeNumber} - ${episodeTitle}`
     : episodeTitle;
 
-  const isChannel = isYouTubeChannel(videoUrl);
-  const youtubeId = extractYouTubeId(videoUrl);
-  const embedUrl = youtubeId 
-    ? `https://www.youtube.com/embed/${youtubeId}${autoPlay ? '?autoplay=1' : ''}`
-    : null;
-
   const handleShare = () => {
-    if (videoUrl) {
-      navigator.clipboard.writeText(videoUrl);
-      toast.success('Video link copied to clipboard!');
-    }
+    navigator.clipboard.writeText(videoUrl);
+    toast.success('Video link copied to clipboard!');
   };
 
-  const handleOpenYouTube = () => {
-    if (videoUrl) {
-      window.open(videoUrl, '_blank');
-    }
-  };
+  const youtubeId = isYouTubeUrl(videoUrl) ? extractYouTubeId(videoUrl) : null;
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="max-w-6xl w-full p-0 gap-0 overflow-hidden">
         <DialogHeader className="p-6 pb-4">
-          <DialogTitle className="text-2xl font-bold">
-            🎬 {episodeInfo}
-          </DialogTitle>
+          <DialogTitle className="text-2xl font-bold">🎬 {episodeInfo}</DialogTitle>
         </DialogHeader>
-        
+
         <div className="relative bg-black">
-          {embedUrl ? (
-            <div className="relative w-full" style={{ paddingTop: "56.25%" }}>
+          {youtubeId ? (
+            /* YouTube embed */
+            <div className="relative w-full" style={{ paddingTop: '56.25%' }}>
               <iframe
-                src={embedUrl}
+                src={`https://www.youtube.com/embed/${youtubeId}${autoPlay ? '?autoplay=1' : ''}`}
                 title={episodeInfo}
                 className="absolute top-0 left-0 w-full h-full"
                 allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
                 allowFullScreen
               />
             </div>
-          ) : isChannel ? (
-            <div className="aspect-video flex flex-col items-center justify-center bg-gradient-to-br from-primary/10 to-accent/10 p-8">
-              <div className="text-center space-y-4">
-                <div className="p-4 rounded-full bg-primary/20 w-fit mx-auto">
-                  <Video className="h-12 w-12 text-primary" />
-                </div>
-                <div>
-                  <p className="text-lg font-semibold mb-2">YouTube Channel Link</p>
-                  <p className="text-sm text-muted-foreground mb-4">
-                    This is a channel URL, not a specific video. Visit the channel to see all videos.
-                  </p>
-                </div>
-                <Button
-                  size="lg"
-                  onClick={handleOpenYouTube}
-                  className="bg-gradient-to-r from-primary to-accent"
-                >
-                  <ExternalLink className="h-4 w-4 mr-2" />
-                  Open YouTube Channel
-                </Button>
+          ) : isDirectVideo(videoUrl) ? (
+            /* Direct MP4/WebM */
+            <div className="aspect-video">
+              <video src={videoUrl} controls autoPlay={autoPlay} className="w-full h-full" />
+            </div>
+          ) : isManifestUrl(videoUrl) ? (
+            /* Manifest: show slideshow player + offer FFmpeg compile */
+            <div className="space-y-0">
+              <VideoManifestPlayer manifestUrl={videoUrl} className="aspect-video" />
+              <div className="p-4 bg-card border-t">
+                <FFmpegVideoRenderer manifestUrl={videoUrl} episodeTitle={episodeTitle} />
               </div>
             </div>
           ) : (
+            /* Fallback: try as video */
             <div className="aspect-video flex flex-col items-center justify-center bg-muted text-muted-foreground p-8">
-              <p className="text-lg font-semibold mb-2">Unable to load YouTube video</p>
-              <p className="text-sm mb-4">Invalid video URL format</p>
-              <Button
-                size="sm"
-                variant="outline"
-                onClick={handleOpenYouTube}
-              >
-                <ExternalLink className="h-4 w-4 mr-2" />
-                Open URL Directly
+              <Video className="h-12 w-12 mb-4 opacity-50" />
+              <p className="text-lg font-semibold mb-2">Video Available</p>
+              <Button variant="outline" onClick={() => window.open(videoUrl, '_blank')}>
+                <ExternalLink className="h-4 w-4 mr-2" />Open Video
               </Button>
             </div>
           )}
@@ -134,28 +110,19 @@ export function EpisodeVideoPlayer({
         <div className="p-6 pt-4 bg-card">
           <div className="flex items-center justify-between">
             <p className="text-sm text-muted-foreground">
-              {isChannel 
-                ? 'Visit this YouTube channel to see all episodes!' 
-                : embedUrl 
-                  ? 'Your episode is ready to watch on YouTube!' 
-                  : 'This link will open in YouTube'}
+              {isManifestUrl(videoUrl)
+                ? 'AI scenes generated — compile to MP4 using the render button above'
+                : 'Your episode is ready to watch!'}
             </p>
             <div className="flex gap-2">
-              <Button
-                size="sm"
-                variant="outline"
-                onClick={handleShare}
-              >
-                <Share2 className="h-4 w-4 mr-2" />
-                Share
+              <Button size="sm" variant="outline" onClick={handleShare}>
+                <Share2 className="h-4 w-4 mr-2" />Share
               </Button>
-              <Button
-                size="sm"
-                onClick={handleOpenYouTube}
-              >
-                <ExternalLink className="h-4 w-4 mr-2" />
-                Open in YouTube
-              </Button>
+              {isYouTubeUrl(videoUrl) && (
+                <Button size="sm" onClick={() => window.open(videoUrl, '_blank')}>
+                  <ExternalLink className="h-4 w-4 mr-2" />Open in YouTube
+                </Button>
+              )}
             </div>
           </div>
         </div>
