@@ -289,14 +289,12 @@ const EpisodeDetail = () => {
                 </div>
               </CardHeader>
               <CardContent className="space-y-4">
-                {episode.video_url && (
+                {episode.video_url && !episode.video_url.endsWith('.json') && !episode.video_url.includes('metadata') && (
                   <div className="relative w-full" style={{ paddingTop: "56.25%" }}>
-                    <iframe
-                      src={`https://www.youtube.com/embed/${episode.video_url.match(/(?:youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/embed\/)([^&\s?]+)/)?.[1] || episode.video_url}`}
-                      title={episode.title}
+                    <video
+                      src={episode.video_url}
+                      controls
                       className="absolute top-0 left-0 w-full h-full rounded-lg"
-                      allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                      allowFullScreen
                     />
                   </div>
                 )}
