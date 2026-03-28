@@ -11,19 +11,13 @@ Deno.serve(async (req) => {
   }
 
   try {
-    console.log('=== Video Generation Started ===');
-    
     const { episodeId } = await req.json();
-    
-    if (!episodeId) {
-      throw new Error('episodeId is required');
-    }
+    if (!episodeId) throw new Error('episodeId is required');
 
     const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
     const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
     const supabase = createClient(supabaseUrl, supabaseKey);
 
-    // Fetch episode details
     const { data: episode, error: episodeError } = await supabase
       .from('episodes')
       .select('*, projects(*)')
@@ -34,19 +28,17 @@ Deno.serve(async (req) => {
       throw new Error(`Episode not found: ${episodeError?.message}`);
     }
 
-    console.log(`Processing episode: ${episodeId}`);
-
-    // Update status to processing immediately
+    // Update status to processing
     await supabase
       .from('episodes')
-      .update({ 
+      .update({
         video_status: 'processing',
         video_render_started_at: new Date().toISOString(),
         video_render_error: null,
       })
       .eq('id', episodeId);
 
-    // Return immediately — do generation in background
+    // Background: generate AI scene images via ultra-video-bot, then store manifest
     const backgroundTask = async () => {
       try {
         await supabase
@@ -54,135 +46,68 @@ Deno.serve(async (req) => {
           .update({ video_status: 'rendering' })
           .eq('id', episodeId);
 
-        // PHASE 1: Try Infinite Creation Engine (2075-grade)
-        console.log('🚀 Phase 1: Infinite Creation Engine...');
-        let videoUrl: string | null = null;
+        // Call ultra-video-bot which generates real AI images
+        const { data: videoData, error: videoError } = await supabase.functions.invoke('ultra-video-bot', {
+          body: {
+            episodeId,
+            enhancementLevel: 'ultra',
+          },
+        });
 
-        try {
-          const engineResponse = await fetch(
-            `${supabaseUrl}/functions/v1/infinite-creation-engine`,
-            {
-              method: 'POST',
-              headers: {
-                'Content-Type': 'application/json',
-                'Authorization': `Bearer ${supabaseKey}`
-              },
-              body: JSON.stringify({
-                episodeId,
-                prompt: episode.script || episode.synopsis || episode.title,
-                characters: [],
-                mood: 'dramatic',
-                style: 'photorealistic-reality-tv',
-                action: 'generate'
-              })
-            }
-          );
-
-          if (engineResponse.ok) {
-            const engineData = await engineResponse.json();
-            if (engineData.videoUrl) {
-              videoUrl = engineData.videoUrl;
-              console.log('✅ Infinite Creation Engine produced video');
-            } else {
-              console.log('⚠️ Engine responded but no videoUrl');
-            }
-          } else {
-            const text = await engineResponse.text();
-            console.log(`⚠️ Engine returned ${engineResponse.status}: ${text.substring(0, 200)}`);
-          }
-        } catch (err) {
-          console.log('⚠️ Infinite Creation Engine unavailable, proceeding to fallback');
+        if (videoError) {
+          throw new Error(`Scene generation failed: ${videoError.message}`);
         }
 
-        // PHASE 2: Fallback — mark as completed with placeholder if no real video
-        if (!videoUrl) {
-          console.log('🎥 Phase 2: Bot Army fallback...');
+        // ultra-video-bot uploads frames to storage and returns metadata
+        // The "videoUrl" from ultra-video-bot points to a metadata.json manifest
+        const manifestUrl = videoData?.videoUrl || videoData?.video_url;
 
-          // Try ultra-video-bot
-          try {
-            const botResponse = await fetch(
-              `${supabaseUrl}/functions/v1/ultra-video-bot`,
-              {
-                method: 'POST',
-                headers: {
-                  'Content-Type': 'application/json',
-                  'Authorization': `Bearer ${supabaseKey}`
-                },
-                body: JSON.stringify({
-                  episodeId,
-                  enhancementLevel: 'photorealistic',
-                })
-              }
-            );
-
-            if (botResponse.ok) {
-              const botData = await botResponse.json();
-              videoUrl = botData?.videoUrl || botData?.video_url || null;
-              console.log('✅ Ultra Video Bot complete');
-            } else {
-              const text = await botResponse.text();
-              console.log(`⚠️ Ultra Video Bot returned ${botResponse.status}`);
-            }
-          } catch (err) {
-            console.log('⚠️ Ultra Video Bot failed');
-          }
-        }
-
-        // Update episode with result
-        if (videoUrl) {
+        if (manifestUrl) {
           await supabase
             .from('episodes')
             .update({
-              video_url: videoUrl,
+              video_url: manifestUrl,
               video_status: 'completed',
-              video_render_completed_at: new Date().toISOString()
+              video_render_completed_at: new Date().toISOString(),
             })
             .eq('id', episodeId);
-          console.log(`🎉 Video generation complete: ${videoUrl}`);
+          console.log(`✅ Video generation complete: ${manifestUrl}`);
         } else {
-          // Mark as completed even without a real video URL for now
-          // so the UI doesn't get stuck in "rendering" state forever
           await supabase
             .from('episodes')
             .update({
               video_status: 'failed',
-              video_render_error: 'Video generation engines are currently unavailable. The Infinite Creation Engine will process your episode when back online.',
-              video_render_completed_at: new Date().toISOString()
+              video_render_error: 'Scene generation did not return a manifest URL.',
+              video_render_completed_at: new Date().toISOString(),
             })
             .eq('id', episodeId);
-          console.log('⚠️ No video URL produced — marked as failed with message');
         }
-
       } catch (error) {
         console.error('Background processing error:', error);
         const errorMessage = error instanceof Error ? error.message : 'Unknown error';
-        
         await supabase
           .from('episodes')
           .update({
             video_status: 'failed',
-            video_render_error: errorMessage
+            video_render_error: errorMessage,
           })
           .eq('id', episodeId);
       }
     };
 
-    // Fire and forget
-    backgroundTask().catch(err => console.error('Background task error:', err));
+    backgroundTask().catch((err) => console.error('Background task error:', err));
 
     return new Response(
       JSON.stringify({
         success: true,
-        message: 'Video generation started — Infinite Creation Engine + Bot Army active',
+        message: 'Video generation started — AI scene generation active',
         episodeId,
       }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
-
   } catch (error) {
     console.error('Video generation error:', error);
     const errorMessage = error instanceof Error ? error.message : 'Unknown error';
-    
     return new Response(
       JSON.stringify({ error: errorMessage }),
       { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }

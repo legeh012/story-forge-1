@@ -5,96 +5,49 @@ import { Progress } from '@/components/ui/progress';
 import { Badge } from '@/components/ui/badge';
 import { CheckCircle2, Loader2 } from 'lucide-react';
 
-interface ProgressData {
-  current_phase: number;
-  total_phases: number;
-  phase_name: string;
-  phase_status: string;
-  phase_details: any;
-  updated_at: string;
-}
-
 interface VideoGenerationProgressProps {
   episodeId: string;
   onComplete?: (videoUrl: string) => void;
 }
 
-const phaseIcons = {
-  1: '🎬',
-  2: '🤖',
-  3: '🎨',
-  4: '🖼️',
-  5: '🎨',
-  6: '⬆️',
-  7: '✨',
-  8: '🔊',
-  9: '🎵'
-};
-
-const phaseDescriptions = {
-  1: 'VMaker Video Composition - Stabilizing and smoothing motion',
-  2: 'Bing AI Optimization - AI-powered upscaling and enhancement',
-  3: 'Scene Composition - Cinema-grade transitions and compositing',
-  4: 'Frame Optimization - Enhancing details and removing artifacts',
-  5: 'Color Grading - Premium VH1/BET color treatment',
-  6: 'Quality Enhancement - Broadcast-quality video processing',
-  7: 'Visual Effects - Professional motion graphics and overlays',
-  8: 'Audio Synchronization - Frame-perfect audio sync',
-  9: 'Audio Mastering - Professional audio mastering'
-};
+const PHASES = [
+  { num: 1, icon: '🤖', name: 'AI Scene Analysis', desc: 'Analyzing script and generating scene breakdown' },
+  { num: 2, icon: '🎨', name: 'Image Generation', desc: 'Creating photorealistic AI scene images' },
+  { num: 3, icon: '📤', name: 'Asset Upload', desc: 'Uploading frames to storage' },
+  { num: 4, icon: '✅', name: 'Manifest Creation', desc: 'Building video manifest for client-side compilation' },
+];
 
 export function VideoGenerationProgress({ episodeId, onComplete }: VideoGenerationProgressProps) {
-  const [progress, setProgress] = useState<ProgressData | null>(null);
-  const [allPhases, setAllPhases] = useState<ProgressData[]>([]);
+  const [currentPhase, setCurrentPhase] = useState(0);
+  const [isComplete, setIsComplete] = useState(false);
 
   useEffect(() => {
-    // Subscribe to realtime updates
-    const channel = supabase
-      .channel(`progress-${episodeId}`)
-      .on(
-        'postgres_changes',
-        {
-          event: 'INSERT',
-          schema: 'public',
-          table: 'video_generation_progress',
-          filter: `episode_id=eq.${episodeId}`
-        },
-        (payload) => {
-          const newProgress = payload.new as ProgressData;
-          setProgress(newProgress);
-          setAllPhases(prev => [...prev, newProgress]);
-          
-          // Check if complete
-          if (newProgress.phase_status === 'completed' && newProgress.phase_details?.videoUrl) {
-            onComplete?.(newProgress.phase_details.videoUrl);
-          }
-        }
-      )
-      .subscribe();
+    // Poll episode status
+    const poll = setInterval(async () => {
+      const { data } = await supabase
+        .from('episodes')
+        .select('video_status, video_url')
+        .eq('id', episodeId)
+        .single();
 
-    return () => {
-      supabase.removeChannel(channel);
-    };
+      if (!data) return;
+
+      if (data.video_status === 'processing') setCurrentPhase(1);
+      else if (data.video_status === 'rendering') setCurrentPhase(2);
+      else if (data.video_status === 'completed') {
+        setCurrentPhase(4);
+        setIsComplete(true);
+        clearInterval(poll);
+        if (data.video_url) onComplete?.(data.video_url);
+      } else if (data.video_status === 'failed') {
+        clearInterval(poll);
+      }
+    }, 3000);
+
+    return () => clearInterval(poll);
   }, [episodeId, onComplete]);
 
-  if (!progress) {
-    return (
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Loader2 className="h-5 w-5 animate-spin" />
-          Initializing Video Generation
-        </CardTitle>
-        <CardDescription>
-          Complete pipeline: VMaker → Bing AI → Scene Composer → Frame Optimizer → Color Grader → Quality Enhancer → Effects → Audio Sync → Audio Master → Media Drive → Playback Ready
-        </CardDescription>
-        </CardHeader>
-      </Card>
-    );
-  }
-
-  const progressPercentage = (progress.current_phase / progress.total_phases) * 100;
-  const isComplete = progress.phase_status === 'completed';
+  const progressPercentage = isComplete ? 100 : (currentPhase / PHASES.length) * 100;
 
   return (
     <Card>
@@ -102,101 +55,51 @@ export function VideoGenerationProgress({ episodeId, onComplete }: VideoGenerati
         <div className="flex items-center justify-between">
           <CardTitle className="flex items-center gap-2">
             {isComplete ? (
-              <>
-                <CheckCircle2 className="h-5 w-5 text-green-500" />
-                Video Generation Complete
-              </>
+              <><CheckCircle2 className="h-5 w-5 text-green-500" />Scenes Generated</>
             ) : (
-              <>
-                <Loader2 className="h-5 w-5 animate-spin" />
-                Processing Video
-              </>
+              <><Loader2 className="h-5 w-5 animate-spin" />Generating Scenes</>
             )}
           </CardTitle>
           <Badge variant={isComplete ? 'default' : 'secondary'}>
-            Phase {progress.current_phase} of {progress.total_phases}
+            Phase {currentPhase || 1} of {PHASES.length}
           </Badge>
         </div>
         <CardDescription>
           {isComplete
-            ? '✅ Video stored to media drive and ready for playback'
-            : progress.phase_details?.status || 'Processing through complete pipeline: 9 phases → Storage → Playback'}
+            ? '✅ AI scenes ready — compile to MP4 in the video player'
+            : 'Generating photorealistic AI scene images...'}
         </CardDescription>
       </CardHeader>
-      <CardContent className="space-y-6">
+      <CardContent className="space-y-4">
+        <Progress value={progressPercentage} className="h-2" />
         <div className="space-y-2">
-          <div className="flex justify-between text-sm">
-            <span className="font-medium">{progress.phase_name}</span>
-            <span className="text-muted-foreground">{Math.round(progressPercentage)}%</span>
-          </div>
-          <Progress value={progressPercentage} className="h-2" />
-        </div>
-
-        <div className="space-y-3">
-          <h4 className="text-sm font-semibold">Processing Phases</h4>
-          <div className="space-y-2">
-            {Array.from({ length: 9 }, (_, i) => i + 1).map((phaseNum) => {
-              const phaseData = allPhases.find(p => p.current_phase === phaseNum);
-              const isActive = progress.current_phase === phaseNum;
-              const isCompleted = phaseData && progress.current_phase > phaseNum;
-              
-              return (
-                <div
-                  key={phaseNum}
-                  className={`flex items-start gap-3 p-3 rounded-lg border transition-colors ${
-                    isActive
-                      ? 'border-primary bg-primary/5'
-                      : isCompleted
-                      ? 'border-green-500/20 bg-green-500/5'
-                      : 'border-border bg-muted/30'
-                  }`}
-                >
-                  <div className="text-2xl flex-shrink-0">
-                    {isCompleted ? (
-                      <CheckCircle2 className="h-6 w-6 text-green-500" />
-                    ) : isActive ? (
-                      <Loader2 className="h-6 w-6 animate-spin text-primary" />
-                    ) : (
-                      <span className="opacity-50">{phaseIcons[phaseNum as keyof typeof phaseIcons]}</span>
-                    )}
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2">
-                      <p className={`text-sm font-medium ${isActive || isCompleted ? '' : 'text-muted-foreground'}`}>
-                        Phase {phaseNum}
-                      </p>
-                      {isActive && (
-                        <Badge variant="outline" className="text-xs">
-                          In Progress
-                        </Badge>
-                      )}
-                    </div>
-                    <p className={`text-xs mt-0.5 ${isActive || isCompleted ? 'text-foreground' : 'text-muted-foreground'}`}>
-                      {phaseDescriptions[phaseNum as keyof typeof phaseDescriptions]}
-                    </p>
-                    {phaseData?.phase_details?.status && (
-                      <p className="text-xs text-muted-foreground mt-1">
-                        {phaseData.phase_details.status}
-                      </p>
-                    )}
-                  </div>
+          {PHASES.map((phase) => {
+            const isActive = currentPhase === phase.num;
+            const isDone = currentPhase > phase.num || isComplete;
+            return (
+              <div
+                key={phase.num}
+                className={`flex items-start gap-3 p-3 rounded-lg border transition-colors ${
+                  isActive ? 'border-primary bg-primary/5'
+                  : isDone ? 'border-green-500/20 bg-green-500/5'
+                  : 'border-border bg-muted/30'
+                }`}
+              >
+                <div className="text-xl flex-shrink-0">
+                  {isDone ? <CheckCircle2 className="h-5 w-5 text-green-500" />
+                  : isActive ? <Loader2 className="h-5 w-5 animate-spin text-primary" />
+                  : <span className="opacity-50">{phase.icon}</span>}
                 </div>
-              );
-            })}
-          </div>
+                <div>
+                  <p className={`text-sm font-medium ${isActive || isDone ? '' : 'text-muted-foreground'}`}>
+                    {phase.name}
+                  </p>
+                  <p className="text-xs text-muted-foreground">{phase.desc}</p>
+                </div>
+              </div>
+            );
+          })}
         </div>
-
-        {isComplete && progress.phase_details?.processingTime && (
-          <div className="pt-4 border-t space-y-3">
-            <p className="text-sm text-muted-foreground">
-              Total processing time: {(progress.phase_details.processingTime / 1000).toFixed(2)}s
-            </p>
-            <div className="flex items-center gap-2 text-sm">
-              <Badge variant="default" className="bg-green-500">✓ Stored to Media Drive</Badge>
-              <Badge variant="default" className="bg-blue-500">▶ Ready for Playback</Badge>
-            </div>
-          </div>
-        )}
       </CardContent>
     </Card>
   );
